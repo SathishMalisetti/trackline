@@ -296,36 +296,61 @@
 
 <script>
 // ==============================================================================
-// AZURE DEPLOYMENT: fill this in once you've deployed the API (see azure-backend/
-// README.md). Leave it empty ('') to keep using local-only storage as today.
-// Example once deployed: 'https://your-app-name.azurestaticapps.net'
+// SUPABASE DEPLOYMENT (current/primary): fill these in once your Supabase
+// project + table are set up (see supabase-backend/SUPABASE_SETUP.md).
+// Leave both empty to fall back to Azure (if configured below) or local storage.
 // ==============================================================================
-//const AZURE_API_BASE = '';
-const AZURE_API_BASE = 'https://victorious-field-093009200.7.azurestaticapps.net';
+const SUPABASE_URL = 'https://pqusqljhzgqbsxroqpel.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxdXNxbGpoemdxYnN4cm9xcGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDA5NzQsImV4cCI6MjEwMjA3Njk3NH0.zuCBTJTi0VCXLDSNSqHxvyXYpml4SDDjUfiwPGW3jLA';
+
+// ==============================================================================
+// AZURE DEPLOYMENT (kept as a backup path — still fully working, just not the
+// active choice right now). Fill this in to switch back to it: see
+// azure-backend/README.md. Leave empty to keep it inactive.
+// ==============================================================================
+const AZURE_API_BASE = '';
 
 // ---- portable storage layer -------------------------------------------------
-// Three modes, auto-detected in this order so the same file keeps working
+// Four modes, auto-detected in this order so the same file keeps working
 // everywhere without code changes:
 //  1) Inside a Claude artifact: window.storage exists -> use it (per-Claude-account storage).
-//  2) AZURE_API_BASE is set above: -> calls the deployed Azure Function, which
-//     reads/writes Cosmos DB. This is the one that gives true multi-device sync —
-//     the tablet and a kid's laptop both hit the same cloud data.
-//  3) Neither of the above: falls back to the browser's own localStorage.
+//  2) SUPABASE_URL + SUPABASE_ANON_KEY are set -> talks directly to Supabase's
+//     REST API (Postgres under the hood). This is the active/current choice —
+//     no VNet or private-endpoint concerns, since Supabase is a fully separate
+//     platform from Azure and is designed for direct browser access.
+//  3) AZURE_API_BASE is set (and Supabase isn't) -> calls the Azure Function +
+//     Cosmos DB path instead. Kept working as a fallback/backup option.
+//  4) None of the above: falls back to the browser's own localStorage.
 //     IMPORTANT LIMITATION: localStorage does NOT sync across devices/browsers —
 //     each device keeps its own separate copy. Fine for a single shared tablet,
 //     not for "every family member's device shows the same live schedule."
 //
-// All three modes are needed by whatever calls storageGet/storageSet — they never
+// All four modes are needed by whatever calls storageGet/storageSet — they never
 // need to know which mode is active.
 const hasClaudeStorage = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
-const hasAzureApi = !hasClaudeStorage && !!AZURE_API_BASE;
-const STORAGE_MODE = hasClaudeStorage ? 'claude' : (hasAzureApi ? 'azure' : 'local');
+const hasSupabase = !hasClaudeStorage && !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
+const hasAzureApi = !hasClaudeStorage && !hasSupabase && !!AZURE_API_BASE;
+const STORAGE_MODE = hasClaudeStorage ? 'claude' : (hasSupabase ? 'supabase' : (hasAzureApi ? 'azure' : 'local'));
 
-const LOCAL_FAMILY_ID_KEY = 'trackline-family-id'; // small pointer kept locally even in azure mode, so this browser knows which family record to fetch
+const LOCAL_FAMILY_ID_KEY = 'trackline-family-id'; // small pointer kept locally even in cloud modes, so this browser knows which family record to fetch
 
 async function storageGet(key){
   if(hasClaudeStorage){
     try{ return await window.storage.get(key); } catch(e){ return null; }
+  }
+  if(hasSupabase && key==='trackline-data'){
+    try{
+      const familyId = window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
+      if(!familyId) return null; // no family linked to this browser yet -> onboarding will show
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=data`,
+        { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+      );
+      if(!res.ok) return null;
+      const rows = await res.json();
+      if(!rows || rows.length===0) return null;
+      return {key, value: JSON.stringify(rows[0].data)};
+    } catch(e){ console.error('Supabase fetch failed, check network/deployment', e); return null; }
   }
   if(hasAzureApi && key==='trackline-data'){
     try{
@@ -345,6 +370,26 @@ async function storageGet(key){
 async function storageSet(key, value){
   if(hasClaudeStorage){
     try{ return await window.storage.set(key, value); } catch(e){ return null; }
+  }
+  if(hasSupabase && key==='trackline-data'){
+    try{
+      const parsed = JSON.parse(value);
+      const familyId = (parsed.family && parsed.family.id) || window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
+      if(!familyId) return null;
+      window.localStorage.setItem(LOCAL_FAMILY_ID_KEY, familyId);
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/families?on_conflict=id`, {
+        method:'POST',
+        headers:{
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type':'application/json',
+          'Prefer':'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({ id: familyId, data: parsed, updated_at: new Date().toISOString() })
+      });
+      if(!res.ok) return null;
+      return {key, value};
+    } catch(e){ console.error('Supabase save failed, check network/deployment', e); return null; }
   }
   if(hasAzureApi && key==='trackline-data'){
     try{
@@ -1000,7 +1045,7 @@ function renderSettings(){
       <h3>Data</h3>
       <p style="font-size:13px;color:#5c5847;margin-top:0;">Your schedule is saved automatically to this app. Use export/import to move data or keep a backup.</p>
       <p style="font-size:12px;color:#6b6650;background:#e3dcc6;border-radius:7px;padding:8px 10px;">
-        Storage mode: <strong>${STORAGE_MODE==='claude'?'Claude account storage':STORAGE_MODE==='azure'?'Azure (synced across devices)':'This browser only (localStorage)'}</strong>${STORAGE_MODE==='local'?' — this device won\u2019t automatically see schedules saved on other devices.':''}${STORAGE_MODE==='azure'?' — this family\u2019s data lives in Cosmos DB, so any device pointed at the same deployment sees the same schedule.':''}
+        Storage mode: <strong>${STORAGE_MODE==='claude'?'Claude account storage':STORAGE_MODE==='supabase'?'Supabase (synced across devices)':STORAGE_MODE==='azure'?'Azure (synced across devices)':'This browser only (localStorage)'}</strong>${STORAGE_MODE==='local'?' — this device won\u2019t automatically see schedules saved on other devices.':''}${STORAGE_MODE==='supabase'?' — this family\u2019s data lives in Supabase, so any device pointed at the same deployment sees the same schedule.':''}${STORAGE_MODE==='azure'?' — this family\u2019s data lives in Cosmos DB, so any device pointed at the same deployment sees the same schedule.':''}
       </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn ghost" onclick="exportData()">Export data</button>
