@@ -203,10 +203,6 @@
     padding:14px 22px;border-radius:30px;font-size:14px;cursor:pointer;
     box-shadow:0 6px 20px rgba(0,0,0,.4);
   }
-  .fab.fab-secondary{
-    bottom:78px;
-    background:var(--ink-2);color:var(--text-on-ink);border:1px solid var(--line);
-  }
 
   /* MODAL */
   .overlay{position:fixed;inset:0;background:rgba(10,11,18,.72);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px;}
@@ -552,36 +548,9 @@ const DEFAULT_CHORES = [
 ];
 
 const DEFAULT_CHORE_LIBRARY = [
-  // Morning — Bedroom & Personal
-  'Make your bed', 'Fold blanket neatly', 'Put pillows in place', 'Put dirty clothes in laundry basket',
-  'Put clean clothes away', 'Keep shoes/school bag in the correct place', 'Open curtains/blinds', 'Keep bedroom floor tidy',
-  // Morning — Bathroom
-  'Put towel in the correct place', 'Put toothbrush and toothpaste away', 'Wipe water from basin if needed', 'Keep bathroom items organised',
-  // Morning — Before School
-  'Pack school bag', 'Check lunch box and water bottle', 'Put breakfast dishes in sink/dishwasher', 'Clear your place at the table', 'Put shoes in the shoe area',
-  // Afternoon — When Coming Home
-  'Put school bag in its place', 'Put shoes away', 'Put lunch box in the kitchen', 'Put water bottle in the correct place',
-  'Change out of school clothes', 'Put school clothes/laundry where they belong',
-  // Afternoon — Inside the House
-  'Tidy your bedroom', 'Pick up toys/books/items from the floor', 'Put books back on the shelf', 'Help clear the dining table',
-  'Put dishes in the sink/dishwasher', 'Help with one small kitchen task',
-  // Afternoon — Outside
-  'Water plants', 'Check vegetable/herb plants', 'Pick up leaves or small rubbish', 'Put outdoor toys/equipment away',
-  'Keep shoes/slippers in the correct place', 'Check that taps are turned off after watering',
-  // Evening — Kitchen & Dining
-  'Help set the dining table', 'Bring plates/cutlery to the table', 'Help clear the table after dinner',
-  'Wipe your place at the table', 'Put food/items back in the correct place',
-  // Evening — House
-  'Do a 5-minute tidy-up', 'Put toys away', 'Put books away', 'Put clothes in laundry/wardrobe',
-  'Return household items to their proper place', 'Check bedroom floor is clear',
-  // Evening — Before Bed
-  'Prepare school uniform for tomorrow', 'Prepare shoes', 'Put water bottle in the kitchen', 'Brush teeth',
-  'Keep bedroom tidy', 'Turn off bedroom light', 'Go to bed on time',
-  // Weekly / Rotating Jobs
-  'Help fold laundry', 'Match socks', 'Put folded clothes away', 'Dust bedroom furniture', 'Dust common areas',
-  'Vacuum bedroom', 'Help vacuum common areas', 'Help clean outdoor area', 'Sweep small outdoor areas', 'Clean outdoor toys',
-  'Organise bookshelf', 'Organise school supplies', 'Help clean the car interior', 'Help with garden maintenance',
-  'Help empty small bins', 'Help refill pet food/water if applicable'
+  'Unload dishwasher', 'Load dishwasher', 'Water the plants', 'Fold clothes', 'Put laundry away',
+  'Make bed', 'Take out bins', 'Vacuum room', 'Tidy shoes', 'English homework', 'Math homework',
+  'Reading practice', 'Feed pet', 'Deep clean bedroom', 'Wipe kitchen counters'
 ];
 
 let kidPlainText = '';
@@ -884,7 +853,6 @@ function renderBoard(){
       ${renderTimeAxis()}
       <div class="columns">${cols}</div>
     </div>
-    <button class="fab fab-secondary" onclick="openChoreAdd()">+ Add task</button>
     <button class="fab" onclick="openAdd(null)">+ Add activity</button>
   `;
 }
@@ -929,8 +897,8 @@ function renderChores(){
   return `
     ${renderWeekNav()}
     ${renderDayRow()}
-    ${anyDue ? groups : `<div class="chore-empty-day">No tasks due on ${formatDateNice(dateISO)}.</div>`}
-    <button class="fab" onclick="openChoreAdd()">+ Add task</button>
+    ${anyDue ? groups : `<div class="chore-empty-day">No chores due on ${formatDateNice(dateISO)}.</div>`}
+    <button class="fab" onclick="openChoreAdd()">+ Add chore</button>
   `;
 }
 
@@ -1001,8 +969,8 @@ function renderParentView(){
       <div class="kd">${formatDateNice(dateISO)}</div>
       ${timelineHtml}
     </div>
-    <h3 style="font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;color:var(--text-on-ink);margin:0 0 12px;">Kids' tasks</h3>
-    ${anyChoresDue ? choreGroups : `<div class="chore-empty-day">No tasks due on ${formatDateNice(dateISO)}.</div>`}
+    <h3 style="font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;color:var(--text-on-ink);margin:0 0 12px;">Kids' chores</h3>
+    ${anyChoresDue ? choreGroups : `<div class="chore-empty-day">No chores due on ${formatDateNice(dateISO)}.</div>`}
   `;
 }
 
@@ -1013,7 +981,6 @@ function renderKidView(){
   const kid = memberById(ui.kidId);
   let items = '';
   let plain = '';
-  let taskItems = '';
   if(kid){
     const evs = eventsForDateMember(dateISO, kid.id).slice().sort((a,b)=>a.start-b.start);
     if(evs.length===0){
@@ -1029,42 +996,6 @@ function renderKidView(){
           </div>
         </div>`).join('');
       plain = kid.name + ' schedule — ' + formatDateNice(dateISO) + '\n' + evs.map(e=>`${minToShort(e.start)}–${minToShort(e.end)}  ${e.title}${e.location? ' ('+e.location+')':''}`).join('\n');
-    }
-
-    const dueTasks = choresForDateMember(dateISO, kid.id);
-    if(dueTasks.length>0){
-      const canAct = ui.profileId===kid.id || isParentLoggedIn();
-      const rows = dueTasks.map(c=>{
-        const log = choreLogFor(c.id, dateISO);
-        let action;
-        if(log){
-          action = canAct
-            ? `<div class="chore-done-badge" onclick="undoChoreDone('${c.id}','${dateISO}')">✓ Done at ${escapeHtml(log.completedAt)}</div>`
-            : `<div class="chore-done-badge" style="cursor:default;">✓ Done at ${escapeHtml(log.completedAt)}</div>`;
-        } else {
-          action = canAct
-            ? `<button class="chore-pending-btn" onclick="openCompleteChore('${c.id}')">Mark done</button>`
-            : `<span class="chore-locked-btn">${isLoggedIn()? 'Not yours':'Log in'}</span>`;
-        }
-        return `<div class="chore-row">
-          <div class="chore-info" onclick="openChoreEdit('${c.id}')">
-            <div class="chore-title">${escapeHtml(c.title)}</div>
-            <div class="chore-freq">${frequencyLabel(c)}</div>
-          </div>
-          ${action}
-        </div>`;
-      }).join('');
-      taskItems = `<div class="kid-big" style="margin-top:18px;">
-        <h2 style="font-size:19px;">${escapeHtml(kid.name)}'s tasks</h2>
-        <div class="kd">${formatDateNice(dateISO)}</div>
-        ${rows}
-      </div>`;
-
-      const taskPlain = dueTasks.map(c=>{
-        const log = choreLogFor(c.id, dateISO);
-        return `- ${c.title}${log? ' (done at '+log.completedAt+')' : ' (not done yet)'}`;
-      }).join('\n');
-      plain += '\n\nTasks:\n' + taskPlain;
     }
   }
   kidPlainText = plain;
@@ -1083,7 +1014,6 @@ function renderKidView(){
       </div>
       <div class="hint">This app can't send email directly — tap "copy" and paste the text into an email, text, or chat to the laptop. Or just bookmark this Kid View tab on the laptop and check it each morning.</div>
     </div>
-    ${taskItems}
   `;
 }
 
@@ -1157,14 +1087,14 @@ function renderSettings(){
       <p style="font-size:12px;color:#6b6650;margin-top:12px;">"Reset PIN" clears that person's PIN — they'll be asked to set a new one next time they log in.</p>
     </div>
     <div class="settings-card">
-      <h3>Task list</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">These names show up as suggestions when adding a task, so nobody has to retype "Unload dishwasher" from scratch every time. New titles typed while adding a task get added here automatically too.</p>
+      <h3>Chore list</h3>
+      <p style="font-size:13px;color:#5c5847;margin-top:0;">These names show up as suggestions when adding a chore, so nobody has to retype "Unload dishwasher" from scratch every time. New titles typed while adding a chore get added here automatically too.</p>
       <div class="chore-lib-chips">
         ${(state.choreLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved chore names yet.</span>' :
           state.choreLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeChoreLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
       </div>
       <div class="add-member" style="margin-top:12px;">
-        <input type="text" id="newChoreLibItem" placeholder="Add a task name to the list">
+        <input type="text" id="newChoreLibItem" placeholder="Add a chore name to the list">
         <button class="btn primary" onclick="addChoreLibraryItem()">Add</button>
       </div>
     </div>
@@ -1329,7 +1259,7 @@ function renderChoreModal(){
   return `
   <div class="overlay" onclick="if(event.target===this) closeChoreModal()">
     <div class="modal">
-      <h2>${editing? (readOnly?'Task details':'Edit task') : 'Add task'}</h2>
+      <h2>${editing? (readOnly?'Chore details':'Edit chore') : 'Add chore'}</h2>
       ${readOnly? `<div class="skip-note">View only. ${isLoggedIn()? 'A parent needs to log in to change or delete this.' : 'Log in to make changes.'}</div>`:''}
       <div class="field">
         <label>What needs doing</label>
@@ -1517,7 +1447,7 @@ function renderOnboarding(){
       <div class="onboard-card" style="text-align:center;">
         <div class="onboard-brand">
           <div class="flap">Track<span>line</span></div>
-          <div class="sub">Family Tracker</div>
+          <div class="sub">Family Departures</div>
         </div>
         <h2>Family created 🎉</h2>
         <p class="lead">Share this with the rest of your family so their own devices can join.</p>
@@ -1539,7 +1469,7 @@ function renderOnboarding(){
       <div class="onboard-card">
         <div class="onboard-brand">
           <div class="flap">Track<span>line</span></div>
-          <div class="sub">Family Tracker</div>
+          <div class="sub">Family Departures</div>
         </div>
         <h2>Join your family</h2>
         <p class="lead">Ask whoever set up Trackline for your family for these two things.</p>
@@ -1564,7 +1494,7 @@ function renderOnboarding(){
     <div class="onboard-card">
       <div class="onboard-brand">
         <div class="flap">Track<span>line</span></div>
-        <div class="sub">Family Tracker</div>
+        <div class="sub">Family Departures</div>
       </div>
       <h2>Set up your family</h2>
       <p class="lead">Create your own family space — your schedule, your people, your login.</p>
@@ -1692,7 +1622,7 @@ function submitOnboarding(){
   state.events = [];
   state.chores = [];
   state.choreLogs = [];
-  state.choreLibrary = JSON.parse(JSON.stringify(DEFAULT_CHORE_LIBRARY));
+  state.choreLibrary = [];
   ui.onboardingError = null;
   ui.priorFamilySnapshot = null; // committing to the new family now — old data (already safely saved) is left behind
   saveData();
@@ -1772,7 +1702,7 @@ function render(){
       <header class="board">
         <div class="brand">
           <div class="flap">Track<span>line</span></div>
-          <div class="sub">Family Tracker</div>
+          <div class="sub">Family Departures</div>
         </div>
         <div class="header-right">
           ${renderProfileDropdown()}
@@ -1790,13 +1720,13 @@ function render(){
     <header class="board">
       <div class="brand">
         <div class="flap">Track<span>line</span></div>
-        <div class="sub">Family Tracker</div>
+        <div class="sub">Family Departures</div>
       </div>
       <div class="header-right">
         <nav class="tabs">
           <button class="${ui.tab==='board'?'active':''}" onclick="setTab('board')">Week Board</button>
           <button class="${ui.tab==='parent'?'active':''}" onclick="setTab('parent')">Parent View</button>
-          <button class="${ui.tab==='chores'?'active':''}" onclick="setTab('chores')">Tasks</button>
+          <button class="${ui.tab==='chores'?'active':''}" onclick="setTab('chores')">Chores</button>
           <button class="${ui.tab==='kid'?'active':''}" onclick="setTab('kid')">Kid View</button>
           <button class="${ui.tab==='settings'?'active':''}" onclick="setTab('settings')">Settings</button>
         </nav>
@@ -2013,7 +1943,7 @@ function saveChore(){
   if(ui.editingChoreId && !isParentLoggedIn()) return; // editing existing: parent only
   if(!ui.editingChoreId && !isLoggedIn()) return; // creating new: must be logged in
 
-  const title = document.getElementById('f_chore_title').value.trim() || 'Untitled task';
+  const title = document.getElementById('f_chore_title').value.trim() || 'Untitled chore';
   const memberId = document.getElementById('f_chore_member').value;
   const frequency = document.getElementById('f_chore_frequency').value;
   let days = [];
