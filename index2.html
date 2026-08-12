@@ -300,8 +300,8 @@
 // project + table are set up (see supabase-backend/SUPABASE_SETUP.md).
 // Leave both empty to fall back to Azure (if configured below) or local storage.
 // ==============================================================================
-const SUPABASE_URL = '';
-const SUPABASE_ANON_KEY = '';
+const SUPABASE_URL = 'https://pqusqljhzgqbsxroqpel.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxdXNxbGpoemdxYnN4cm9xcGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDA5NzQsImV4cCI6MjEwMjA3Njk3NH0.zuCBTJTi0VCXLDSNSqHxvyXYpml4SDDjUfiwPGW3jLA';
 
 // ==============================================================================
 // AZURE DEPLOYMENT (kept as a backup path — still fully working, just not the
@@ -412,33 +412,6 @@ async function storageSet(key, value){
   } catch(e){ return null; }
 }
 
-// Looks up a family's data by ID directly, bypassing this browser's local
-// pointer — used only by the "join an existing family" flow, where a new
-// device doesn't have that pointer set yet. Returns the raw data object
-// (not a {key,value} wrapper) or null if not found / not reachable.
-async function fetchFamilyById(familyId){
-  if(hasClaudeStorage) return null; // Claude storage is already account-scoped; joining by ID doesn't apply here
-  if(hasSupabase){
-    try{
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=data`,
-        { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
-      );
-      if(!res.ok) return null;
-      const rows = await res.json();
-      return (rows && rows.length) ? rows[0].data : null;
-    } catch(e){ console.error('Supabase lookup failed', e); return null; }
-  }
-  if(hasAzureApi){
-    try{
-      const res = await fetch(`${AZURE_API_BASE}/api/family-data?familyId=${encodeURIComponent(familyId)}`);
-      if(!res.ok) return null;
-      return await res.json();
-    } catch(e){ console.error('Azure lookup failed', e); return null; }
-  }
-  return null; // local-only mode: no network, this device can't see another device's data
-}
-
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const DAY_START = 6*60;      // 6:00am
 const DAY_END = 21*60+30;    // 9:30pm
@@ -461,17 +434,6 @@ function simpleHash(str){
 }
 
 function cid(){ return 'e' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
-
-function genFamilyId(){
-  // Short, typeable code — this is both the database row id AND the code
-  // shared with family members so their own devices can join. Excludes
-  // easily-confused characters (0/O, 1/I/L) since a human has to type this.
-  const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  let s = '';
-  for(let i=0;i<8;i++){ s += alphabet[Math.floor(Math.random()*alphabet.length)]; }
-  return s;
-}
-
 function pad2(n){ return n<10 ? '0'+n : ''+n; }
 function minToLabel(m){
   let h = Math.floor(m/60), mm = m%60;
@@ -587,10 +549,6 @@ let ui = {
   completingChoreId: null,
   completingDate: null,
   priorFamilySnapshot: null,
-  joinFamilyMode: false,
-  joinError: null,
-  justCreatedFamilyId: null,
-  justCreatedHolderId: null,
 };
 
 function selectedDateISO(){
@@ -1047,20 +1005,6 @@ function renderSettings(){
     <div class="settings-card">
       <h3>Family</h3>
       <div class="field">
-        <label>Family ID <span style="font-weight:400;color:#8a8468;">(for other devices to join)</span></label>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;letter-spacing:.06em;background:#e3dcc6;border-radius:8px;padding:8px 14px;">${escapeHtml(fam.id||'')}</div>
-        </div>
-      </div>
-      <div class="field">
-        <label>Family password</label>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <input type="password" id="fam_newPassword" placeholder="${fam.passwordHash? 'Set a new family password':'No password set yet — set one'}" style="flex:1;">
-          <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="changeFamilyPassword()">${fam.passwordHash?'Change':'Set'}</button>
-        </div>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Family members use the Family ID above plus this password to join from their own device, then pick their own name and set their own PIN.</p>
-      </div>
-      <div class="field">
         <label>Family name</label>
         <input type="text" value="${escapeHtml(fam.name)}" onchange="updateFamily('name',this.value)">
       </div>
@@ -1440,54 +1384,7 @@ function submitLogin(){
 }
 
 function renderOnboarding(){
-  if(ui.justCreatedFamilyId){
-    return `
-    <div class="onboard-wrap">
-      <div class="onboard-card" style="text-align:center;">
-        <div class="onboard-brand">
-          <div class="flap">Track<span>line</span></div>
-          <div class="sub">Family Departures</div>
-        </div>
-        <h2>Family created 🎉</h2>
-        <p class="lead">Share this with the rest of your family so their own devices can join.</p>
-        <div style="background:#e3dcc6;border-radius:10px;padding:16px;margin-bottom:16px;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6650;margin-bottom:4px;">Family ID</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;letter-spacing:.08em;color:var(--ink);">${escapeHtml(ui.justCreatedFamilyId)}</div>
-        </div>
-        <p style="font-size:12.5px;color:#6b6650;margin-bottom:18px;">Each family member opens this same website, taps <strong>"Join an existing family,"</strong> enters this Family ID and the family password you just set, then picks their own name and sets their own PIN.</p>
-        <button class="btn primary" style="width:100%;padding:13px;" onclick="continueAfterFamilyCreated()">Continue — set my PIN</button>
-      </div>
-    </div>`;
-  }
-
   const hasSnapshotToReturnTo = !!ui.priorFamilySnapshot;
-
-  if(ui.joinFamilyMode){
-    return `
-    <div class="onboard-wrap">
-      <div class="onboard-card">
-        <div class="onboard-brand">
-          <div class="flap">Track<span>line</span></div>
-          <div class="sub">Family Departures</div>
-        </div>
-        <h2>Join your family</h2>
-        <p class="lead">Ask whoever set up Trackline for your family for these two things.</p>
-
-        <div class="field">
-          <label>Family ID</label>
-          <input type="text" id="jf_familyId" placeholder="e.g. K3M9XQPZ" style="text-transform:uppercase;letter-spacing:.05em;font-family:'IBM Plex Mono',monospace;">
-        </div>
-        <div class="field">
-          <label>Family password</label>
-          <input type="password" id="jf_password" placeholder="Family password">
-        </div>
-        ${ui.joinError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.joinError)}</div>`:''}
-        <button class="btn primary" style="width:100%;padding:13px;" onclick="submitJoinFamily()">Join family</button>
-        <button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="cancelJoinFamily()">← Back</button>
-      </div>
-    </div>`;
-  }
-
   return `
   <div class="onboard-wrap">
     <div class="onboard-card">
@@ -1516,83 +1413,15 @@ function renderOnboarding(){
           <input type="tel" id="ob_holderPhone" placeholder="04xx xxx xxx">
         </div>
       </div>
-      <div class="field">
-        <label>Family password</label>
-        <input type="password" id="ob_familyPassword" placeholder="For other family members to join with">
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">You'll get a Family ID after creating this — other family members use that ID plus this password to join from their own device.</p>
-      </div>
       ${ui.onboardingError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.onboardingError)}</div>`:''}
       <button class="btn primary" style="width:100%;padding:13px;" onclick="submitOnboarding()">Create my family</button>
 
       <div class="onboard-divider">or</div>
-      <button class="btn ghost" style="width:100%;padding:11px;" onclick="openJoinFamily()">Join an existing family</button>
-      <button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="loadExampleData()">Just show me an example first</button>
+      <button class="btn ghost" style="width:100%;padding:11px;" onclick="loadExampleData()">Just show me an example first</button>
       ${hasSnapshotToReturnTo ? `<button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="cancelNewFamilySetup()">← Back to my existing family</button>` : ''}
       <p style="font-size:11.5px;color:#8a8468;text-align:center;margin:14px 0 0;">Email/phone are stored so this is ready for notifications later — this app can't send real emails or texts yet.</p>
     </div>
   </div>`;
-}
-
-function openJoinFamily(){
-  ui.joinFamilyMode = true;
-  ui.joinError = null;
-  render();
-}
-function cancelJoinFamily(){
-  ui.joinFamilyMode = false;
-  ui.joinError = null;
-  render();
-}
-async function submitJoinFamily(){
-  const familyId = (document.getElementById('jf_familyId').value||'').trim().toUpperCase();
-  const password = document.getElementById('jf_password').value||'';
-
-  if(!familyId || !password){
-    ui.joinError = 'Enter both the Family ID and the family password.';
-    render();
-    return;
-  }
-
-  if(STORAGE_MODE === 'local'){
-    ui.joinError = 'This deployment isn\u2019t connected to cloud sync yet, so this device can\u2019t see another device\u2019s family. Ask whoever manages the deployment to finish the Supabase/Azure setup first.';
-    render();
-    return;
-  }
-
-  ui.joinError = null;
-  render(); // clear any previous error while the lookup runs
-
-  const data = await fetchFamilyById(familyId);
-  if(!data || !data.family){
-    ui.joinError = 'No family found with that ID. Double-check it and try again.';
-    render();
-    return;
-  }
-  if(!data.family.passwordHash){
-    ui.joinError = 'This family doesn\u2019t have a password set yet — ask the parent who created it to set one in Settings.';
-    render();
-    return;
-  }
-  if(simpleHash(password) !== data.family.passwordHash){
-    ui.joinError = 'Incorrect family password.';
-    render();
-    return;
-  }
-
-  // success — link this browser to that family and load its data
-  window.localStorage.setItem(LOCAL_FAMILY_ID_KEY, familyId);
-  state = data;
-  ui.joinFamilyMode = false;
-  ui.joinError = null;
-  render();
-}
-
-function continueAfterFamilyCreated(){
-  const holderId = ui.justCreatedHolderId;
-  ui.justCreatedFamilyId = null;
-  ui.justCreatedHolderId = null;
-  render();
-  if(holderId) openLogin(holderId);
 }
 
 function submitOnboarding(){
@@ -1600,23 +1429,16 @@ function submitOnboarding(){
   const holderName = (document.getElementById('ob_holderName').value||'').trim();
   const holderEmail = (document.getElementById('ob_holderEmail').value||'').trim();
   const holderPhone = (document.getElementById('ob_holderPhone').value||'').trim();
-  const familyPassword = document.getElementById('ob_familyPassword').value||'';
 
   if(!familyName || !holderName){
     ui.onboardingError = 'Please enter a family name and your name.';
     render();
     return;
   }
-  if(!familyPassword || familyPassword.length < 4){
-    ui.onboardingError = 'Please set a family password (at least 4 characters) — this is what other family members will use to join.';
-    render();
-    return;
-  }
 
   const palette = ['#4C8577','#C1555F','#CE8A2E','#5C6BA0','#7C6BA0','#4A9B8E','#B0703C'];
   const holderId = cid();
-  const familyId = genFamilyId();
-  state.family = {id:familyId, name:familyName, primaryHolderName:holderName, primaryHolderEmail:holderEmail, primaryHolderPhone:holderPhone, passwordHash: simpleHash(familyPassword)};
+  state.family = {id:cid(), name:familyName, primaryHolderName:holderName, primaryHolderEmail:holderEmail, primaryHolderPhone:holderPhone};
   state.members = [{id:holderId, name:holderName, role:'parent', color:palette[0], pinHash:null, email:holderEmail, phone:holderPhone}];
   state.events = [];
   state.chores = [];
@@ -1625,16 +1447,15 @@ function submitOnboarding(){
   ui.onboardingError = null;
   ui.priorFamilySnapshot = null; // committing to the new family now — old data (already safely saved) is left behind
   saveData();
-  ui.justCreatedFamilyId = familyId;
-  ui.justCreatedHolderId = holderId;
   render();
+  openLogin(holderId); // immediately prompt them to set their PIN and log in
 }
 
 function loadExampleData(){
   if(ui.priorFamilySnapshot){
     if(!confirm('This replaces your current family\u2019s data on this device with example data. Continue?')) return;
   }
-  state.family = {id:genFamilyId(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:'', passwordHash: simpleHash('demo1234')};
+  state.family = {id:cid(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''};
   state.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
   state.events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
   state.chores = JSON.parse(JSON.stringify(DEFAULT_CHORES));
@@ -1691,7 +1512,7 @@ function render(){
     return;
   }
 
-  if(!state.family || ui.justCreatedFamilyId || ui.joinFamilyMode){
+  if(!state.family){
     root.innerHTML = renderOnboarding();
     return;
   }
@@ -2027,20 +1848,6 @@ function updateFamily(field, value){
   render();
 }
 
-function changeFamilyPassword(){
-  if(!isParentLoggedIn()) return;
-  if(!state.family) return;
-  const input = document.getElementById('fam_newPassword');
-  const val = (input.value||'').trim();
-  if(!val || val.length < 4){
-    alert('Family password needs to be at least 4 characters.');
-    return;
-  }
-  state.family.passwordHash = simpleHash(val);
-  saveData();
-  render();
-}
-
 function addChoreLibraryItem(){
   if(!isParentLoggedIn()) return;
   const input = document.getElementById('newChoreLibItem');
@@ -2150,7 +1957,7 @@ function resetDefaults(){
   if(!isParentLoggedIn()) return;
   if(!confirm('Reset to the example data? This replaces your current schedule and clears all PINs.')) return;
   state = {
-    family: {id:genFamilyId(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:'', passwordHash: simpleHash('demo1234')},
+    family: {id:cid(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''},
     members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
     events: JSON.parse(JSON.stringify(DEFAULT_EVENTS)),
     chores: JSON.parse(JSON.stringify(DEFAULT_CHORES)),
