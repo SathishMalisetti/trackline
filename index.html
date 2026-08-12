@@ -1,0 +1,1971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Trackline — Family Schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#181C2A;
+    --ink-2:#232840;
+    --ink-3:#2E3454;
+    --line:#3A4066;
+    --paper:#ECE7DA;
+    --paper-dim:#D9D3C2;
+    --amber:#E8A33D;
+    --text-on-ink:#ECE9DD;
+    --text-dim:#9AA0C0;
+    --transit:#8C8676;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--text-on-ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app{max-width:1400px;margin:0 auto;padding:0 0 60px;}
+
+  /* HEADER / BOARD MASTHEAD */
+  header.board{
+    padding:22px 20px 16px;
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  }
+  .brand{display:flex;align-items:baseline;gap:12px;}
+  .brand .flap{
+    font-family:'Archivo Narrow',sans-serif;
+    font-weight:800;
+    font-size:28px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--text-on-ink);
+  }
+  .brand .flap span{color:var(--amber);}
+  .brand .sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+  nav.tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  nav.tabs button{
+    font-family:'Archivo Narrow',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    padding:9px 16px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  nav.tabs button:hover{color:var(--text-on-ink);border-color:var(--text-dim);}
+  nav.tabs button.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
+
+  /* PROFILE DROPDOWN */
+  .header-right{display:flex;align-items:center;gap:14px;}
+  .profile-wrap{position:relative;}
+  .profile-btn{
+    display:flex;align-items:center;gap:8px;
+    background:var(--ink-2);border:1px solid var(--line);color:var(--text-on-ink);
+    padding:7px 12px 7px 7px;border-radius:24px;cursor:pointer;
+  }
+  .profile-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:12px;color:#151726;flex:none;}
+  .profile-btn .pname{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:13px;letter-spacing:.02em;text-transform:uppercase;}
+  .profile-btn .caret{font-size:10px;color:var(--text-dim);}
+  .profile-menu{
+    position:absolute;top:calc(100% + 8px);right:0;min-width:190px;
+    background:var(--paper);color:var(--ink);border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden;z-index:40;
+  }
+  .profile-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:13.5px;font-weight:600;}
+  .profile-item:hover{background:#e3dcc6;}
+  .profile-item.current{background:#e3dcc6;}
+  .profile-item .dot{width:20px;height:20px;border-radius:50%;flex:none;}
+  .profile-menu-footer{border-top:1px solid #cfc7ac;padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#5c5847;cursor:pointer;}
+  .profile-menu-footer:hover{background:#e3dcc6;}
+  .profile-none{padding:12px 14px;font-size:12.5px;color:#6b6650;}
+
+  /* ONBOARDING */
+  .onboard-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .onboard-card{background:var(--paper);color:var(--ink);border-radius:16px;padding:32px;max-width:420px;width:100%;}
+  .onboard-brand{text-align:center;margin-bottom:22px;}
+  .onboard-brand .flap{font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);}
+  .onboard-brand .flap span{color:#B8791F;}
+  .onboard-brand .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6b6650;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+  .onboard-card h2{font-family:'Archivo Narrow',sans-serif;font-size:19px;text-transform:uppercase;letter-spacing:.02em;text-align:center;margin:0 0 6px;}
+  .onboard-card .lead{font-size:13px;color:#5c5847;text-align:center;margin:0 0 20px;}
+  .onboard-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:#8a8468;font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+  .onboard-divider::before,.onboard-divider::after{content:'';flex:1;height:1px;background:#cfc7ac;}
+
+  /* PRE-LOGIN DASHBOARD */
+  .dash-wrap{max-width:640px;margin:40px auto;padding:0 20px;text-align:center;}
+  .dash-wrap h1{font-family:'Archivo Narrow',sans-serif;font-size:26px;text-transform:uppercase;letter-spacing:.02em;margin:0 0 6px;}
+  .dash-wrap .dash-sub{color:var(--text-dim);font-size:14px;margin-bottom:32px;}
+  .dash-stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+  .dash-stat{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:20px 26px;min-width:130px;}
+  .dash-stat .num{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:var(--amber);}
+  .dash-stat .label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-top:4px;}
+  .dash-cta{background:var(--amber);color:var(--ink);border:none;font-family:'Archivo Narrow',sans-serif;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:14px 28px;border-radius:30px;font-size:14px;cursor:pointer;}
+
+  main{padding:18px 20px;}
+
+  /* DAY SELECTOR */
+  .week-nav{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .week-nav .arrow{
+    background:var(--ink-2);border:1px solid var(--line);color:var(--text-on-ink);
+    width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:15px;
+  }
+  .week-nav .label{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--text-dim);letter-spacing:.03em;}
+  .week-nav .today-btn{
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+    background:transparent;border:1px solid var(--line);color:var(--text-dim);padding:7px 12px;border-radius:6px;cursor:pointer;
+  }
+  .day-row{display:flex;gap:4px;margin-bottom:18px;overflow-x:auto;padding-bottom:4px;}
+  .day-pill{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;font-weight:600;
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    color:var(--text-dim);
+    padding:9px 16px;border-radius:8px;cursor:pointer;white-space:nowrap;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    min-width:64px;
+  }
+  .day-pill .dname{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;}
+  .day-pill .dnum{font-size:11px;opacity:.75;}
+  .day-pill.today{border-color:var(--amber);}
+  .day-pill.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
+  .day-pill.today .dname::after{content:" •";color:var(--amber);}
+  .day-pill.active.today .dname::after{color:var(--ink);}
+  .skip-note{font-size:12px;color:#6b6650;background:#e3dcc6;border-radius:7px;padding:8px 10px;margin:-4px 0 14px;}
+
+  /* BOARD GRID */
+  .board-wrap{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--ink-2);}
+  .time-axis{width:56px;flex:none;position:relative;border-right:1px solid var(--line);}
+  .time-axis .tick{
+    position:absolute;left:0;right:0;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);
+    padding-left:6px;transform:translateY(-6px);
+  }
+  .columns{display:flex;flex:1;overflow-x:auto;}
+  .col{flex:1;min-width:150px;position:relative;border-right:1px solid var(--line);}
+  .col:last-child{border-right:none;}
+  .col-head{
+    padding:10px 8px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:var(--ink-2);z-index:2;
+    display:flex;align-items:center;gap:7px;
+  }
+  .swatch{width:10px;height:10px;border-radius:50%;flex:none;}
+  .col-head .name{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:14px;letter-spacing:.03em;text-transform:uppercase;}
+  .col-body{position:relative;cursor:crosshair;}
+  .gridline{position:absolute;left:0;right:0;border-top:1px solid var(--line);opacity:.55;}
+  .gridline.hour{opacity:.9;}
+  .nowline{position:absolute;left:0;right:0;height:2px;background:var(--amber);z-index:3;}
+  .nowline::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--amber);}
+
+  .block{
+    position:absolute;
+    border-radius:6px;padding:6px 8px;overflow:hidden;
+    cursor:pointer;border:1px solid rgba(0,0,0,.25);
+    box-shadow:0 2px 6px rgba(0,0,0,.25);
+    z-index:1;
+  }
+  .block .t{font-weight:700;font-size:12.5px;line-height:1.2;color:#151726;}
+  .block .m{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#151726;opacity:.75;margin-top:2px;}
+  .block.transit{
+    background:repeating-linear-gradient(135deg, var(--transit), var(--transit) 6px, #6f6a5c 6px, #6f6a5c 12px);
+    color:#fff;border-color:#5c5748;
+  }
+  .block.transit .t,.block.transit .m{color:#fff;}
+  .block.conflict{
+    border:2px solid #D6484E;
+    box-shadow:0 0 0 1px #D6484E, 0 2px 6px rgba(0,0,0,.3);
+    z-index:2;
+  }
+
+  /* FAB */
+  .fab{
+    position:fixed;right:22px;bottom:22px;z-index:20;
+    background:var(--amber);color:var(--ink);border:none;
+    font-family:'Archivo Narrow',sans-serif;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+    padding:14px 22px;border-radius:30px;font-size:14px;cursor:pointer;
+    box-shadow:0 6px 20px rgba(0,0,0,.4);
+  }
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(10,11,18,.72);display:flex;align-items:center;justify-content:center;z-index:30;padding:16px;}
+  .modal{background:var(--paper);color:var(--ink);width:100%;max-width:440px;border-radius:14px;padding:22px;max-height:88vh;overflow-y:auto;}
+  .modal h2{font-family:'Archivo Narrow',sans-serif;font-size:20px;letter-spacing:.02em;margin:0 0 14px;text-transform:uppercase;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#5c5847;margin-bottom:5px;}
+  .field input[type=text],.field input[type=time],.field input[type=number],.field select{
+    width:100%;padding:10px 11px;border-radius:7px;border:1px solid #c9c2ab;background:#fff;
+    font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);
+  }
+  .row2{display:flex;gap:10px;}
+  .row2 > *{flex:1;}
+  .checkline{display:flex;align-items:center;gap:9px;margin:6px 0 14px;}
+  .checkline input{width:18px;height:18px;}
+  .checkline label{font-size:13.5px;font-weight:600;}
+  .modal-actions{display:flex;justify-content:space-between;align-items:center;margin-top:18px;}
+  .btn{
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+    border:none;border-radius:8px;padding:11px 18px;font-size:13.5px;cursor:pointer;
+  }
+  .btn.primary{background:var(--ink);color:var(--paper);}
+  .btn.ghost{background:transparent;color:#8a5a3a;border:1px solid #8a5a3a;}
+  .btn.danger{background:transparent;color:#a5323a;font-size:12px;padding:8px 12px;}
+
+  /* KID VIEW */
+  .kid-select{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .kid-select button{
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;text-transform:uppercase;
+    border:2px solid var(--line);background:var(--ink-2);color:var(--text-dim);padding:12px 20px;border-radius:10px;cursor:pointer;
+  }
+  .kid-select button.active{color:var(--ink);}
+  .kid-big{background:var(--paper);color:var(--ink);border-radius:16px;padding:26px;}
+  .kid-big h2{font-family:'Archivo Narrow',sans-serif;font-size:26px;letter-spacing:.02em;margin:0 0 4px;text-transform:uppercase;}
+  .kid-big .kd{font-family:'IBM Plex Mono',monospace;color:#6b6650;margin-bottom:20px;}
+  .kid-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed #cfc7ac;align-items:flex-start;}
+  .kid-item:last-child{border-bottom:none;}
+  .kid-time{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;min-width:100px;color:#5c5847;}
+  .kid-title{font-weight:700;font-size:20px;}
+  .kid-loc{color:#6b6650;font-size:14px;margin-top:2px;}
+  .kid-empty{padding:30px 0;text-align:center;color:#8a8468;font-size:15px;}
+
+  /* CHORES */
+  .chore-group{background:var(--paper);color:var(--ink);border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+  .chore-group-head{display:flex;align-items:center;gap:9px;margin-bottom:12px;}
+  .chore-group-head .swatch{width:12px;height:12px;border-radius:50%;flex:none;}
+  .chore-group-head .name{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.02em;}
+  .chore-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .chore-row:last-child{border-bottom:none;}
+  .chore-info{flex:1;cursor:pointer;}
+  .chore-title{font-weight:700;font-size:14.5px;}
+  .chore-freq{font-size:11px;color:#8a8468;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .chore-done-badge{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#3d7a4f;background:#dcecdf;border-radius:20px;padding:6px 12px;cursor:pointer;white-space:nowrap;}
+  .chore-pending-btn{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:.03em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:none;border-radius:20px;padding:9px 16px;cursor:pointer;white-space:nowrap;}
+  .chore-locked-btn{font-size:11.5px;color:#8a8468;white-space:nowrap;}
+  .chore-empty-day{text-align:center;color:var(--text-dim);padding:40px 0;font-size:14px;}
+  .days-picker{display:flex;gap:6px;flex-wrap:wrap;}
+  .days-picker label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#5c5847;cursor:pointer;}
+  .days-picker input{width:16px;height:16px;}
+  .copybar{margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .copied{font-size:12.5px;color:#3d7a4f;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  .hint{font-size:12.5px;color:var(--text-dim);margin-top:10px;line-height:1.5;}
+
+  /* SETTINGS */
+  .settings-card{background:var(--paper);color:var(--ink);border-radius:14px;padding:20px;max-width:560px;margin-bottom:18px;}
+  .settings-card h3{font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;margin:0 0 12px;}
+  .member-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .member-contact-row{display:flex;gap:8px;margin:0 0 14px 44px;}
+  .member-contact-row input{flex:1;padding:7px 9px;border-radius:6px;border:1px solid #c9c2ab;font-size:12.5px;color:#5c5847;}
+  .member-row input[type=color]{width:34px;height:34px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;}
+  .member-row input[type=text]{flex:1;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;font-size:14px;}
+  .member-row select{padding:9px 8px;border-radius:7px;border:1px solid #c9c2ab;font-size:13px;}
+  .chore-lib-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chore-lib-chip{display:inline-flex;align-items:center;gap:6px;background:#e3dcc6;border-radius:16px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:600;color:#4a4636;}
+  .chore-lib-chip button{background:none;border:none;color:#a5323a;cursor:pointer;font-size:13px;padding:2px;line-height:1;}
+  .member-row button{background:none;border:none;color:#a5323a;cursor:pointer;font-size:18px;padding:4px;}
+  .add-member{display:flex;gap:8px;margin-top:10px;}
+  .add-member input{flex:1;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  @media(max-width:640px){
+    .brand .flap{font-size:22px;}
+    .col{min-width:130px;}
+  }
+</style>
+</head>
+<body>
+<div id="root" class="app"></div>
+
+<script>
+// ==============================================================================
+// AZURE DEPLOYMENT: fill this in once you've deployed the API (see azure-backend/
+// README.md). Leave it empty ('') to keep using local-only storage as today.
+// Example once deployed: 'https://your-app-name.azurestaticapps.net'
+// ==============================================================================
+const AZURE_API_BASE = '';
+
+// ---- portable storage layer -------------------------------------------------
+// Three modes, auto-detected in this order so the same file keeps working
+// everywhere without code changes:
+//  1) Inside a Claude artifact: window.storage exists -> use it (per-Claude-account storage).
+//  2) AZURE_API_BASE is set above: -> calls the deployed Azure Function, which
+//     reads/writes Cosmos DB. This is the one that gives true multi-device sync —
+//     the tablet and a kid's laptop both hit the same cloud data.
+//  3) Neither of the above: falls back to the browser's own localStorage.
+//     IMPORTANT LIMITATION: localStorage does NOT sync across devices/browsers —
+//     each device keeps its own separate copy. Fine for a single shared tablet,
+//     not for "every family member's device shows the same live schedule."
+//
+// All three modes are needed by whatever calls storageGet/storageSet — they never
+// need to know which mode is active.
+const hasClaudeStorage = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
+const hasAzureApi = !hasClaudeStorage && !!AZURE_API_BASE;
+const STORAGE_MODE = hasClaudeStorage ? 'claude' : (hasAzureApi ? 'azure' : 'local');
+
+const LOCAL_FAMILY_ID_KEY = 'trackline-family-id'; // small pointer kept locally even in azure mode, so this browser knows which family record to fetch
+
+async function storageGet(key){
+  if(hasClaudeStorage){
+    try{ return await window.storage.get(key); } catch(e){ return null; }
+  }
+  if(hasAzureApi && key==='trackline-data'){
+    try{
+      const familyId = window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
+      if(!familyId) return null; // no family linked to this browser yet -> onboarding will show
+      const res = await fetch(`${AZURE_API_BASE}/api/family-data?familyId=${encodeURIComponent(familyId)}`);
+      if(!res.ok) return null;
+      const data = await res.json();
+      return data ? {key, value: JSON.stringify(data)} : null;
+    } catch(e){ console.error('Azure fetch failed, check network/deployment', e); return null; }
+  }
+  try{
+    const v = window.localStorage.getItem(key);
+    return v!==null ? {key, value:v} : null;
+  } catch(e){ return null; }
+}
+async function storageSet(key, value){
+  if(hasClaudeStorage){
+    try{ return await window.storage.set(key, value); } catch(e){ return null; }
+  }
+  if(hasAzureApi && key==='trackline-data'){
+    try{
+      const parsed = JSON.parse(value);
+      const familyId = (parsed.family && parsed.family.id) || window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
+      if(!familyId) return null;
+      window.localStorage.setItem(LOCAL_FAMILY_ID_KEY, familyId);
+      const res = await fetch(`${AZURE_API_BASE}/api/family-data`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({familyId, data: parsed})
+      });
+      if(!res.ok) return null;
+      return {key, value};
+    } catch(e){ console.error('Azure save failed, check network/deployment', e); return null; }
+  }
+  try{
+    window.localStorage.setItem(key, value);
+    return {key, value};
+  } catch(e){ return null; }
+}
+
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const DAY_START = 6*60;      // 6:00am
+const DAY_END = 21*60+30;    // 9:30pm
+const RANGE = DAY_END - DAY_START;
+const PX_PER_MIN = 1.15;
+
+const DEFAULT_MEMBERS = [
+  {id:'dad',  name:'Dad',   role:'parent', color:'#4C8577', pinHash:null, email:'', phone:''},
+  {id:'mom',  name:'Mom',   role:'parent', color:'#C1555F', pinHash:null, email:'', phone:''},
+  {id:'kid1', name:'Kid 1', role:'kid',    color:'#CE8A2E', pinHash:null, email:'', phone:''},
+  {id:'kid2', name:'Kid 2', role:'kid',    color:'#5C6BA0', pinHash:null, email:'', phone:''},
+];
+
+function simpleHash(str){
+  // Basic non-cryptographic hash — this is a lightweight device PIN lock for a shared
+  // family tablet, not encryption-grade security. Good enough to stop casual tampering.
+  let h = 5381;
+  for(let i=0;i<str.length;i++){ h = ((h*33) ^ str.charCodeAt(i)) >>> 0; }
+  return h.toString(16);
+}
+
+function cid(){ return 'e' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+function pad2(n){ return n<10 ? '0'+n : ''+n; }
+function minToLabel(m){
+  let h = Math.floor(m/60), mm = m%60;
+  const ap = h>=12?'PM':'AM';
+  let h12 = h%12; if(h12===0) h12=12;
+  return h12+':'+pad2(mm)+' '+ap;
+}
+function minToShort(m){
+  let h = Math.floor(m/60), mm = m%60;
+  return pad2(h)+':'+pad2(mm);
+}
+function timeInputToMin(v){ // "HH:MM"
+  if(!v) return null;
+  const [h,m] = v.split(':').map(Number);
+  return h*60+m;
+}
+function minToTimeInput(m){
+  return pad2(Math.floor(m/60))+':'+pad2(m%60);
+}
+
+// ---- date helpers (all dates handled as local, ISO 'YYYY-MM-DD' strings) ----
+function toISODate(d){
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+}
+function fromISODate(s){
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function addDays(dateOrISO, n){
+  const d = typeof dateOrISO === 'string' ? fromISODate(dateOrISO) : new Date(dateOrISO);
+  d.setDate(d.getDate()+n);
+  return d;
+}
+function mondayOf(dateOrISO){
+  const d = typeof dateOrISO === 'string' ? fromISODate(dateOrISO) : new Date(dateOrISO);
+  const jsDow = d.getDay(); // 0=Sun
+  const offset = jsDow===0 ? -6 : 1-jsDow;
+  return addDays(d, offset);
+}
+function dowMonIndexed(dateOrISO){
+  const d = typeof dateOrISO === 'string' ? fromISODate(dateOrISO) : new Date(dateOrISO);
+  const j = d.getDay();
+  return j===0 ? 6 : j-1;
+}
+function todayISO(){ return toISODate(new Date()); }
+function formatDateNice(iso){
+  const d = fromISODate(iso);
+  return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
+}
+
+const DEFAULT_EVENTS = [
+  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:0, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:1, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:2, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:3, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:4, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:0, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:1, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:2, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:3, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:4, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
+  {id:cid(), memberId:'kid1', title:'Swimming', recurrence:'weekly', day:2, date:null, skipDates:[], start:1080, end:1110, location:'Local pool', needsDrive:true, driverId:'dad', travelMin:30},
+  {id:cid(), memberId:'kid2', title:'Tuition', recurrence:'weekly', day:1, date:null, skipDates:[], start:1110, end:1200, location:'', needsDrive:false, driverId:null, travelMin:15},
+];
+
+const DEFAULT_CHORES = [
+  {id:cid(), title:'Water the plants',    memberId:'kid1', frequency:'daily',  days:[], dayOfMonth:null, active:true},
+  {id:cid(), title:'Unload dishwasher',   memberId:'kid2', frequency:'daily',  days:[], dayOfMonth:null, active:true},
+  {id:cid(), title:'Fold clothes',        memberId:'kid1', frequency:'weekly', days:[5], dayOfMonth:null, active:true}, // Sat
+  {id:cid(), title:'English homework',    memberId:'kid2', frequency:'weekly', days:[0,1,2,3,4], dayOfMonth:null, active:true}, // weekdays
+  {id:cid(), title:'Math homework',       memberId:'kid1', frequency:'weekly', days:[0,1,2,3,4], dayOfMonth:null, active:true}, // weekdays
+  {id:cid(), title:'Deep clean bedroom',  memberId:'kid2', frequency:'monthly', days:[], dayOfMonth:1, active:true},
+];
+
+const DEFAULT_CHORE_LIBRARY = [
+  'Unload dishwasher', 'Load dishwasher', 'Water the plants', 'Fold clothes', 'Put laundry away',
+  'Make bed', 'Take out bins', 'Vacuum room', 'Tidy shoes', 'English homework', 'Math homework',
+  'Reading practice', 'Feed pet', 'Deep clean bedroom', 'Wipe kitchen counters'
+];
+
+let kidPlainText = '';
+let state = {
+  family: null,   // {id, name, primaryHolderName, primaryHolderEmail, primaryHolderPhone} — null until set up
+  members: [],
+  events: [],
+  chores: [],        // recurring definitions: {id,title,memberId,frequency,days,dayOfMonth,active}
+  choreLogs: [],     // completion records: {id,choreId,date,completedAt,loggedBy,timestamp}
+  choreLibrary: [],  // reusable catalog of chore names, parent-managed, grows as new titles are used
+};
+let ui = {
+  tab: 'board',
+  weekStart: toISODate(mondayOf(todayISO())),
+  selectedOffset: dowMonIndexed(todayISO()),
+  modalOpen: false,
+  editingId: null,
+  editingOccurrenceDate: null,
+  formPrefill: null,
+  kidId: null,
+  copiedFlash: false,
+  loaded: false,
+  profileId: null,
+  authenticated: false,
+  profileMenuOpen: false,
+  loginOpen: false,
+  loginMemberId: null,
+  loginMode: 'enter', // 'enter' | 'create'
+  loginError: null,
+  onboardingError: null,
+  choreModalOpen: false,
+  editingChoreId: null,
+  choreFormPrefill: null,
+  completeModalOpen: false,
+  completingChoreId: null,
+  completingDate: null,
+  priorFamilySnapshot: null,
+};
+
+function selectedDateISO(){
+  return toISODate(addDays(ui.weekStart, ui.selectedOffset));
+}
+
+function isLoggedIn(){ return ui.authenticated && !!ui.profileId; }
+function currentMember(){ return ui.profileId ? memberById(ui.profileId) : null; }
+function isParentLoggedIn(){ const m = currentMember(); return isLoggedIn() && m && m.role==='parent'; }
+
+async function loadData(){
+  try{
+    const r = await storageGet('trackline-data');
+    if(r && r.value){
+      const parsed = JSON.parse(r.value);
+      if(parsed.members && parsed.events){
+        // migrate old events (no recurrence field) to weekly recurrence
+        parsed.events.forEach(e=>{
+          if(!e.recurrence) e.recurrence = 'weekly';
+          if(!('date' in e)) e.date = null;
+          if(!e.skipDates) e.skipDates = [];
+        });
+        parsed.members.forEach(m=>{
+          if(!('pinHash' in m)) m.pinHash = null;
+          if(!('email' in m)) m.email = '';
+          if(!('phone' in m)) m.phone = '';
+        });
+        // anyone with data saved before family setup existed gets a default family wrapper
+        // so they aren't unexpectedly dropped back into onboarding
+        if(!parsed.family){
+          parsed.family = {id:cid(), name:'My Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''};
+        }
+        if(!parsed.chores) parsed.chores = [];
+        parsed.chores.forEach(c=>{ if(!('anchorDate' in c)) c.anchorDate = null; });
+        if(!parsed.choreLogs) parsed.choreLogs = [];
+        if(!parsed.choreLibrary){
+          const fromExisting = [...new Set(parsed.chores.map(c=>c.title))];
+          parsed.choreLibrary = fromExisting.length ? fromExisting : [];
+        }
+        state = parsed;
+      }
+    }
+  }catch(e){ /* no saved data yet — fresh install, onboarding will show */ }
+  ui.loaded = true;
+  if(!ui.kidId){
+    const firstKid = state.members.find(m=>m.role==='kid');
+    ui.kidId = firstKid ? firstKid.id : null;
+  }
+  render();
+}
+async function saveData(){
+  try{ await storageSet('trackline-data', JSON.stringify(state)); }
+  catch(e){ console.error('save failed', e); }
+}
+
+function memberById(id){ return state.members.find(m=>m.id===id); }
+
+function eventsForDate(dateISO){
+  const dow = dowMonIndexed(dateISO);
+  const weekly = state.events.filter(e=> e.recurrence==='weekly' && e.day===dow && !(e.skipDates||[]).includes(dateISO));
+  const once = state.events.filter(e=> e.recurrence==='once' && e.date===dateISO);
+  return weekly.concat(once);
+}
+function eventsForDateMember(dateISO, memberId){
+  return eventsForDate(dateISO).filter(e=>e.memberId===memberId);
+}
+function transitBlocksForDateDriver(dateISO, driverId){
+  const blocks = [];
+  eventsForDate(dateISO).filter(e=>e.needsDrive && e.driverId===driverId).forEach(e=>{
+    const t = e.travelMin||0;
+    if(t>0){
+      blocks.push({kind:'transit', label:'Drive: '+e.title+' (there)', start:e.start-t, end:e.start, sourceId:e.id});
+      blocks.push({kind:'transit', label:'Drive: '+e.title+' (back)', start:e.end, end:e.end+t, sourceId:e.id});
+    }
+  });
+  return blocks;
+}
+
+// ---- chores (recurring checklist items, separate from time-blocked activities) ----
+function choreDue(chore, dateISO){
+  if(!chore.active) return false;
+  if(chore.frequency==='daily') return true;
+  if(chore.frequency==='weekly') return (chore.days||[]).includes(dowMonIndexed(dateISO));
+  if(chore.frequency==='fortnightly'){
+    if(!(chore.days||[]).includes(dowMonIndexed(dateISO))) return false;
+    const anchorMonday = mondayOf(chore.anchorDate || dateISO);
+    const thisMonday = mondayOf(dateISO);
+    const weeksDiff = Math.round((thisMonday.getTime() - anchorMonday.getTime()) / (7*24*60*60*1000));
+    return ((weeksDiff % 2) + 2) % 2 === 0; // works for negative diffs too
+  }
+  if(chore.frequency==='monthly'){
+    const d = fromISODate(dateISO);
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    const targetDay = Math.min(chore.dayOfMonth||1, daysInMonth);
+    return d.getDate() === targetDay;
+  }
+  return false;
+}
+function choresForDate(dateISO){
+  return state.chores.filter(c=> choreDue(c, dateISO));
+}
+function choresForDateMember(dateISO, memberId){
+  return choresForDate(dateISO).filter(c=>c.memberId===memberId);
+}
+function choreLogFor(choreId, dateISO){
+  return state.choreLogs.find(l=>l.choreId===choreId && l.date===dateISO) || null;
+}
+function canMarkChoreDone(chore){
+  if(!isLoggedIn()) return false;
+  return isParentLoggedIn() || currentMember().id === chore.memberId;
+}
+function frequencyLabel(chore){
+  if(chore.frequency==='daily') return 'Daily';
+  if(chore.frequency==='monthly') return 'Monthly (day '+(chore.dayOfMonth||1)+')';
+  if(chore.frequency==='weekly'){
+    if(!chore.days || chore.days.length===0) return 'Weekly';
+    return chore.days.slice().sort().map(d=>DAYS[d]).join('/');
+  }
+  if(chore.frequency==='fortnightly'){
+    const dayPart = (!chore.days || chore.days.length===0) ? '' : ' ('+chore.days.slice().sort().map(d=>DAYS[d]).join('/')+')';
+    return 'Fortnightly'+dayPart;
+  }
+  return '';
+}
+
+function clampRange(s,e){
+  return [Math.max(s,DAY_START), Math.min(e,DAY_END)];
+}
+
+function renderTimeAxis(){
+  let ticks = '';
+  for(let m=DAY_START; m<=DAY_END; m+=60){
+    const top = (m-DAY_START)*PX_PER_MIN;
+    ticks += `<div class="tick" style="top:${top}px">${minToLabel(m).replace(':00','')}</div>`;
+  }
+  return `<div class="time-axis" style="height:${RANGE*PX_PER_MIN}px">${ticks}</div>`;
+}
+
+function renderGridlines(){
+  let lines = '';
+  for(let m=DAY_START; m<=DAY_END; m+=30){
+    const top=(m-DAY_START)*PX_PER_MIN;
+    const isHour = m%60===0;
+    lines += `<div class="gridline ${isHour?'hour':''}" style="top:${top}px"></div>`;
+  }
+  return lines;
+}
+
+function renderNowLine(dateISO){
+  if(dateISO !== todayISO()) return '';
+  const now = new Date();
+  const mins = now.getHours()*60+now.getMinutes();
+  if(mins<DAY_START || mins>DAY_END) return '';
+  const top=(mins-DAY_START)*PX_PER_MIN;
+  return `<div class="nowline" style="top:${top}px"></div>`;
+}
+
+function renderWeekNav(){
+  const wkEnd = addDays(ui.weekStart,6);
+  const label = formatDateNice(ui.weekStart) + ' – ' + formatDateNice(toISODate(wkEnd));
+  return `<div class="week-nav">
+    <button class="arrow" onclick="shiftWeek(-1)">‹</button>
+    <span class="label">${label}</span>
+    <button class="arrow" onclick="shiftWeek(1)">›</button>
+    <button class="today-btn" onclick="goToday()">Today</button>
+  </div>`;
+}
+
+function renderDayRow(){
+  const pills = DAYS.map((d,i)=>{
+    const dateISO = toISODate(addDays(ui.weekStart,i));
+    const cls = ['day-pill'];
+    if(i===ui.selectedOffset) cls.push('active');
+    if(dateISO===todayISO()) cls.push('today');
+    return `<div class="${cls.join(' ')}" onclick="setDay(${i})">
+      <span class="dname">${d}</span>
+      <span class="dnum">${formatDateNice(dateISO)}</span>
+    </div>`;
+  }).join('');
+  return `<div class="day-row">${pills}</div>`;
+}
+
+function layoutItems(items){
+  // items: [{start,end,...}] -> assigns _col (0-based lane) and _cols (total lanes needed)
+  // classic calendar-style greedy column packing, plus a real overlap flag per item
+  const sorted = items.slice().sort((a,b)=> a.start-b.start || a.end-b.end);
+  const colEndTimes = [];
+  sorted.forEach(it=>{
+    let placed = -1;
+    for(let i=0;i<colEndTimes.length;i++){
+      if(colEndTimes[i] <= it.start){ placed = i; break; }
+    }
+    if(placed === -1){ placed = colEndTimes.length; colEndTimes.push(it.end); }
+    else { colEndTimes[placed] = it.end; }
+    it._col = placed;
+  });
+  const totalCols = colEndTimes.length;
+  sorted.forEach(it=>{
+    it._cols = totalCols;
+    it._conflict = items.some(o => o!==it && o.start < it.end && it.start < o.end);
+  });
+  return sorted;
+}
+
+function renderBoard(){
+  const dateISO = selectedDateISO();
+
+  const cols = state.members.map(m=>{
+    const realItems = eventsForDateMember(dateISO, m.id).map(e=>({
+      kind:'event', id:e.id, title:e.title, start:e.start, end:e.end,
+      location:e.location, recurrence:e.recurrence, color:e.color||m.color
+    }));
+    const transitItems = transitBlocksForDateDriver(dateISO, m.id).map(t=>({
+      kind:'transit', id:t.sourceId+'_'+t.start, sourceId:t.sourceId, label:t.label, start:t.start, end:t.end
+    }));
+    const laidOut = layoutItems(realItems.concat(transitItems));
+
+    const blocks = laidOut.map(it=>{
+      const [s,en] = clampRange(it.start,it.end);
+      if(en<=s) return '';
+      const top=(s-DAY_START)*PX_PER_MIN;
+      const h=Math.max((en-s)*PX_PER_MIN, it.kind==='transit'?18:22);
+      const widthPct = 100/it._cols;
+      const leftPct = it._col*widthPct;
+      const gutter = it._cols>1 ? 3 : 4;
+      const posStyle = `top:${top}px;height:${h}px;left:calc(${leftPct}% + ${gutter}px);width:calc(${widthPct}% - ${gutter*2}px);`;
+
+      if(it.kind==='transit'){
+        const cls = it._conflict ? 'block transit conflict' : 'block transit';
+        return `<div class="${cls}" style="${posStyle}" onclick="openEdit('${it.sourceId}','${dateISO}')">
+          <div class="t">${it._conflict?'⚠ ':''}🚗 ${escapeHtml(it.label)}</div>
+          <div class="m">${minToShort(it.start)}–${minToShort(it.end)}</div>
+        </div>`;
+      }
+      const badge = it.recurrence==='weekly' ? '' : ' <span style="opacity:.7">·once</span>';
+      const cls = it._conflict ? 'block conflict' : 'block';
+      const bg = `background:${it.color};`;
+      return `<div class="${cls}" style="${posStyle}${bg}" onclick="openEdit('${it.id}','${dateISO}')">
+        <div class="t">${it._conflict?'⚠ ':''}${escapeHtml(it.title)}${badge}</div>
+        <div class="m">${minToShort(it.start)}–${minToShort(it.end)}${it.location? ' · '+escapeHtml(it.location):''}</div>
+      </div>`;
+    }).join('');
+
+    const isMe = m.id===ui.profileId;
+    return `<div class="col">
+      <div class="col-head" style="${isMe?'background:'+m.color+'22;':''}"><span class="swatch" style="background:${m.color}"></span><span class="name">${escapeHtml(m.name)}${isMe?' <span style="opacity:.6">· you</span>':''}</span></div>
+      <div class="col-body" style="height:${RANGE*PX_PER_MIN}px" data-member="${m.id}" onclick="colClick(event,'${m.id}')">
+        ${renderGridlines()}
+        ${renderNowLine(dateISO)}
+        ${blocks}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    ${renderWeekNav()}
+    ${renderDayRow()}
+    <div class="board-wrap">
+      ${renderTimeAxis()}
+      <div class="columns">${cols}</div>
+    </div>
+    <button class="fab" onclick="openAdd(null)">+ Add activity</button>
+  `;
+}
+
+function renderChores(){
+  const dateISO = selectedDateISO();
+  const loggedInId = ui.profileId;
+
+  const groups = state.members.map(m=>{
+    const due = choresForDateMember(dateISO, m.id);
+    if(due.length===0) return '';
+    const rows = due.map(c=>{
+      const log = choreLogFor(c.id, dateISO);
+      const canAct = canMarkChoreDone(c);
+      let action;
+      if(log){
+        action = canAct
+          ? `<div class="chore-done-badge" onclick="undoChoreDone('${c.id}','${dateISO}')">✓ Done at ${escapeHtml(log.completedAt)}</div>`
+          : `<div class="chore-done-badge" style="cursor:default;">✓ Done at ${escapeHtml(log.completedAt)}</div>`;
+      } else {
+        action = canAct
+          ? `<button class="chore-pending-btn" onclick="openCompleteChore('${c.id}')">Mark done</button>`
+          : `<span class="chore-locked-btn">${isLoggedIn()? 'Not yours':'Log in'}</span>`;
+      }
+      return `<div class="chore-row">
+        <div class="chore-info" onclick="openChoreEdit('${c.id}')">
+          <div class="chore-title">${escapeHtml(c.title)}</div>
+          <div class="chore-freq">${frequencyLabel(c)}</div>
+        </div>
+        ${action}
+      </div>`;
+    }).join('');
+
+    return `<div class="chore-group">
+      <div class="chore-group-head"><span class="swatch" style="background:${m.color}"></span><span class="name">${escapeHtml(m.name)}</span></div>
+      ${rows}
+    </div>`;
+  }).join('');
+
+  const anyDue = state.members.some(m=>choresForDateMember(dateISO,m.id).length>0);
+
+  return `
+    ${renderWeekNav()}
+    ${renderDayRow()}
+    ${anyDue ? groups : `<div class="chore-empty-day">No chores due on ${formatDateNice(dateISO)}.</div>`}
+    <button class="fab" onclick="openChoreAdd()">+ Add chore</button>
+  `;
+}
+
+function renderParentView(){
+  const dateISO = selectedDateISO();
+
+  // combine every family member's activities + every driver's transit blocks into one sorted timeline
+  const combined = [];
+  eventsForDate(dateISO).forEach(e=>{
+    const owner = memberById(e.memberId);
+    if(!owner) return;
+    combined.push({
+      kind:'event', start:e.start, end:e.end, title:e.title, location:e.location,
+      color: e.color || owner.color, ownerName: owner.name
+    });
+  });
+  state.members.forEach(m=>{
+    transitBlocksForDateDriver(dateISO, m.id).forEach(t=>{
+      combined.push({
+        kind:'transit', start:t.start, end:t.end, title:t.label,
+        color: m.color, ownerName: m.name+' driving'
+      });
+    });
+  });
+  combined.sort((a,b)=>a.start-b.start);
+
+  const timelineHtml = combined.length===0
+    ? `<div class="kid-empty">Nothing scheduled for ${formatDateNice(dateISO)}. Free day 🎉</div>`
+    : combined.map(item=>`
+      <div class="kid-item">
+        <div class="kid-time">${minToShort(item.start)}–${minToShort(item.end)}</div>
+        <div>
+          <div class="kid-title" style="display:flex;align-items:center;gap:8px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:${item.color};display:inline-block;flex:none;"></span>
+            ${item.kind==='transit'?'🚗 ':''}${escapeHtml(item.title)}
+          </div>
+          <div class="kid-loc">${escapeHtml(item.ownerName)}${item.location? ' · '+escapeHtml(item.location):''}</div>
+        </div>
+      </div>`).join('');
+
+  // chore status across every kid, for a quick who's-done-what check
+  const kids = state.members.filter(m=>m.role==='kid');
+  const choreGroups = kids.map(k=>{
+    const due = choresForDateMember(dateISO, k.id);
+    if(due.length===0) return '';
+    const rows = due.map(c=>{
+      const log = choreLogFor(c.id, dateISO);
+      const status = log
+        ? `<div class="chore-done-badge" style="cursor:default;">✓ Done at ${escapeHtml(log.completedAt)}</div>`
+        : `<span class="chore-locked-btn" style="color:#c0393f;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.03em;">Pending</span>`;
+      return `<div class="chore-row">
+        <div class="chore-info">
+          <div class="chore-title">${escapeHtml(c.title)}</div>
+          <div class="chore-freq">${frequencyLabel(c)}</div>
+        </div>
+        ${status}
+      </div>`;
+    }).join('');
+    return `<div class="chore-group"><div class="chore-group-head"><span class="swatch" style="background:${k.color}"></span><span class="name">${escapeHtml(k.name)}</span></div>${rows}</div>`;
+  }).join('');
+  const anyChoresDue = kids.some(k=>choresForDateMember(dateISO,k.id).length>0);
+
+  return `
+    ${renderWeekNav()}
+    ${renderDayRow()}
+    <div class="kid-big" style="margin-bottom:22px;">
+      <h2>Everyone's day</h2>
+      <div class="kd">${formatDateNice(dateISO)}</div>
+      ${timelineHtml}
+    </div>
+    <h3 style="font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;color:var(--text-on-ink);margin:0 0 12px;">Kids' chores</h3>
+    ${anyChoresDue ? choreGroups : `<div class="chore-empty-day">No chores due on ${formatDateNice(dateISO)}.</div>`}
+  `;
+}
+
+function renderKidView(){
+  const kids = state.members.filter(m=>m.role==='kid');
+  const selectBtns = kids.map(k=>`<button class="kid-select-btn ${ui.kidId===k.id?'active':''}" style="border-color:${k.color};${ui.kidId===k.id?'background:'+k.color+';':''}" onclick="setKid('${k.id}')">${escapeHtml(k.name)}</button>`).join('');
+  const dateISO = selectedDateISO();
+  const kid = memberById(ui.kidId);
+  let items = '';
+  let plain = '';
+  if(kid){
+    const evs = eventsForDateMember(dateISO, kid.id).slice().sort((a,b)=>a.start-b.start);
+    if(evs.length===0){
+      items = `<div class="kid-empty">Nothing scheduled for ${formatDateNice(dateISO)}. Free day 🎉</div>`;
+      plain = kid.name + ' schedule — ' + formatDateNice(dateISO) + '\nNothing scheduled. Free day!';
+    } else {
+      items = evs.map(e=>`
+        <div class="kid-item">
+          <div class="kid-time">${minToShort(e.start)}–${minToShort(e.end)}</div>
+          <div>
+            <div class="kid-title">${escapeHtml(e.title)}</div>
+            ${e.location?`<div class="kid-loc">${escapeHtml(e.location)}</div>`:''}
+          </div>
+        </div>`).join('');
+      plain = kid.name + ' schedule — ' + formatDateNice(dateISO) + '\n' + evs.map(e=>`${minToShort(e.start)}–${minToShort(e.end)}  ${e.title}${e.location? ' ('+e.location+')':''}`).join('\n');
+    }
+  }
+  kidPlainText = plain;
+
+  return `
+    <div class="kid-select">${selectBtns}</div>
+    ${renderWeekNav()}
+    ${renderDayRow()}
+    <div class="kid-big">
+      <h2>${kid?escapeHtml(kid.name):'—'}'s day</h2>
+      <div class="kd">${formatDateNice(dateISO)}</div>
+      ${items}
+      <div class="copybar">
+        <button class="btn primary" onclick="copySchedule()">Copy schedule to send</button>
+        ${ui.copiedFlash? '<span class="copied">Copied ✓ — paste into an email or text</span>':''}
+      </div>
+      <div class="hint">This app can't send email directly — tap "copy" and paste the text into an email, text, or chat to the laptop. Or just bookmark this Kid View tab on the laptop and check it each morning.</div>
+    </div>
+  `;
+}
+
+function renderSettings(){
+  if(!isParentLoggedIn()){
+    return `
+      <div class="settings-card" style="text-align:center;">
+        <h3>🔒 Parent login required</h3>
+        <p style="font-size:13.5px;color:#5c5847;">Log in as a parent (top right) to manage family members, colors, and data.</p>
+      </div>`;
+  }
+
+  const fam = state.family || {name:'',primaryHolderName:'',primaryHolderEmail:'',primaryHolderPhone:''};
+
+  const memberRows = state.members.map(m=>`
+    <div class="member-row">
+      <input type="color" value="${m.color}" onchange="updateMember('${m.id}','color',this.value)">
+      <input type="text" value="${escapeHtml(m.name)}" onchange="updateMember('${m.id}','name',this.value)" placeholder="Name">
+      <select onchange="updateMember('${m.id}','role',this.value)">
+        <option value="parent" ${m.role==='parent'?'selected':''}>Parent</option>
+        <option value="kid" ${m.role==='kid'?'selected':''}>Kid</option>
+      </select>
+      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:11px;background:none;border:1px solid #c9c2ab;border-radius:6px;padding:6px 8px;cursor:pointer;color:#5c5847;">${m.pinHash?'Reset PIN':'No PIN'}</button>
+      <button onclick="removeMember('${m.id}')" title="Remove">✕</button>
+    </div>
+    <div class="member-contact-row">
+      <input type="email" value="${escapeHtml(m.email||'')}" onchange="updateMember('${m.id}','email',this.value)" placeholder="Email (for future notifications)">
+      <input type="tel" value="${escapeHtml(m.phone||'')}" onchange="updateMember('${m.id}','phone',this.value)" placeholder="Phone (for future SMS)">
+    </div>`).join('');
+
+  return `
+    <div class="settings-card">
+      <h3>Family</h3>
+      <div class="field">
+        <label>Family name</label>
+        <input type="text" value="${escapeHtml(fam.name)}" onchange="updateFamily('name',this.value)">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Primary holder email</label>
+          <input type="email" value="${escapeHtml(fam.primaryHolderEmail)}" onchange="updateFamily('primaryHolderEmail',this.value)">
+        </div>
+        <div class="field">
+          <label>Primary holder phone</label>
+          <input type="tel" value="${escapeHtml(fam.primaryHolderPhone||'')}" onchange="updateFamily('primaryHolderPhone',this.value)">
+        </div>
+      </div>
+      <p style="font-size:12px;color:#6b6650;margin:0;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
+    </div>
+    <div class="settings-card">
+      <h3>Family members</h3>
+      ${memberRows}
+      <div class="add-member">
+        <input type="text" id="newMemberName" placeholder="Add a person (e.g. Kid 3, Grandma)">
+        <button class="btn primary" onclick="addMember()">Add</button>
+      </div>
+      <p style="font-size:12px;color:#6b6650;margin-top:12px;">"Reset PIN" clears that person's PIN — they'll be asked to set a new one next time they log in.</p>
+    </div>
+    <div class="settings-card">
+      <h3>Chore list</h3>
+      <p style="font-size:13px;color:#5c5847;margin-top:0;">These names show up as suggestions when adding a chore, so nobody has to retype "Unload dishwasher" from scratch every time. New titles typed while adding a chore get added here automatically too.</p>
+      <div class="chore-lib-chips">
+        ${(state.choreLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved chore names yet.</span>' :
+          state.choreLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeChoreLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
+      </div>
+      <div class="add-member" style="margin-top:12px;">
+        <input type="text" id="newChoreLibItem" placeholder="Add a chore name to the list">
+        <button class="btn primary" onclick="addChoreLibraryItem()">Add</button>
+      </div>
+    </div>
+    <div class="settings-card">
+      <h3>Data</h3>
+      <p style="font-size:13px;color:#5c5847;margin-top:0;">Your schedule is saved automatically to this app. Use export/import to move data or keep a backup.</p>
+      <p style="font-size:12px;color:#6b6650;background:#e3dcc6;border-radius:7px;padding:8px 10px;">
+        Storage mode: <strong>${STORAGE_MODE==='claude'?'Claude account storage':STORAGE_MODE==='azure'?'Azure (synced across devices)':'This browser only (localStorage)'}</strong>${STORAGE_MODE==='local'?' — this device won\u2019t automatically see schedules saved on other devices.':''}${STORAGE_MODE==='azure'?' — this family\u2019s data lives in Cosmos DB, so any device pointed at the same deployment sees the same schedule.':''}
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn ghost" onclick="exportData()">Export data</button>
+        <button class="btn ghost" onclick="document.getElementById('importFile').click()">Import data</button>
+        <button class="btn danger" onclick="resetDefaults()">Reset to example data</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+  `;
+}
+
+function renderModal(){
+  if(!ui.modalOpen) return '';
+  const editing = ui.editingId ? state.events.find(e=>e.id===ui.editingId) : null;
+  const pre = ui.formPrefill || {};
+  const occurrenceDate = editing ? ui.editingOccurrenceDate : selectedDateISO();
+
+  const memberId = editing? editing.memberId : (pre.memberId || (state.members[0]&&state.members[0].id));
+  const recurrence = editing? editing.recurrence : 'once';
+  const day = editing? editing.day : dowMonIndexed(occurrenceDate);
+  const onceDate = editing? (editing.date || occurrenceDate) : occurrenceDate;
+  const start = editing? editing.start : (pre.start!=null? pre.start : 540);
+  const end = editing? editing.end : (start+30);
+  const title = editing? editing.title : '';
+  const location = editing? editing.location : '';
+  const needsDrive = editing? editing.needsDrive : false;
+  const driverId = editing? editing.driverId : (state.members.find(m=>m.role==='parent')||{}).id;
+  const travelMin = editing? editing.travelMin : 15;
+  const defaultMemberColor = (memberById(memberId)||{}).color || '#4C8577';
+  const color = editing? (editing.color || defaultMemberColor) : defaultMemberColor;
+
+  const memberOptions = state.members.map(m=>`<option value="${m.id}" ${m.id===memberId?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
+  const driverOptions = state.members.map(m=>`<option value="${m.id}" ${m.id===driverId?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
+  const dayOptions = DAYS.map((d,i)=>`<option value="${i}" ${i===day?'selected':''}>${d}</option>`).join('');
+
+  const isWeekly = recurrence==='weekly';
+  const canSkip = editing && editing.recurrence==='weekly';
+  const readOnly = !!(editing && !isParentLoggedIn());
+  const dis = readOnly ? 'disabled' : '';
+
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <h2>${editing? (readOnly?'Activity details':'Edit activity') : 'Add activity'}</h2>
+      ${readOnly? `<div class="skip-note">View only. ${isLoggedIn()? 'A parent needs to log in to change or delete this.' : 'Log in to make changes.'}</div>`:''}
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="f_title" value="${escapeHtml(title)}" placeholder="e.g. Swimming, Tuition, Dentist" ${dis}>
+      </div>
+      <div class="field">
+        <label>Whose activity</label>
+        <select id="f_member" ${dis}>${memberOptions}</select>
+      </div>
+      <div class="field">
+        <label>Activity color</label>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="color" id="f_color" value="${color}" style="width:44px;height:38px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;" ${dis}>
+          ${readOnly?'':`<button type="button" class="btn ghost" style="padding:8px 12px;font-size:11.5px;" onclick="resetColorToMember()">Use member's color</button>`}
+        </div>
+      </div>
+
+      <div id="onceFields" style="${isWeekly?'display:none':''}">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="f_date" value="${onceDate}" ${dis}>
+        </div>
+      </div>
+      <div class="checkline">
+        <input type="checkbox" id="f_recurWeekly" ${isWeekly?'checked':''} onchange="toggleRecurFields(this.checked)" ${dis}>
+        <label for="f_recurWeekly">Repeats every week</label>
+      </div>
+      <div id="weeklyFields" style="${isWeekly?'':'display:none'}">
+        <div class="field">
+          <label>Day of week</label>
+          <select id="f_day" ${dis}>${dayOptions}</select>
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Start</label>
+          <input type="time" id="f_start" value="${minToTimeInput(start)}" onchange="onStartChange()" ${dis}>
+        </div>
+        <div class="field">
+          <label>End</label>
+          <input type="time" id="f_end" value="${minToTimeInput(end)}" ${dis}>
+        </div>
+      </div>
+      <div class="field">
+        <label>Location (optional)</label>
+        <input type="text" id="f_location" value="${escapeHtml(location)}" placeholder="e.g. Local pool" ${dis}>
+      </div>
+      <div class="checkline">
+        <input type="checkbox" id="f_needsDrive" ${needsDrive?'checked':''} onchange="toggleDriveFields(this.checked)" ${dis}>
+        <label for="f_needsDrive">Someone needs to drive / drop off &amp; pick up</label>
+      </div>
+      <div id="driveFields" style="${needsDrive?'':'display:none'}">
+        <div class="row2">
+          <div class="field">
+            <label>Driver</label>
+            <select id="f_driver" ${dis}>${driverOptions}</select>
+          </div>
+          <div class="field">
+            <label>Travel time (one way, min)</label>
+            <input type="number" id="f_travel" value="${travelMin}" min="0" step="5" ${dis}>
+          </div>
+        </div>
+        <p style="font-size:12px;color:#6b6650;margin:-6px 0 4px;">This blocks the driver's calendar before and after the activity automatically.</p>
+      </div>
+
+      ${(canSkip && !readOnly)? `<div class="skip-note">Recurring activity. To skip just ${formatDateNice(occurrenceDate)} (e.g. a holiday) without deleting the whole series, use "Skip this date" below.</div>`:''}
+
+      <div class="modal-actions">
+        ${readOnly ? `
+        <div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn primary" onclick="closeModal()">Close</button>
+        </div>` : `
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${editing? '<button class="btn danger" onclick="deleteEvent()">Delete series</button>':''}
+          ${canSkip? `<button class="btn danger" onclick="skipOccurrence()">Skip this date</button>`:''}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" onclick="saveEvent()">Save</button>
+        </div>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderChoreModal(){
+  if(!ui.choreModalOpen) return '';
+  const editing = ui.editingChoreId ? state.chores.find(c=>c.id===ui.editingChoreId) : null;
+  const pre = ui.choreFormPrefill || {};
+  const readOnly = !!(editing && !isParentLoggedIn());
+
+  const memberId = editing? editing.memberId : (pre.memberId || (state.members[0]&&state.members[0].id));
+  const title = editing? editing.title : '';
+  const frequency = editing? editing.frequency : 'daily';
+  const days = editing? (editing.days||[]) : [];
+  const dayOfMonth = editing? (editing.dayOfMonth||1) : 1;
+  const anchorDate = editing? (editing.anchorDate || selectedDateISO()) : selectedDateISO();
+
+  const memberOptions = state.members.map(m=>`<option value="${m.id}" ${m.id===memberId?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
+  const daysPicker = DAYS.map((d,i)=>`
+    <label>
+      <input type="checkbox" class="f_chore_day" value="${i}" ${days.includes(i)?'checked':''} ${readOnly?'disabled':''}>
+      ${d}
+    </label>`).join('');
+  const dis = readOnly ? 'disabled' : '';
+  const showDays = frequency==='weekly' || frequency==='fortnightly';
+
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeChoreModal()">
+    <div class="modal">
+      <h2>${editing? (readOnly?'Chore details':'Edit chore') : 'Add chore'}</h2>
+      ${readOnly? `<div class="skip-note">View only. ${isLoggedIn()? 'A parent needs to log in to change or delete this.' : 'Log in to make changes.'}</div>`:''}
+      <div class="field">
+        <label>What needs doing</label>
+        <input type="text" id="f_chore_title" value="${escapeHtml(title)}" placeholder="Start typing — pick from the list or add a new one" list="choreLibraryList" autocomplete="off" ${dis}>
+        <datalist id="choreLibraryList">
+          ${(state.choreLibrary||[]).map(t=>`<option value="${escapeHtml(t)}"></option>`).join('')}
+        </datalist>
+      </div>
+      <div class="field">
+        <label>Assigned to</label>
+        <select id="f_chore_member" ${dis}>${memberOptions}</select>
+      </div>
+      <div class="field">
+        <label>How often</label>
+        <select id="f_chore_frequency" ${dis} onchange="toggleChoreFreqFields(this.value)">
+          <option value="daily" ${frequency==='daily'?'selected':''}>Daily</option>
+          <option value="weekly" ${frequency==='weekly'?'selected':''}>Weekly (pick days)</option>
+          <option value="fortnightly" ${frequency==='fortnightly'?'selected':''}>Fortnightly (every 2 weeks)</option>
+          <option value="monthly" ${frequency==='monthly'?'selected':''}>Monthly (pick day of month)</option>
+        </select>
+      </div>
+      <div id="choreDaysFields" class="field" style="${showDays?'':'display:none'}">
+        <label>Which days</label>
+        <div class="days-picker">${daysPicker}</div>
+      </div>
+      <div id="choreFortnightAnchorField" class="field" style="${frequency==='fortnightly'?'':'display:none'}">
+        <label>Due on this week, or the next?</label>
+        <input type="date" id="f_chore_anchor" value="${anchorDate}" ${dis}>
+        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Pick any date in the week you want it due. It'll then repeat every 2 weeks from there.</p>
+      </div>
+      <div id="choreMonthlyFields" class="field" style="${frequency==='monthly'?'':'display:none'}">
+        <label>Day of month</label>
+        <input type="number" id="f_chore_dayOfMonth" value="${dayOfMonth}" min="1" max="31" ${dis}>
+      </div>
+
+      <div class="modal-actions">
+        ${readOnly ? `
+        <div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn primary" onclick="closeChoreModal()">Close</button>
+        </div>` : `
+        <div>${editing? '<button class="btn danger" onclick="deleteChore()">Delete</button>':''}</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn ghost" onclick="closeChoreModal()">Cancel</button>
+          <button class="btn primary" onclick="saveChore()">Save</button>
+        </div>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCompleteChoreModal(){
+  if(!ui.completeModalOpen) return '';
+  const chore = state.chores.find(c=>c.id===ui.completingChoreId);
+  if(!chore) return '';
+  const now = new Date();
+  const defaultTime = pad2(now.getHours())+':'+pad2(now.getMinutes());
+
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeCompleteModal()">
+    <div class="modal" style="max-width:340px;text-align:center;">
+      <h2 style="margin-bottom:4px;">Nice work!</h2>
+      <p style="font-size:13.5px;color:#5c5847;margin:0 0 18px;">What time did you finish "${escapeHtml(chore.title)}"?</p>
+      <input type="time" id="f_complete_time" value="${defaultTime}"
+        style="width:100%;text-align:center;font-size:22px;padding:12px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;">
+      <div style="display:flex;gap:8px;margin-top:18px;">
+        <button class="btn ghost" style="flex:1;" onclick="closeCompleteModal()">Cancel</button>
+        <button class="btn primary" style="flex:1;" onclick="submitCompleteChore()">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function initials(name){
+  return (name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+
+function renderProfileDropdown(){
+  const current = currentMember();
+  const btnLabel = isLoggedIn() ? escapeHtml(current.name) : 'Log in';
+  const avatarBg = isLoggedIn() ? current.color : '#555B7A';
+  const avatarText = isLoggedIn() ? initials(current.name) : '🔒';
+
+  const items = state.members.map(m=>`
+    <div class="profile-item ${m.id===ui.profileId?'current':''}" onclick="openLogin('${m.id}')">
+      <span class="dot" style="background:${m.color}"></span>
+      <span>${escapeHtml(m.name)}</span>
+      <span style="margin-left:auto;font-size:10px;opacity:.55;text-transform:uppercase;">${m.role}${m.pinHash?'':' · no pin yet'}</span>
+    </div>`).join('') || `<div class="profile-none">Add family members in Settings first.</div>`;
+
+  const menu = ui.profileMenuOpen ? `
+    <div class="profile-menu">
+      ${items}
+      ${isLoggedIn()? `<div class="profile-menu-footer" onclick="logout()">Log out</div>` : ''}
+    </div>` : '';
+
+  return `
+    <div class="profile-wrap">
+      <button class="profile-btn" onclick="toggleProfileMenu()">
+        <span class="profile-avatar" style="background:${avatarBg}">${avatarText}</span>
+        <span class="pname">${btnLabel}</span>
+        <span class="caret">${ui.profileMenuOpen?'▲':'▼'}</span>
+      </button>
+      ${menu}
+    </div>`;
+}
+
+function renderLoginModal(){
+  if(!ui.loginOpen) return '';
+  const m = memberById(ui.loginMemberId);
+  if(!m) return '';
+  const isCreate = ui.loginMode === 'create';
+
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeLogin()">
+    <div class="modal" style="max-width:340px;text-align:center;">
+      <span class="profile-avatar" style="background:${m.color};width:52px;height:52px;font-size:18px;margin:0 auto 12px;">${initials(m.name)}</span>
+      <h2 style="margin-bottom:4px;">${isCreate? 'Set a PIN':'Enter PIN'}</h2>
+      <p style="font-size:13px;color:#5c5847;margin:0 0 18px;">${isCreate? `Choose a 4-digit PIN for ${escapeHtml(m.name)}. You'll use this to log in from now on.` : `Logging in as ${escapeHtml(m.name)}`}</p>
+
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin_input"
+        placeholder="••••" autocomplete="off"
+        style="width:100%;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;">
+
+      ${isCreate? `
+      <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin_confirm"
+        placeholder="Confirm PIN" autocomplete="off"
+        style="width:100%;text-align:center;font-size:18px;letter-spacing:6px;padding:10px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;margin-top:10px;">
+      `:''}
+
+      ${ui.loginError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.loginError)}</div>`:''}
+
+      <div style="display:flex;gap:8px;margin-top:18px;">
+        <button class="btn ghost" style="flex:1;" onclick="closeLogin()">Cancel</button>
+        <button class="btn primary" style="flex:1;" onclick="submitLogin()">${isCreate?'Create PIN & log in':'Log in'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function submitLogin(){
+  const m = memberById(ui.loginMemberId);
+  if(!m) return;
+  const pin = (document.getElementById('pin_input').value||'').trim();
+
+  if(!/^\d{4}$/.test(pin)){
+    ui.loginError = 'PIN must be exactly 4 digits.';
+    render();
+    return;
+  }
+
+  if(ui.loginMode==='create'){
+    const confirm = (document.getElementById('pin_confirm').value||'').trim();
+    if(pin !== confirm){
+      ui.loginError = 'PINs don\u2019t match. Try again.';
+      render();
+      return;
+    }
+    m.pinHash = simpleHash(pin);
+    saveData();
+  } else {
+    if(simpleHash(pin) !== m.pinHash){
+      ui.loginError = 'Incorrect PIN.';
+      render();
+      return;
+    }
+  }
+
+  ui.profileId = m.id;
+  ui.authenticated = true;
+  ui.loginOpen = false;
+  ui.loginError = null;
+  if(m.role==='kid') ui.kidId = m.id;
+  render();
+}
+
+function renderOnboarding(){
+  const hasSnapshotToReturnTo = !!ui.priorFamilySnapshot;
+  return `
+  <div class="onboard-wrap">
+    <div class="onboard-card">
+      <div class="onboard-brand">
+        <div class="flap">Track<span>line</span></div>
+        <div class="sub">Family Departures</div>
+      </div>
+      <h2>Set up your family</h2>
+      <p class="lead">Create your own family space — your schedule, your people, your login.</p>
+
+      <div class="field">
+        <label>Family name</label>
+        <input type="text" id="ob_familyName" placeholder="e.g. The Sathish Family">
+      </div>
+      <div class="field">
+        <label>Your name (primary holder)</label>
+        <input type="text" id="ob_holderName" placeholder="e.g. Sathish">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Your email</label>
+          <input type="email" id="ob_holderEmail" placeholder="you@email.com">
+        </div>
+        <div class="field">
+          <label>Your phone (optional)</label>
+          <input type="tel" id="ob_holderPhone" placeholder="04xx xxx xxx">
+        </div>
+      </div>
+      ${ui.onboardingError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.onboardingError)}</div>`:''}
+      <button class="btn primary" style="width:100%;padding:13px;" onclick="submitOnboarding()">Create my family</button>
+
+      <div class="onboard-divider">or</div>
+      <button class="btn ghost" style="width:100%;padding:11px;" onclick="loadExampleData()">Just show me an example first</button>
+      ${hasSnapshotToReturnTo ? `<button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="cancelNewFamilySetup()">← Back to my existing family</button>` : ''}
+      <p style="font-size:11.5px;color:#8a8468;text-align:center;margin:14px 0 0;">Email/phone are stored so this is ready for notifications later — this app can't send real emails or texts yet.</p>
+    </div>
+  </div>`;
+}
+
+function submitOnboarding(){
+  const familyName = (document.getElementById('ob_familyName').value||'').trim();
+  const holderName = (document.getElementById('ob_holderName').value||'').trim();
+  const holderEmail = (document.getElementById('ob_holderEmail').value||'').trim();
+  const holderPhone = (document.getElementById('ob_holderPhone').value||'').trim();
+
+  if(!familyName || !holderName){
+    ui.onboardingError = 'Please enter a family name and your name.';
+    render();
+    return;
+  }
+
+  const palette = ['#4C8577','#C1555F','#CE8A2E','#5C6BA0','#7C6BA0','#4A9B8E','#B0703C'];
+  const holderId = cid();
+  state.family = {id:cid(), name:familyName, primaryHolderName:holderName, primaryHolderEmail:holderEmail, primaryHolderPhone:holderPhone};
+  state.members = [{id:holderId, name:holderName, role:'parent', color:palette[0], pinHash:null, email:holderEmail, phone:holderPhone}];
+  state.events = [];
+  state.chores = [];
+  state.choreLogs = [];
+  state.choreLibrary = [];
+  ui.onboardingError = null;
+  ui.priorFamilySnapshot = null; // committing to the new family now — old data (already safely saved) is left behind
+  saveData();
+  render();
+  openLogin(holderId); // immediately prompt them to set their PIN and log in
+}
+
+function loadExampleData(){
+  if(ui.priorFamilySnapshot){
+    if(!confirm('This replaces your current family\u2019s data on this device with example data. Continue?')) return;
+  }
+  state.family = {id:cid(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''};
+  state.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
+  state.events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
+  state.chores = JSON.parse(JSON.stringify(DEFAULT_CHORES));
+  state.choreLogs = [];
+  state.choreLibrary = JSON.parse(JSON.stringify(DEFAULT_CHORE_LIBRARY));
+  ui.onboardingError = null;
+  ui.priorFamilySnapshot = null;
+  saveData();
+  render();
+}
+
+function startNewFamilySetup(){
+  if(!confirm('Create a new family on this device? Your current family\u2019s data stays safely saved until you finish creating the new one — you can back out and return to it at any point before that.')) return;
+  ui.priorFamilySnapshot = JSON.parse(JSON.stringify(state));
+  state = {family:null, members:[], events:[], chores:[], choreLogs:[], choreLibrary:[]};
+  ui.onboardingError = null;
+  ui.profileMenuOpen = false;
+  render();
+}
+function cancelNewFamilySetup(){
+  if(!ui.priorFamilySnapshot) return;
+  state = ui.priorFamilySnapshot;
+  ui.priorFamilySnapshot = null;
+  ui.onboardingError = null;
+  render();
+}
+
+function renderDashboard(){
+  const fam = state.family;
+  const todayCount = eventsForDate(todayISO()).length;
+  const weekDates = Array.from({length:7}, (_,i)=> toISODate(addDays(ui.weekStart,i)));
+  const weekCount = weekDates.reduce((sum,d)=> sum + eventsForDate(d).length, 0);
+
+  return `
+  <div class="dash-wrap">
+    <h1>${escapeHtml(fam.name)}</h1>
+    <div class="dash-sub">Log in to see today's schedule and who's doing what.</div>
+    <div class="dash-stats">
+      <div class="dash-stat"><div class="num">${state.members.length}</div><div class="label">Family members</div></div>
+      <div class="dash-stat"><div class="num">${todayCount}</div><div class="label">Activities today</div></div>
+      <div class="dash-stat"><div class="num">${weekCount}</div><div class="label">This week</div></div>
+    </div>
+    <button class="dash-cta" onclick="toggleProfileMenu()">Log in</button>
+    <div style="margin-top:14px;">
+      <button class="btn ghost" style="background:transparent;border:1px solid var(--line);color:var(--text-dim);" onclick="startNewFamilySetup()">Create / register a new family</button>
+    </div>
+  </div>`;
+}
+
+function render(){
+  const root = document.getElementById('root');
+  if(!ui.loaded){
+    root.innerHTML = `<div style="padding:60px;text-align:center;color:#9AA0C0;font-family:'IBM Plex Mono',monospace;">Loading schedule…</div>`;
+    return;
+  }
+
+  if(!state.family){
+    root.innerHTML = renderOnboarding();
+    return;
+  }
+
+  if(!isLoggedIn()){
+    root.innerHTML = `
+      <header class="board">
+        <div class="brand">
+          <div class="flap">Track<span>line</span></div>
+          <div class="sub">Family Departures</div>
+        </div>
+        <div class="header-right">
+          ${renderProfileDropdown()}
+        </div>
+      </header>
+      <main>
+        ${renderDashboard()}
+      </main>
+      ${renderLoginModal()}
+    `;
+    return;
+  }
+
+  root.innerHTML = `
+    <header class="board">
+      <div class="brand">
+        <div class="flap">Track<span>line</span></div>
+        <div class="sub">Family Departures</div>
+      </div>
+      <div class="header-right">
+        <nav class="tabs">
+          <button class="${ui.tab==='board'?'active':''}" onclick="setTab('board')">Week Board</button>
+          <button class="${ui.tab==='parent'?'active':''}" onclick="setTab('parent')">Parent View</button>
+          <button class="${ui.tab==='chores'?'active':''}" onclick="setTab('chores')">Chores</button>
+          <button class="${ui.tab==='kid'?'active':''}" onclick="setTab('kid')">Kid View</button>
+          <button class="${ui.tab==='settings'?'active':''}" onclick="setTab('settings')">Settings</button>
+        </nav>
+        ${renderProfileDropdown()}
+      </div>
+    </header>
+    <main>
+      ${ui.tab==='board'? renderBoard() : ''}
+      ${ui.tab==='parent'? renderParentView() : ''}
+      ${ui.tab==='chores'? renderChores() : ''}
+      ${ui.tab==='kid'? renderKidView() : ''}
+      ${ui.tab==='settings'? renderSettings() : ''}
+    </main>
+    ${renderModal()}
+    ${renderChoreModal()}
+    ${renderCompleteChoreModal()}
+    ${renderLoginModal()}
+  `;
+  document.querySelectorAll('.kid-select-btn.active').forEach(b=>{ b.style.color = '#181C2A'; });
+}
+
+// ---- interactions ----
+function setTab(t){
+  ui.tab=t;
+  if(t==='kid' && ui.profileId){
+    const p = memberById(ui.profileId);
+    if(p && p.role==='kid') ui.kidId = p.id;
+  }
+  render();
+}
+function setDay(offset){ ui.selectedOffset=offset; render(); }
+function setKid(id){ ui.kidId=id; ui.copiedFlash=false; render(); }
+
+function toggleProfileMenu(){ ui.profileMenuOpen = !ui.profileMenuOpen; render(); }
+function openLogin(id){
+  const m = memberById(id);
+  if(!m) return;
+  ui.loginMemberId = id;
+  ui.loginMode = m.pinHash ? 'enter' : 'create';
+  ui.loginError = null;
+  ui.loginOpen = true;
+  ui.profileMenuOpen = false;
+  render();
+}
+function closeLogin(){
+  ui.loginOpen = false;
+  ui.loginMemberId = null;
+  ui.loginError = null;
+  render();
+}
+function logout(){
+  ui.profileId = null;
+  ui.authenticated = false;
+  ui.profileMenuOpen = false;
+  render();
+}
+
+function shiftWeek(dir){
+  ui.weekStart = toISODate(addDays(ui.weekStart, dir*7));
+  render();
+}
+function goToday(){
+  ui.weekStart = toISODate(mondayOf(todayISO()));
+  ui.selectedOffset = dowMonIndexed(todayISO());
+  render();
+}
+
+function colClick(evt, memberId){
+  if(evt.target.closest('.block')) return; // clicked an existing block, ignore
+  if(!requireAuth()) return;
+  const rect = evt.currentTarget.getBoundingClientRect();
+  const y = evt.clientY - rect.top;
+  let mins = DAY_START + Math.round((y/PX_PER_MIN)/15)*15;
+  mins = Math.max(DAY_START, Math.min(mins, DAY_END-30));
+  openAdd({memberId, start:mins});
+}
+
+function requireAuth(){
+  if(isLoggedIn()) return true;
+  ui.profileMenuOpen = true;
+  render();
+  return false;
+}
+
+function openAdd(prefill){
+  if(!requireAuth()) return;
+  ui.modalOpen = true;
+  ui.editingId = null;
+  ui.editingOccurrenceDate = null;
+  ui.formPrefill = prefill || {};
+  render();
+}
+function openEdit(id, occurrenceDate){
+  ui.modalOpen = true;
+  ui.editingId = id;
+  ui.editingOccurrenceDate = occurrenceDate || selectedDateISO();
+  ui.formPrefill = null;
+  render();
+}
+function closeModal(){
+  ui.modalOpen = false; ui.editingId = null; ui.editingOccurrenceDate = null; ui.formPrefill = null;
+  render();
+}
+function onStartChange(){
+  const startVal = document.getElementById('f_start').value;
+  const s = timeInputToMin(startVal);
+  if(s==null) return;
+  const newEnd = Math.min(s+30, 23*60+59);
+  document.getElementById('f_end').value = minToTimeInput(newEnd);
+}
+function toggleDriveFields(checked){
+  document.getElementById('driveFields').style.display = checked? '' : 'none';
+}
+function resetColorToMember(){
+  const memberId = document.getElementById('f_member').value;
+  const m = memberById(memberId);
+  if(m) document.getElementById('f_color').value = m.color;
+}
+function toggleRecurFields(checked){
+  document.getElementById('weeklyFields').style.display = checked? '' : 'none';
+  document.getElementById('onceFields').style.display = checked? 'none' : '';
+}
+
+function currentRecurMode(){
+  return document.getElementById('f_recurWeekly').checked ? 'weekly' : 'once';
+}
+
+function saveEvent(){
+  if(ui.editingId && !isParentLoggedIn()) return; // editing existing: parent only
+  if(!ui.editingId && !isLoggedIn()) return; // creating new: must be logged in
+  const title = document.getElementById('f_title').value.trim() || 'Untitled';
+  const memberId = document.getElementById('f_member').value;
+  const recurrence = currentRecurMode();
+  const start = timeInputToMin(document.getElementById('f_start').value);
+  let end = timeInputToMin(document.getElementById('f_end').value);
+  const location = document.getElementById('f_location').value.trim();
+  const needsDrive = document.getElementById('f_needsDrive').checked;
+  const driverId = needsDrive? document.getElementById('f_driver').value : null;
+  const travelMin = needsDrive? parseInt(document.getElementById('f_travel').value||'0',10) : 0;
+  const color = document.getElementById('f_color').value;
+
+  if(end<=start){ end = start+30; }
+
+  let day, date;
+  if(recurrence==='weekly'){
+    day = parseInt(document.getElementById('f_day').value,10);
+    date = null;
+  } else {
+    date = document.getElementById('f_date').value;
+    day = dowMonIndexed(date);
+  }
+
+  if(ui.editingId){
+    const ev = state.events.find(e=>e.id===ui.editingId);
+    Object.assign(ev, {title,memberId,recurrence,day,date,start,end,location,needsDrive,driverId,travelMin,color});
+    if(recurrence==='once'){ ev.skipDates = []; }
+  } else {
+    state.events.push({id:cid(), title,memberId,recurrence,day,date,skipDates:[],start,end,location,needsDrive,driverId,travelMin,color});
+  }
+  saveData();
+  closeModal();
+}
+function deleteEvent(){
+  if(!isParentLoggedIn()) return;
+  state.events = state.events.filter(e=>e.id!==ui.editingId);
+  saveData();
+  closeModal();
+}
+function skipOccurrence(){
+  if(!isParentLoggedIn()) return;
+  const ev = state.events.find(e=>e.id===ui.editingId);
+  if(ev && ui.editingOccurrenceDate){
+    ev.skipDates = ev.skipDates || [];
+    if(!ev.skipDates.includes(ui.editingOccurrenceDate)) ev.skipDates.push(ui.editingOccurrenceDate);
+    saveData();
+  }
+  closeModal();
+}
+
+// ---- chore interactions ----
+function openChoreAdd(){
+  if(!requireAuth()) return;
+  ui.choreModalOpen = true;
+  ui.editingChoreId = null;
+  ui.choreFormPrefill = {};
+  render();
+}
+function openChoreEdit(id){
+  ui.choreModalOpen = true;
+  ui.editingChoreId = id;
+  ui.choreFormPrefill = null;
+  render();
+}
+function closeChoreModal(){
+  ui.choreModalOpen = false;
+  ui.editingChoreId = null;
+  ui.choreFormPrefill = null;
+  render();
+}
+function toggleChoreFreqFields(freq){
+  document.getElementById('choreDaysFields').style.display = (freq==='weekly'||freq==='fortnightly') ? '' : 'none';
+  document.getElementById('choreFortnightAnchorField').style.display = freq==='fortnightly' ? '' : 'none';
+  document.getElementById('choreMonthlyFields').style.display = freq==='monthly' ? '' : 'none';
+}
+function addToChoreLibrary(title){
+  const exists = (state.choreLibrary||[]).some(t=>t.toLowerCase()===title.toLowerCase());
+  if(!exists){
+    state.choreLibrary = state.choreLibrary || [];
+    state.choreLibrary.push(title);
+  }
+}
+
+function saveChore(){
+  if(ui.editingChoreId && !isParentLoggedIn()) return; // editing existing: parent only
+  if(!ui.editingChoreId && !isLoggedIn()) return; // creating new: must be logged in
+
+  const title = document.getElementById('f_chore_title').value.trim() || 'Untitled chore';
+  const memberId = document.getElementById('f_chore_member').value;
+  const frequency = document.getElementById('f_chore_frequency').value;
+  let days = [];
+  if(frequency==='weekly' || frequency==='fortnightly'){
+    document.querySelectorAll('.f_chore_day').forEach(cb=>{ if(cb.checked) days.push(parseInt(cb.value,10)); });
+  }
+  const dayOfMonth = frequency==='monthly' ? Math.min(31, Math.max(1, parseInt(document.getElementById('f_chore_dayOfMonth').value||'1',10))) : null;
+  const anchorDate = frequency==='fortnightly' ? (document.getElementById('f_chore_anchor').value || selectedDateISO()) : null;
+
+  if(ui.editingChoreId){
+    const c = state.chores.find(c=>c.id===ui.editingChoreId);
+    Object.assign(c, {title, memberId, frequency, days, dayOfMonth, anchorDate, active:true});
+  } else {
+    state.chores.push({id:cid(), title, memberId, frequency, days, dayOfMonth, anchorDate, active:true});
+  }
+  addToChoreLibrary(title);
+  saveData();
+  closeChoreModal();
+}
+function deleteChore(){
+  if(!isParentLoggedIn()) return;
+  state.chores = state.chores.filter(c=>c.id!==ui.editingChoreId);
+  state.choreLogs = state.choreLogs.filter(l=>l.choreId!==ui.editingChoreId);
+  saveData();
+  closeChoreModal();
+}
+
+function openCompleteChore(choreId){
+  const chore = state.chores.find(c=>c.id===choreId);
+  if(!chore || !canMarkChoreDone(chore)) return;
+  ui.completeModalOpen = true;
+  ui.completingChoreId = choreId;
+  ui.completingDate = selectedDateISO();
+  render();
+}
+function closeCompleteModal(){
+  ui.completeModalOpen = false;
+  ui.completingChoreId = null;
+  ui.completingDate = null;
+  render();
+}
+function submitCompleteChore(){
+  const chore = state.chores.find(c=>c.id===ui.completingChoreId);
+  if(!chore || !canMarkChoreDone(chore)) return;
+  const time = document.getElementById('f_complete_time').value;
+  if(!time) return;
+  state.choreLogs.push({
+    id:cid(),
+    choreId: chore.id,
+    date: ui.completingDate,
+    completedAt: time,
+    loggedBy: ui.profileId,
+    timestamp: new Date().toISOString()
+  });
+  saveData();
+  closeCompleteModal();
+}
+function undoChoreDone(choreId, dateISO){
+  const chore = state.chores.find(c=>c.id===choreId);
+  if(!chore || !canMarkChoreDone(chore)) return;
+  if(!confirm('Undo this — mark it not done yet?')) return;
+  state.choreLogs = state.choreLogs.filter(l=>!(l.choreId===choreId && l.date===dateISO));
+  saveData();
+  render();
+}
+
+function copySchedule(){
+  const text = kidPlainText;
+  navigator.clipboard.writeText(text).then(()=>{
+    ui.copiedFlash = true; render();
+    setTimeout(()=>{ ui.copiedFlash=false; render(); }, 3500);
+  }).catch(()=>{
+    alert(text); // fallback so it's never silently lost
+  });
+}
+
+function updateFamily(field, value){
+  if(!isParentLoggedIn()) return;
+  if(!state.family) return;
+  state.family[field] = value;
+  saveData();
+  render();
+}
+
+function addChoreLibraryItem(){
+  if(!isParentLoggedIn()) return;
+  const input = document.getElementById('newChoreLibItem');
+  const val = (input.value||'').trim();
+  if(!val) return;
+  addToChoreLibrary(val);
+  saveData();
+  render();
+}
+function removeChoreLibraryItem(index){
+  if(!isParentLoggedIn()) return;
+  state.choreLibrary.splice(index, 1);
+  saveData();
+  render();
+}
+
+function updateMember(id, field, value){
+  if(!isParentLoggedIn()) return;
+  const m = memberById(id);
+  if(!m) return;
+  m[field] = value;
+  saveData();
+  render();
+}
+function addMember(){
+  if(!isParentLoggedIn()) return;
+  const input = document.getElementById('newMemberName');
+  const name = input.value.trim();
+  if(!name) return;
+  const palette = ['#4C8577','#C1555F','#CE8A2E','#5C6BA0','#7C6BA0','#4A9B8E','#B0703C'];
+  const color = palette[state.members.length % palette.length];
+  state.members.push({id:cid(), name, role:'kid', color, pinHash:null, email:'', phone:''});
+  saveData();
+  render();
+}
+function removeMember(id){
+  if(!isParentLoggedIn()) return;
+  if(!confirm('Remove this person? Their activities and chores will also be removed.')) return;
+  state.members = state.members.filter(m=>m.id!==id);
+  state.events = state.events.filter(e=>e.memberId!==id && e.driverId!==id);
+  const removedChoreIds = state.chores.filter(c=>c.memberId===id).map(c=>c.id);
+  state.chores = state.chores.filter(c=>c.memberId!==id);
+  state.choreLogs = state.choreLogs.filter(l=>!removedChoreIds.includes(l.choreId));
+  if(ui.kidId===id){ const k=state.members.find(m=>m.role==='kid'); ui.kidId=k?k.id:null; }
+  if(ui.profileId===id){ ui.profileId=null; ui.authenticated=false; }
+  saveData();
+  render();
+}
+function resetMemberPin(id){
+  if(!isParentLoggedIn()) return;
+  const m = memberById(id);
+  if(!m) return;
+  if(!confirm(`Reset ${m.name}'s PIN? They'll set a new one next time they log in.`)) return;
+  m.pinHash = null;
+  saveData();
+  render();
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'trackline-backup.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importData(evt){
+  if(!isParentLoggedIn()) return;
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      if(parsed.members && parsed.events){
+        parsed.events.forEach(e=>{
+          if(!e.recurrence) e.recurrence = 'weekly';
+          if(!('date' in e)) e.date = null;
+          if(!e.skipDates) e.skipDates = [];
+        });
+        parsed.members.forEach(m=>{
+          if(!('pinHash' in m)) m.pinHash = null;
+          if(!('email' in m)) m.email = '';
+          if(!('phone' in m)) m.phone = '';
+        });
+        if(!parsed.family){ parsed.family = state.family || {id:cid(), name:'My Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''}; }
+        if(!parsed.chores) parsed.chores = [];
+        parsed.chores.forEach(c=>{ if(!('anchorDate' in c)) c.anchorDate = null; });
+        if(!parsed.choreLogs) parsed.choreLogs = [];
+        if(!parsed.choreLibrary){
+          const fromExisting = [...new Set(parsed.chores.map(c=>c.title))];
+          parsed.choreLibrary = fromExisting.length ? fromExisting : [];
+        }
+        state = parsed;
+        ui.profileId = null; ui.authenticated = false; // PIN set may have changed — log out to be safe
+        saveData();
+        render();
+        alert('Import complete. Please log in again.');
+      } else {
+        alert('This file does not look like a Trackline backup.');
+      }
+    }catch(e){ alert('Could not read that file.'); }
+  };
+  reader.readAsText(file);
+}
+function resetDefaults(){
+  if(!isParentLoggedIn()) return;
+  if(!confirm('Reset to the example data? This replaces your current schedule and clears all PINs.')) return;
+  state = {
+    family: {id:cid(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''},
+    members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
+    events: JSON.parse(JSON.stringify(DEFAULT_EVENTS)),
+    chores: JSON.parse(JSON.stringify(DEFAULT_CHORES)),
+    choreLogs: [],
+    choreLibrary: JSON.parse(JSON.stringify(DEFAULT_CHORE_LIBRARY))
+  };
+  ui.profileId = null; ui.authenticated = false;
+  saveData();
+  render();
+}
+
+loadData();
+setInterval(()=>{ if(ui.tab==='board') render(); }, 60000); // refresh now-line each minute
+</script>
+</body>
+</html>
+
+<!--
+=================================================================================
+DEPLOYMENT NOTES — read this when you're ready to host Trackline outside Claude
+=================================================================================
+
+WHAT WORKS AS-IS RIGHT NOW:
+This file is fully self-contained (HTML + CSS + JS, no build step, no dependencies).
+Drop it on Azure Web App, Azure Static Web Apps, Netlify, GitHub Pages, or any
+static host, and it will run immediately. Once window.storage isn't available
+(i.e. you're no longer inside a Claude artifact), it automatically falls back to
+the browser's localStorage — no code changes required to go live.
+
+THE ONE REAL LIMITATION OF localStorage HOSTING:
+localStorage is per-browser, per-device. If you open this on the family tablet
+AND on a kid's laptop, they will NOT see the same schedule — each device keeps
+its own separate copy. For a single shared tablet used by the whole family,
+that's often fine. For "everyone's device shows the same live schedule," it isn't.
+
+WHAT'S NEEDED FOR TRUE MULTI-DEVICE SYNC (the next real step, if you want it):
+ 1. A backend API (e.g. Azure Functions, or a small Node/Express app on Azure
+    Web App) with endpoints like GET/POST /api/family-data.
+ 2. A real database behind it (Azure SQL, Cosmos DB, or even Azure Table Storage
+    for something this simple) instead of localStorage.
+ 3. Swap storageGet/storageSet (see top of the <script> block) to call that API
+    with fetch() instead of localStorage — everything else in this file (all the
+    UI, scheduling logic, permissions) stays the same, since it already only
+    talks to storage through those two functions.
+ 4. Real login would move from the current PIN-in-the-browser model to actual
+    server-side authentication (hashed + salted, checked server-side, session
+    tokens) — the current PIN system is a lightweight device lock, not this.
+ 5. Actual email/SMS sending needs a provider wired into that same backend
+    (e.g. SendGrid or Azure Communication Services for email, Twilio or Azure
+    Communication Services for SMS) triggered from server-side code — never
+    from the browser, since that would expose provider API keys publicly.
+
+If/when you want to take that step, come back and I can help scaffold the
+backend, the database schema, and the API — happy to pick this up from here.
+=================================================================================
+-->
+
