@@ -1,12 +1,10 @@
-// Trackline family-data API (v3 — explicit node-fetch, defensive logging)
+// Trackline family-data API (v4 — explicit response body construction)
 //
-// Same behavior as v2, with two reliability fixes:
-//  1. Uses the 'node-fetch' package explicitly instead of relying on the
-//     Function runtime's built-in fetch (which isn't guaranteed to exist
-//     depending on the exact Node version Azure picks for this app).
-//  2. Wraps everything so a failure always returns a real error response
-//     with a message, instead of the function crashing silently and the
-//     caller seeing a blank response with no explanation.
+// Same behavior as v3, with one more reliability fix: the `jsonBody`
+// convenience property was silently producing empty responses in this
+// runtime (confirmed via HAR capture: status 200, Content-Length 0). Every
+// response is now built the fully explicit way — JSON.stringify() into
+// `body`, with `Content-Type` set by hand — which has no such ambiguity.
 //
 // Required Application Settings (server-only):
 //   SUPABASE_URL
@@ -16,6 +14,14 @@ const fetch = require('node-fetch');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function jsonRes(status, obj){
+  return {
+    status: status,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(obj === undefined ? null : obj),
+  };
+}
 
 function supabaseHeaders(extra){
   return Object.assign({
@@ -46,7 +52,7 @@ module.exports = async function (context, req) {
 
   if(!SUPABASE_URL || !SERVICE_KEY){
     context.log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY app settings');
-    context.res = { status: 500, jsonBody: { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured on the server.' } };
+    context.res = jsonRes(500, { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured on the server.' });
     return;
   }
 
@@ -54,7 +60,7 @@ module.exports = async function (context, req) {
     if (req.method === 'GET') {
       const familyId = (req.query && req.query.familyId) || '';
       if (!familyId) {
-        context.res = { status: 400, jsonBody: { error: 'familyId is required' } };
+        context.res = jsonRes(400, { error: 'familyId is required' });
         return;
       }
 
@@ -66,19 +72,21 @@ module.exports = async function (context, req) {
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
         context.log.error('Supabase families GET failed:', res.status, bodyText);
-        context.res = { status: 502, jsonBody: { error: 'Upstream database error', status: res.status, detail: bodyText } };
+        context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
         return;
       }
 
       const rows = await res.json();
+      context.log('families query returned', rows ? rows.length : 0, 'row(s) for familyId', familyId);
+
       if (!rows || rows.length === 0) {
-        context.res = { status: 200, jsonBody: null };
+        context.res = jsonRes(200, null);
         return;
       }
 
       const data = rows[0].data;
       data.choreLogs = await fetchChoreLogsForFamily(familyId);
-      context.res = { status: 200, jsonBody: data };
+      context.res = jsonRes(200, data);
       return;
     }
 
@@ -87,7 +95,7 @@ module.exports = async function (context, req) {
       const familyId = body.familyId;
       const data = body.data;
       if (!familyId || !data) {
-        context.res = { status: 400, jsonBody: { error: 'familyId and data are required' } };
+        context.res = jsonRes(400, { error: 'familyId and data are required' });
         return;
       }
       const { choreLogs, ...rest } = data;
@@ -102,16 +110,16 @@ module.exports = async function (context, req) {
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
         context.log.error('Supabase families POST failed:', res.status, bodyText);
-        context.res = { status: 502, jsonBody: { error: 'Upstream database error', status: res.status, detail: bodyText } };
+        context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
         return;
       }
-      context.res = { status: 200, jsonBody: { ok: true } };
+      context.res = jsonRes(200, { ok: true });
       return;
     }
 
-    context.res = { status: 405, jsonBody: { error: 'Method not allowed' } };
+    context.res = jsonRes(405, { error: 'Method not allowed' });
   } catch (err) {
     context.log.error('family-data function threw:', err && err.stack ? err.stack : err);
-    context.res = { status: 500, jsonBody: { error: 'Server error', detail: String(err && err.message || err) } };
+    context.res = jsonRes(500, { error: 'Server error', detail: String(err && err.message || err) });
   }
 };

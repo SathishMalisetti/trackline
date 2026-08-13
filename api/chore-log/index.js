@@ -1,11 +1,18 @@
-// Trackline chore-log API (v3 — explicit node-fetch, defensive logging)
-// Same behavior as v2 — see family-data/index.js for the reasoning behind
-// using node-fetch explicitly and returning real error bodies on failure.
+// Trackline chore-log API (v4 — explicit response body construction)
+// See family-data/index.js for why jsonBody was replaced.
 
 const fetch = require('node-fetch');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function jsonRes(status, obj){
+  return {
+    status: status,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(obj === undefined ? null : obj),
+  };
+}
 
 function supabaseHeaders(extra){
   return Object.assign({
@@ -19,7 +26,7 @@ module.exports = async function (context, req) {
 
   if(!SUPABASE_URL || !SERVICE_KEY){
     context.log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY app settings');
-    context.res = { status: 500, jsonBody: { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured on the server.' } };
+    context.res = jsonRes(500, { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured on the server.' });
     return;
   }
 
@@ -28,7 +35,7 @@ module.exports = async function (context, req) {
       const body = req.body || {};
       const { familyId, id, choreId, date, completedAt, loggedBy } = body;
       if (!familyId || !choreId || !date || !completedAt) {
-        context.res = { status: 400, jsonBody: { error: 'familyId, choreId, date, and completedAt are required' } };
+        context.res = jsonRes(400, { error: 'familyId, choreId, date, and completedAt are required' });
         return;
       }
       const res = await fetch(`${SUPABASE_URL}/rest/v1/chore_logs`, {
@@ -46,10 +53,10 @@ module.exports = async function (context, req) {
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
         context.log.error('Supabase chore_logs POST failed:', res.status, bodyText);
-        context.res = { status: 502, jsonBody: { error: 'Upstream database error', status: res.status, detail: bodyText } };
+        context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
         return;
       }
-      context.res = { status: 200, jsonBody: { ok: true } };
+      context.res = jsonRes(200, { ok: true });
       return;
     }
 
@@ -58,7 +65,7 @@ module.exports = async function (context, req) {
       const choreId = (req.query && req.query.choreId) || '';
       const date = (req.query && req.query.date) || '';
       if (!familyId || !choreId || !date) {
-        context.res = { status: 400, jsonBody: { error: 'familyId, choreId, and date are required' } };
+        context.res = jsonRes(400, { error: 'familyId, choreId, and date are required' });
         return;
       }
       const res = await fetch(
@@ -68,16 +75,16 @@ module.exports = async function (context, req) {
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
         context.log.error('Supabase chore_logs DELETE failed:', res.status, bodyText);
-        context.res = { status: 502, jsonBody: { error: 'Upstream database error', status: res.status, detail: bodyText } };
+        context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
         return;
       }
-      context.res = { status: 200, jsonBody: { ok: true } };
+      context.res = jsonRes(200, { ok: true });
       return;
     }
 
-    context.res = { status: 405, jsonBody: { error: 'Method not allowed' } };
+    context.res = jsonRes(405, { error: 'Method not allowed' });
   } catch (err) {
     context.log.error('chore-log function threw:', err && err.stack ? err.stack : err);
-    context.res = { status: 500, jsonBody: { error: 'Server error', detail: String(err && err.message || err) } };
+    context.res = jsonRes(500, { error: 'Server error', detail: String(err && err.message || err) });
   }
 };
