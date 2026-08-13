@@ -1,19 +1,18 @@
-// Trackline family-data API (v2 — Supabase-backed, credentials server-only)
+// Trackline family-data API (v3 — explicit node-fetch, defensive logging)
 //
-// GET  /api/family-data?familyId=xxx
-//   -> returns the family's data (family, members, events, chores, choreLibrary)
-//      with choreLogs merged back in from the separate chore_logs table, or null.
-// POST /api/family-data  { familyId, data }
-//   -> upserts the family blob. `data` should NOT include choreLogs — those are
-//      synced individually through /api/chore-log instead (see that function).
+// Same behavior as v2, with two reliability fixes:
+//  1. Uses the 'node-fetch' package explicitly instead of relying on the
+//     Function runtime's built-in fetch (which isn't guaranteed to exist
+//     depending on the exact Node version Azure picks for this app).
+//  2. Wraps everything so a failure always returns a real error response
+//     with a message, instead of the function crashing silently and the
+//     caller seeing a blank response with no explanation.
 //
-// Required Application Settings on this Static Web App (server-only, never
-// sent to the browser):
-//   SUPABASE_URL              e.g. https://xxxxxxxxxxx.supabase.co
-//   SUPABASE_SERVICE_ROLE_KEY the "service_role" key (NOT anon) — bypasses
-//                              Row Level Security, which is exactly what a
-//                              trusted server-side caller is supposed to do.
-//                              Never put this key in frontend code.
+// Required Application Settings (server-only):
+//   SUPABASE_URL
+//   SUPABASE_SERVICE_ROLE_KEY
+
+const fetch = require('node-fetch');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -43,7 +42,10 @@ async function fetchChoreLogsForFamily(familyId){
 }
 
 module.exports = async function (context, req) {
+  context.log('family-data invoked:', req.method, req.query);
+
   if(!SUPABASE_URL || !SERVICE_KEY){
+    context.log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY app settings');
     context.res = { status: 500, jsonBody: { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured on the server.' } };
     return;
   }
@@ -55,19 +57,25 @@ module.exports = async function (context, req) {
         context.res = { status: 400, jsonBody: { error: 'familyId is required' } };
         return;
       }
+
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=data`,
         { headers: supabaseHeaders() }
       );
+
       if (!res.ok) {
-        context.res = { status: 502, jsonBody: { error: 'Upstream database error' } };
+        const bodyText = await res.text().catch(()=> '');
+        context.log.error('Supabase families GET failed:', res.status, bodyText);
+        context.res = { status: 502, jsonBody: { error: 'Upstream database error', status: res.status, detail: bodyText } };
         return;
       }
+
       const rows = await res.json();
       if (!rows || rows.length === 0) {
         context.res = { status: 200, jsonBody: null };
         return;
       }
+
       const data = rows[0].data;
       data.choreLogs = await fetchChoreLogsForFamily(familyId);
       context.res = { status: 200, jsonBody: data };
@@ -82,8 +90,6 @@ module.exports = async function (context, req) {
         context.res = { status: 400, jsonBody: { error: 'familyId and data are required' } };
         return;
       }
-      // choreLogs are synced separately — never store them in this blob even
-      // if a caller accidentally includes them.
       const { choreLogs, ...rest } = data;
       const res = await fetch(`${SUPABASE_URL}/rest/v1/families?on_conflict=id`, {
         method: 'POST',
@@ -94,7 +100,9 @@ module.exports = async function (context, req) {
         body: JSON.stringify({ id: familyId, data: rest, updated_at: new Date().toISOString() }),
       });
       if (!res.ok) {
-        context.res = { status: 502, jsonBody: { error: 'Upstream database error' } };
+        const bodyText = await res.text().catch(()=> '');
+        context.log.error('Supabase families POST failed:', res.status, bodyText);
+        context.res = { status: 502, jsonBody: { error: 'Upstream database error', status: res.status, detail: bodyText } };
         return;
       }
       context.res = { status: 200, jsonBody: { ok: true } };
@@ -103,7 +111,7 @@ module.exports = async function (context, req) {
 
     context.res = { status: 405, jsonBody: { error: 'Method not allowed' } };
   } catch (err) {
-    context.log.error('family-data function error:', err);
-    context.res = { status: 500, jsonBody: { error: 'Server error' } };
+    context.log.error('family-data function threw:', err && err.stack ? err.stack : err);
+    context.res = { status: 500, jsonBody: { error: 'Server error', detail: String(err && err.message || err) } };
   }
 };

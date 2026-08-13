@@ -1,9 +1,12 @@
 {
   "name": "trackline-api",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "description": "Trackline backend API for Azure Static Web Apps — proxies to Supabase using server-only credentials",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
   }
 }

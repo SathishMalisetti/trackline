@@ -1,18 +1,8 @@
-// Trackline chore-log API
-//
-// POST   /api/chore-log  { familyId, choreId, date, completedAt, loggedBy }
-//   -> inserts one completion record.
-// DELETE /api/chore-log?familyId=X&choreId=Y&date=Z
-//   -> removes that completion record (the "undo" action).
-//
-// This is deliberately a separate table/endpoint from family-data: completion
-// logs grow every single day forever, while everything else in a family's
-// data stays roughly constant in size. Keeping logs separate means checking
-// off one task is a single small insert, not a rewrite of the whole family
-// record.
-//
-// Uses the same SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY server-only settings
-// as family-data.
+// Trackline chore-log API (v3 — explicit node-fetch, defensive logging)
+// Same behavior as v2 — see family-data/index.js for the reasoning behind
+// using node-fetch explicitly and returning real error bodies on failure.
+
+const fetch = require('node-fetch');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -25,7 +15,10 @@ function supabaseHeaders(extra){
 }
 
 module.exports = async function (context, req) {
+  context.log('chore-log invoked:', req.method, req.query);
+
   if(!SUPABASE_URL || !SERVICE_KEY){
+    context.log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY app settings');
     context.res = { status: 500, jsonBody: { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured on the server.' } };
     return;
   }
@@ -51,7 +44,9 @@ module.exports = async function (context, req) {
         }),
       });
       if (!res.ok) {
-        context.res = { status: 502, jsonBody: { error: 'Upstream database error' } };
+        const bodyText = await res.text().catch(()=> '');
+        context.log.error('Supabase chore_logs POST failed:', res.status, bodyText);
+        context.res = { status: 502, jsonBody: { error: 'Upstream database error', status: res.status, detail: bodyText } };
         return;
       }
       context.res = { status: 200, jsonBody: { ok: true } };
@@ -71,7 +66,9 @@ module.exports = async function (context, req) {
         { method: 'DELETE', headers: supabaseHeaders({ 'Prefer': 'return=minimal' }) }
       );
       if (!res.ok) {
-        context.res = { status: 502, jsonBody: { error: 'Upstream database error' } };
+        const bodyText = await res.text().catch(()=> '');
+        context.log.error('Supabase chore_logs DELETE failed:', res.status, bodyText);
+        context.res = { status: 502, jsonBody: { error: 'Upstream database error', status: res.status, detail: bodyText } };
         return;
       }
       context.res = { status: 200, jsonBody: { ok: true } };
@@ -80,7 +77,7 @@ module.exports = async function (context, req) {
 
     context.res = { status: 405, jsonBody: { error: 'Method not allowed' } };
   } catch (err) {
-    context.log.error('chore-log function error:', err);
-    context.res = { status: 500, jsonBody: { error: 'Server error' } };
+    context.log.error('chore-log function threw:', err && err.stack ? err.stack : err);
+    context.res = { status: 500, jsonBody: { error: 'Server error', detail: String(err && err.message || err) } };
   }
 };
