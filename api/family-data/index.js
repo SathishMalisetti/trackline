@@ -1,84 +1,109 @@
-// Trackline family-data API
-// GET  /api/family-data?familyId=xxx   -> returns the saved family JSON blob, or null
-// POST /api/family-data  { familyId, data }  -> upserts the family JSON blob
+// Trackline family-data API (v2 — Supabase-backed, credentials server-only)
 //
-// Reads the Cosmos DB connection string from the COSMOS_CONNECTION_STRING app setting.
-// Never put the connection string in frontend code — it stays server-side here.
+// GET  /api/family-data?familyId=xxx
+//   -> returns the family's data (family, members, events, chores, choreLibrary)
+//      with choreLogs merged back in from the separate chore_logs table, or null.
+// POST /api/family-data  { familyId, data }
+//   -> upserts the family blob. `data` should NOT include choreLogs — those are
+//      synced individually through /api/chore-log instead (see that function).
+//
+// Required Application Settings on this Static Web App (server-only, never
+// sent to the browser):
+//   SUPABASE_URL              e.g. https://xxxxxxxxxxx.supabase.co
+//   SUPABASE_SERVICE_ROLE_KEY the "service_role" key (NOT anon) — bypasses
+//                              Row Level Security, which is exactly what a
+//                              trusted server-side caller is supposed to do.
+//                              Never put this key in frontend code.
 
-const { CosmosClient } = require("@azure/cosmos");
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const DB_NAME = "trackline";
-const CONTAINER_NAME = "families";
+function supabaseHeaders(extra){
+  return Object.assign({
+    'apikey': SERVICE_KEY,
+    'Authorization': `Bearer ${SERVICE_KEY}`,
+  }, extra || {});
+}
 
-let containerPromise = null;
-
-async function getContainer() {
-  if (containerPromise) return containerPromise;
-
-  containerPromise = (async () => {
-    const connectionString = process.env.COSMOS_CONNECTION_STRING;
-    if (!connectionString) {
-      throw new Error("COSMOS_CONNECTION_STRING app setting is not configured.");
-    }
-    const client = new CosmosClient(connectionString);
-
-    // Auto-create the database/container on first run if they don't exist yet —
-    // convenient for getting started on the free tier without a separate setup step.
-    const { database } = await client.databases.createIfNotExists({ id: DB_NAME });
-    const { container } = await database.containers.createIfNotExists({
-      id: CONTAINER_NAME,
-      partitionKey: { paths: ["/familyId"] },
-    });
-    return container;
-  })();
-
-  return containerPromise;
+async function fetchChoreLogsForFamily(familyId){
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/chore_logs?family_id=eq.${encodeURIComponent(familyId)}&select=id,chore_id,date,completed_at,logged_by,created_at`,
+    { headers: supabaseHeaders() }
+  );
+  if(!res.ok) return [];
+  const rows = await res.json();
+  return rows.map(r => ({
+    id: r.id,
+    choreId: r.chore_id,
+    date: r.date,
+    completedAt: r.completed_at,
+    loggedBy: r.logged_by,
+    timestamp: r.created_at,
+  }));
 }
 
 module.exports = async function (context, req) {
-  try {
-    const container = await getContainer();
+  if(!SUPABASE_URL || !SERVICE_KEY){
+    context.res = { status: 500, jsonBody: { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured on the server.' } };
+    return;
+  }
 
-    if (req.method === "GET") {
-      const familyId = (req.query && req.query.familyId) || "";
+  try {
+    if (req.method === 'GET') {
+      const familyId = (req.query && req.query.familyId) || '';
       if (!familyId) {
-        context.res = { status: 400, jsonBody: { error: "familyId is required" } };
+        context.res = { status: 400, jsonBody: { error: 'familyId is required' } };
         return;
       }
-      try {
-        const { resource } = await container.item(familyId, familyId).read();
-        context.res = { status: 200, jsonBody: resource ? resource.data : null };
-      } catch (err) {
-        if (err.code === 404) {
-          context.res = { status: 200, jsonBody: null };
-        } else {
-          throw err;
-        }
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=data`,
+        { headers: supabaseHeaders() }
+      );
+      if (!res.ok) {
+        context.res = { status: 502, jsonBody: { error: 'Upstream database error' } };
+        return;
       }
+      const rows = await res.json();
+      if (!rows || rows.length === 0) {
+        context.res = { status: 200, jsonBody: null };
+        return;
+      }
+      const data = rows[0].data;
+      data.choreLogs = await fetchChoreLogsForFamily(familyId);
+      context.res = { status: 200, jsonBody: data };
       return;
     }
 
-    if (req.method === "POST") {
+    if (req.method === 'POST') {
       const body = req.body || {};
       const familyId = body.familyId;
       const data = body.data;
       if (!familyId || !data) {
-        context.res = { status: 400, jsonBody: { error: "familyId and data are required" } };
+        context.res = { status: 400, jsonBody: { error: 'familyId and data are required' } };
         return;
       }
-      await container.items.upsert({
-        id: familyId,
-        familyId: familyId,
-        data: data,
-        updatedAt: new Date().toISOString(),
+      // choreLogs are synced separately — never store them in this blob even
+      // if a caller accidentally includes them.
+      const { choreLogs, ...rest } = data;
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/families?on_conflict=id`, {
+        method: 'POST',
+        headers: supabaseHeaders({
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal',
+        }),
+        body: JSON.stringify({ id: familyId, data: rest, updated_at: new Date().toISOString() }),
       });
+      if (!res.ok) {
+        context.res = { status: 502, jsonBody: { error: 'Upstream database error' } };
+        return;
+      }
       context.res = { status: 200, jsonBody: { ok: true } };
       return;
     }
 
-    context.res = { status: 405, jsonBody: { error: "Method not allowed" } };
+    context.res = { status: 405, jsonBody: { error: 'Method not allowed' } };
   } catch (err) {
-    context.log.error("family-data function error:", err);
-    context.res = { status: 500, jsonBody: { error: "Server error" } };
+    context.log.error('family-data function error:', err);
+    context.res = { status: 500, jsonBody: { error: 'Server error' } };
   }
 };

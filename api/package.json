@@ -1,10 +1,9 @@
 {
   "name": "trackline-api",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Trackline family-data API for Azure Static Web Apps (Functions v3 model)",
-  "main": "index.js",
-  "dependencies": {
-    "@azure/cosmos": "^4.1.1"
+  "description": "Trackline backend API for Azure Static Web Apps — proxies to Supabase using server-only credentials",
+  "engines": {
+    "node": ">=18"
   }
 }

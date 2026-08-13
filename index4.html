@@ -300,51 +300,72 @@
 
 <script>
 // ==============================================================================
-// No database URLs or keys live here anymore — on purpose. The browser only
-// ever talks to its own domain's /api/family-data and /api/chore-log, which
-// are Azure Functions deployed alongside this file. Those Functions hold the
-// real Supabase/Cosmos DB credentials as server-only settings (never sent to
-// the browser). "View Source" on this page reveals nothing about the database.
-// See azure-backend/README.md for how those Functions are configured.
+// SUPABASE DEPLOYMENT (current/primary): fill these in once your Supabase
+// project + table are set up (see supabase-backend/SUPABASE_SETUP.md).
+// Leave both empty to fall back to Azure (if configured below) or local storage.
 // ==============================================================================
-const API_BASE = ''; // '' = same origin (normal case, since the API is hosted alongside this file)
-const FAMILY_ENDPOINT = API_BASE + '/api/family-data';
-const CHORE_LOG_ENDPOINT = API_BASE + '/api/chore-log';
+const SUPABASE_URL = 'https://pqusqljhzgqbsxroqpel.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxdXNxbGpoemdxYnN4cm9xcGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDA5NzQsImV4cCI6MjEwMjA3Njk3NH0.zuCBTJTi0VCXLDSNSqHxvyXYpml4SDDjUfiwPGW3jLA';
+
+
+// ==============================================================================
+// AZURE DEPLOYMENT (kept as a backup path — still fully working, just not the
+// active choice right now). Fill this in to switch back to it: see
+// azure-backend/README.md. Leave empty to keep it inactive.
+// ==============================================================================
+const AZURE_API_BASE = '';
 
 // ---- portable storage layer -------------------------------------------------
-// Two modes, auto-detected:
+// Four modes, auto-detected in this order so the same file keeps working
+// everywhere without code changes:
 //  1) Inside a Claude artifact: window.storage exists -> use it (per-Claude-account storage).
-//  2) Everywhere else: talk to this domain's own /api/family-data (backed by
-//     whatever database the deployed Function is configured for). If that API
-//     isn't reachable (e.g. testing this file locally with no backend deployed
-//     yet), everything gracefully falls back to the browser's own localStorage
-//     instead of failing outright.
-//     IMPORTANT LIMITATION of the localStorage fallback: it does NOT sync
-//     across devices/browsers — each device keeps its own separate copy.
-let backendReachable = null; // null = unknown yet, true/false once we've tried
-
+//  2) SUPABASE_URL + SUPABASE_ANON_KEY are set -> talks directly to Supabase's
+//     REST API (Postgres under the hood). This is the active/current choice —
+//     no VNet or private-endpoint concerns, since Supabase is a fully separate
+//     platform from Azure and is designed for direct browser access.
+//  3) AZURE_API_BASE is set (and Supabase isn't) -> calls the Azure Function +
+//     Cosmos DB path instead. Kept working as a fallback/backup option.
+//  4) None of the above: falls back to the browser's own localStorage.
+//     IMPORTANT LIMITATION: localStorage does NOT sync across devices/browsers —
+//     each device keeps its own separate copy. Fine for a single shared tablet,
+//     not for "every family member's device shows the same live schedule."
+//
+// All four modes are needed by whatever calls storageGet/storageSet — they never
+// need to know which mode is active.
 const hasClaudeStorage = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
-const STORAGE_MODE_LABEL = () => hasClaudeStorage ? 'claude' : (backendReachable ? 'cloud' : (backendReachable===false ? 'local' : 'checking'));
+const hasSupabase = !hasClaudeStorage && !!SUPABASE_URL && !!SUPABASE_ANON_KEY;
+const hasAzureApi = !hasClaudeStorage && !hasSupabase && !!AZURE_API_BASE;
+const STORAGE_MODE = hasClaudeStorage ? 'claude' : (hasSupabase ? 'supabase' : (hasAzureApi ? 'azure' : 'local'));
 
-const LOCAL_FAMILY_ID_KEY = 'trackline-family-id'; // small pointer kept locally even in cloud mode, so this browser knows which family record to fetch
+const LOCAL_FAMILY_ID_KEY = 'trackline-family-id'; // small pointer kept locally even in cloud modes, so this browser knows which family record to fetch
 
 async function storageGet(key){
   if(hasClaudeStorage){
     try{ return await window.storage.get(key); } catch(e){ return null; }
   }
-  if(key==='trackline-data'){
-    const familyId = window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
-    if(familyId){
-      try{
-        const res = await fetch(`${FAMILY_ENDPOINT}?familyId=${encodeURIComponent(familyId)}`);
-        if(res.ok){
-          backendReachable = true;
-          const data = await res.json();
-          if(data) return {key, value: JSON.stringify(data)};
-          return null; // backend reachable, but this family genuinely doesn't exist there
-        }
-      } catch(e){ backendReachable = false; console.error('Backend not reachable, using local copy for now', e); }
-    }
+  if(hasSupabase && key==='trackline-data'){
+    try{
+      const familyId = window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
+      if(!familyId) return null; // no family linked to this browser yet -> onboarding will show
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=data`,
+        { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+      );
+      if(!res.ok) return null;
+      const rows = await res.json();
+      if(!rows || rows.length===0) return null;
+      return {key, value: JSON.stringify(rows[0].data)};
+    } catch(e){ console.error('Supabase fetch failed, check network/deployment', e); return null; }
+  }
+  if(hasAzureApi && key==='trackline-data'){
+    try{
+      const familyId = window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
+      if(!familyId) return null; // no family linked to this browser yet -> onboarding will show
+      const res = await fetch(`${AZURE_API_BASE}/api/family-data?familyId=${encodeURIComponent(familyId)}`);
+      if(!res.ok) return null;
+      const data = await res.json();
+      return data ? {key, value: JSON.stringify(data)} : null;
+    } catch(e){ console.error('Azure fetch failed, check network/deployment', e); return null; }
   }
   try{
     const v = window.localStorage.getItem(key);
@@ -355,63 +376,72 @@ async function storageSet(key, value){
   if(hasClaudeStorage){
     try{ return await window.storage.set(key, value); } catch(e){ return null; }
   }
-  // Always write locally first, so nothing is ever lost even if the network/backend is down.
-  try{ window.localStorage.setItem(key, value); } catch(e){}
-
-  if(key==='trackline-data'){
+  if(hasSupabase && key==='trackline-data'){
     try{
       const parsed = JSON.parse(value);
       const familyId = (parsed.family && parsed.family.id) || window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
-      if(familyId){
-        window.localStorage.setItem(LOCAL_FAMILY_ID_KEY, familyId);
-        // choreLogs are stored/synced separately (see chore-log endpoint) to
-        // avoid rewriting the whole family record every time one task gets
-        // checked off — strip it out of what we send here.
-        const { choreLogs, ...rest } = parsed;
-        const res = await fetch(FAMILY_ENDPOINT, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({familyId, data: rest})
-        });
-        backendReachable = res.ok;
-      }
-    } catch(e){ backendReachable = false; console.error('Backend sync failed, saved locally only for now', e); }
+      if(!familyId) return null;
+      window.localStorage.setItem(LOCAL_FAMILY_ID_KEY, familyId);
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/families?on_conflict=id`, {
+        method:'POST',
+        headers:{
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type':'application/json',
+          'Prefer':'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify({ id: familyId, data: parsed, updated_at: new Date().toISOString() })
+      });
+      if(!res.ok) return null;
+      return {key, value};
+    } catch(e){ console.error('Supabase save failed, check network/deployment', e); return null; }
   }
-  return {key, value};
+  if(hasAzureApi && key==='trackline-data'){
+    try{
+      const parsed = JSON.parse(value);
+      const familyId = (parsed.family && parsed.family.id) || window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
+      if(!familyId) return null;
+      window.localStorage.setItem(LOCAL_FAMILY_ID_KEY, familyId);
+      const res = await fetch(`${AZURE_API_BASE}/api/family-data`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({familyId, data: parsed})
+      });
+      if(!res.ok) return null;
+      return {key, value};
+    } catch(e){ console.error('Azure save failed, check network/deployment', e); return null; }
+  }
+  try{
+    window.localStorage.setItem(key, value);
+    return {key, value};
+  } catch(e){ return null; }
 }
 
 // Looks up a family's data by ID directly, bypassing this browser's local
 // pointer — used only by the "join an existing family" flow, where a new
-// device doesn't have that pointer set yet.
+// device doesn't have that pointer set yet. Returns the raw data object
+// (not a {key,value} wrapper) or null if not found / not reachable.
 async function fetchFamilyById(familyId){
   if(hasClaudeStorage) return null; // Claude storage is already account-scoped; joining by ID doesn't apply here
-  try{
-    const res = await fetch(`${FAMILY_ENDPOINT}?familyId=${encodeURIComponent(familyId)}`);
-    if(!res.ok) return null;
-    return await res.json();
-  } catch(e){ console.error('Lookup failed, check network/deployment', e); return null; }
-}
-
-// Chore completion logs live in their own table server-side (they grow every
-// day, unlike everything else which stays roughly constant in size), synced
-// through these two dedicated calls instead of the big family blob.
-async function pushChoreLog(logEntry){
-  if(hasClaudeStorage) return; // Claude mode keeps everything in the one blob, no separate log table there
-  try{
-    await fetch(CHORE_LOG_ENDPOINT, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(logEntry)
-    });
-  } catch(e){ console.error('Chore log sync failed (saved locally, will still show on this device)', e); }
-}
-async function deleteChoreLog(familyId, choreId, date){
-  if(hasClaudeStorage) return;
-  try{
-    await fetch(`${CHORE_LOG_ENDPOINT}?familyId=${encodeURIComponent(familyId)}&choreId=${encodeURIComponent(choreId)}&date=${encodeURIComponent(date)}`, {
-      method:'DELETE'
-    });
-  } catch(e){ console.error('Chore log delete sync failed', e); }
+  if(hasSupabase){
+    try{
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=data`,
+        { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+      );
+      if(!res.ok) return null;
+      const rows = await res.json();
+      return (rows && rows.length) ? rows[0].data : null;
+    } catch(e){ console.error('Supabase lookup failed', e); return null; }
+  }
+  if(hasAzureApi){
+    try{
+      const res = await fetch(`${AZURE_API_BASE}/api/family-data?familyId=${encodeURIComponent(familyId)}`);
+      if(!res.ok) return null;
+      return await res.json();
+    } catch(e){ console.error('Azure lookup failed', e); return null; }
+  }
+  return null; // local-only mode: no network, this device can't see another device's data
 }
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -626,12 +656,7 @@ async function loadData(){
           parsed.family = {id:cid(), name:'My Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''};
         }
         if(!parsed.chores) parsed.chores = [];
-        parsed.chores.forEach(c=>{
-          if(!('anchorDate' in c)) c.anchorDate = null;
-          if(!('startDate' in c)) c.startDate = null; // null = unrestricted, preserves behavior for tasks that existed before this field
-          if(!('dueDate' in c)) c.dueDate = null;
-          if(!('dueTime' in c)) c.dueTime = null;
-        });
+        parsed.chores.forEach(c=>{ if(!('anchorDate' in c)) c.anchorDate = null; });
         if(!parsed.choreLogs) parsed.choreLogs = [];
         if(!parsed.choreLibrary){
           const fromExisting = [...new Set(parsed.chores.map(c=>c.title))];
@@ -679,14 +704,11 @@ function transitBlocksForDateDriver(dateISO, driverId){
 // ---- chores (recurring checklist items, separate from time-blocked activities) ----
 function choreDue(chore, dateISO){
   if(!chore.active) return false;
-  // Never show a task as due before it actually started existing — prevents
-  // a newly-created weekly/daily task from retroactively appearing on past dates.
-  if(chore.startDate && dateISO < chore.startDate) return false;
   if(chore.frequency==='daily') return true;
   if(chore.frequency==='weekly') return (chore.days||[]).includes(dowMonIndexed(dateISO));
   if(chore.frequency==='fortnightly'){
     if(!(chore.days||[]).includes(dowMonIndexed(dateISO))) return false;
-    const anchorMonday = mondayOf(chore.startDate || chore.anchorDate || dateISO);
+    const anchorMonday = mondayOf(chore.anchorDate || dateISO);
     const thisMonday = mondayOf(dateISO);
     const weeksDiff = Math.round((thisMonday.getTime() - anchorMonday.getTime()) / (7*24*60*60*1000));
     return ((weeksDiff % 2) + 2) % 2 === 0; // works for negative diffs too
@@ -697,7 +719,6 @@ function choreDue(chore, dateISO){
     const targetDay = Math.min(chore.dayOfMonth||1, daysInMonth);
     return d.getDate() === targetDay;
   }
-  if(chore.frequency==='once') return chore.dueDate === dateISO;
   return false;
 }
 function choresForDate(dateISO){
@@ -714,21 +735,17 @@ function canMarkChoreDone(chore){
   return isParentLoggedIn() || currentMember().id === chore.memberId;
 }
 function frequencyLabel(chore){
-  let base = '';
-  if(chore.frequency==='daily') base = 'Daily';
-  else if(chore.frequency==='monthly') base = 'Monthly (day '+(chore.dayOfMonth||1)+')';
-  else if(chore.frequency==='weekly'){
-    base = (!chore.days || chore.days.length===0) ? 'Weekly' : chore.days.slice().sort().map(d=>DAYS[d]).join('/');
+  if(chore.frequency==='daily') return 'Daily';
+  if(chore.frequency==='monthly') return 'Monthly (day '+(chore.dayOfMonth||1)+')';
+  if(chore.frequency==='weekly'){
+    if(!chore.days || chore.days.length===0) return 'Weekly';
+    return chore.days.slice().sort().map(d=>DAYS[d]).join('/');
   }
-  else if(chore.frequency==='fortnightly'){
+  if(chore.frequency==='fortnightly'){
     const dayPart = (!chore.days || chore.days.length===0) ? '' : ' ('+chore.days.slice().sort().map(d=>DAYS[d]).join('/')+')';
-    base = 'Fortnightly'+dayPart;
+    return 'Fortnightly'+dayPart;
   }
-  else if(chore.frequency==='once'){
-    base = chore.dueDate ? 'Once — '+formatDateNice(chore.dueDate) : 'Just once';
-  }
-  if(chore.dueTime) base += ' · by ' + minToLabel(timeInputToMin(chore.dueTime));
-  return base;
+  return '';
 }
 
 function clampRange(s,e){
@@ -1155,7 +1172,7 @@ function renderSettings(){
       <h3>Data</h3>
       <p style="font-size:13px;color:#5c5847;margin-top:0;">Your schedule is saved automatically to this app. Use export/import to move data or keep a backup.</p>
       <p style="font-size:12px;color:#6b6650;background:#e3dcc6;border-radius:7px;padding:8px 10px;">
-        Storage mode: <strong>${hasClaudeStorage?'Claude account storage':backendReachable?'Cloud (synced across devices)':backendReachable===false?'This browser only (localStorage) — backend unreachable':'Checking connection…'}</strong>${(!hasClaudeStorage && backendReachable===false)?' — this device won\u2019t automatically see schedules saved on other devices until the backend is reachable again.':''}${(!hasClaudeStorage && backendReachable)?' — this family\u2019s data is synced through the backend, so any device pointed at the same deployment sees the same schedule.':''}
+        Storage mode: <strong>${STORAGE_MODE==='claude'?'Claude account storage':STORAGE_MODE==='supabase'?'Supabase (synced across devices)':STORAGE_MODE==='azure'?'Azure (synced across devices)':'This browser only (localStorage)'}</strong>${STORAGE_MODE==='local'?' — this device won\u2019t automatically see schedules saved on other devices.':''}${STORAGE_MODE==='supabase'?' — this family\u2019s data lives in Supabase, so any device pointed at the same deployment sees the same schedule.':''}${STORAGE_MODE==='azure'?' — this family\u2019s data lives in Cosmos DB, so any device pointed at the same deployment sees the same schedule.':''}
       </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn ghost" onclick="exportData()">Export data</button>
@@ -1292,18 +1309,13 @@ function renderChoreModal(){
   const editing = ui.editingChoreId ? state.chores.find(c=>c.id===ui.editingChoreId) : null;
   const pre = ui.choreFormPrefill || {};
   const readOnly = !!(editing && !isParentLoggedIn());
-  const today = todayISO();
 
   const memberId = editing? editing.memberId : (pre.memberId || (state.members[0]&&state.members[0].id));
   const title = editing? editing.title : '';
   const frequency = editing? editing.frequency : 'daily';
   const days = editing? (editing.days||[]) : [];
   const dayOfMonth = editing? (editing.dayOfMonth||1) : 1;
-  // startDate: when this recurring task starts applying (never in the past for new/edited tasks)
-  const startDate = editing? (editing.startDate || editing.anchorDate || today) : today;
-  const startDateClamped = startDate < today ? today : startDate; // don't let the field show a past date as the default
-  const dueDate = editing? (editing.dueDate || today) : today; // for 'once' tasks
-  const dueTime = editing? (editing.dueTime || '') : '';
+  const anchorDate = editing? (editing.anchorDate || selectedDateISO()) : selectedDateISO();
 
   const memberOptions = state.members.map(m=>`<option value="${m.id}" ${m.id===memberId?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
   const daysPicker = DAYS.map((d,i)=>`
@@ -1313,8 +1325,6 @@ function renderChoreModal(){
     </label>`).join('');
   const dis = readOnly ? 'disabled' : '';
   const showDays = frequency==='weekly' || frequency==='fortnightly';
-  const showStartDate = frequency==='daily' || frequency==='weekly' || frequency==='fortnightly' || frequency==='monthly';
-  const showDueDate = frequency==='once';
 
   return `
   <div class="overlay" onclick="if(event.target===this) closeChoreModal()">
@@ -1339,7 +1349,6 @@ function renderChoreModal(){
           <option value="weekly" ${frequency==='weekly'?'selected':''}>Weekly (pick days)</option>
           <option value="fortnightly" ${frequency==='fortnightly'?'selected':''}>Fortnightly (every 2 weeks)</option>
           <option value="monthly" ${frequency==='monthly'?'selected':''}>Monthly (pick day of month)</option>
-          <option value="once" ${frequency==='once'?'selected':''}>Just once</option>
         </select>
       </div>
       <div id="choreDaysFields" class="field" style="${showDays?'':'display:none'}">
@@ -1347,25 +1356,13 @@ function renderChoreModal(){
         <div class="days-picker">${daysPicker}</div>
       </div>
       <div id="choreFortnightAnchorField" class="field" style="${frequency==='fortnightly'?'':'display:none'}">
-        <p style="font-size:11.5px;color:#8a8468;margin:0 0 6px;">Uses the "Starts on" date below to work out the every-2-weeks pattern.</p>
+        <label>Due on this week, or the next?</label>
+        <input type="date" id="f_chore_anchor" value="${anchorDate}" ${dis}>
+        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Pick any date in the week you want it due. It'll then repeat every 2 weeks from there.</p>
       </div>
       <div id="choreMonthlyFields" class="field" style="${frequency==='monthly'?'':'display:none'}">
         <label>Day of month</label>
         <input type="number" id="f_chore_dayOfMonth" value="${dayOfMonth}" min="1" max="31" ${dis}>
-      </div>
-      <div id="choreStartDateField" class="field" style="${showStartDate?'':'display:none'}">
-        <label>Starts on</label>
-        <input type="date" id="f_chore_startDate" value="${startDateClamped}" min="${today}" ${dis}>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Won't show as due on any date before this — new tasks can't retroactively apply to past days.</p>
-      </div>
-      <div id="choreDueDateField" class="field" style="${showDueDate?'':'display:none'}">
-        <label>Date</label>
-        <input type="date" id="f_chore_dueDate" value="${dueDate}" min="${today}" ${dis}>
-      </div>
-      <div class="field">
-        <label>Due time (optional)</label>
-        <input type="time" id="f_chore_dueTime" value="${dueTime}" ${dis}>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Leave blank for "anytime today" — set a time if it needs doing by a specific point in the day.</p>
       </div>
 
       <div class="modal-actions">
@@ -1627,8 +1624,8 @@ async function submitJoinFamily(){
     return;
   }
 
-  if(hasClaudeStorage){
-    ui.joinError = 'Joining another family isn\u2019t applicable while running inside Claude — each Claude account already has its own separate space.';
+  if(STORAGE_MODE === 'local'){
+    ui.joinError = 'This deployment isn\u2019t connected to cloud sync yet, so this device can\u2019t see another device\u2019s family. Ask whoever manages the deployment to finish the Supabase/Azure setup first.';
     render();
     return;
   }
@@ -1638,9 +1635,7 @@ async function submitJoinFamily(){
 
   const data = await fetchFamilyById(familyId);
   if(!data || !data.family){
-    ui.joinError = backendReachable===false
-      ? 'Can\u2019t reach the server right now — check your internet connection and try again.'
-      : 'No family found with that ID. Double-check it and try again.';
+    ui.joinError = 'No family found with that ID. Double-check it and try again.';
     render();
     return;
   }
@@ -2005,8 +2000,6 @@ function toggleChoreFreqFields(freq){
   document.getElementById('choreDaysFields').style.display = (freq==='weekly'||freq==='fortnightly') ? '' : 'none';
   document.getElementById('choreFortnightAnchorField').style.display = freq==='fortnightly' ? '' : 'none';
   document.getElementById('choreMonthlyFields').style.display = freq==='monthly' ? '' : 'none';
-  document.getElementById('choreStartDateField').style.display = (freq==='daily'||freq==='weekly'||freq==='fortnightly'||freq==='monthly') ? '' : 'none';
-  document.getElementById('choreDueDateField').style.display = freq==='once' ? '' : 'none';
 }
 function addToChoreLibrary(title){
   const exists = (state.choreLibrary||[]).some(t=>t.toLowerCase()===title.toLowerCase());
@@ -2020,7 +2013,6 @@ function saveChore(){
   if(ui.editingChoreId && !isParentLoggedIn()) return; // editing existing: parent only
   if(!ui.editingChoreId && !isLoggedIn()) return; // creating new: must be logged in
 
-  const today = todayISO();
   const title = document.getElementById('f_chore_title').value.trim() || 'Untitled task';
   const memberId = document.getElementById('f_chore_member').value;
   const frequency = document.getElementById('f_chore_frequency').value;
@@ -2029,23 +2021,13 @@ function saveChore(){
     document.querySelectorAll('.f_chore_day').forEach(cb=>{ if(cb.checked) days.push(parseInt(cb.value,10)); });
   }
   const dayOfMonth = frequency==='monthly' ? Math.min(31, Math.max(1, parseInt(document.getElementById('f_chore_dayOfMonth').value||'1',10))) : null;
-
-  let startDate = null, dueDate = null;
-  if(frequency==='daily' || frequency==='weekly' || frequency==='fortnightly' || frequency==='monthly'){
-    startDate = document.getElementById('f_chore_startDate').value || today;
-    if(startDate < today) startDate = today; // never allow a past start date, regardless of what the field held
-  }
-  if(frequency==='once'){
-    dueDate = document.getElementById('f_chore_dueDate').value || today;
-    if(dueDate < today) dueDate = today; // a one-off task can't be due in the past either
-  }
-  const dueTime = document.getElementById('f_chore_dueTime').value || null;
+  const anchorDate = frequency==='fortnightly' ? (document.getElementById('f_chore_anchor').value || selectedDateISO()) : null;
 
   if(ui.editingChoreId){
     const c = state.chores.find(c=>c.id===ui.editingChoreId);
-    Object.assign(c, {title, memberId, frequency, days, dayOfMonth, startDate, dueDate, dueTime, active:true});
+    Object.assign(c, {title, memberId, frequency, days, dayOfMonth, anchorDate, active:true});
   } else {
-    state.chores.push({id:cid(), title, memberId, frequency, days, dayOfMonth, startDate, dueDate, dueTime, active:true});
+    state.chores.push({id:cid(), title, memberId, frequency, days, dayOfMonth, anchorDate, active:true});
   }
   addToChoreLibrary(title);
   saveData();
@@ -2078,17 +2060,15 @@ function submitCompleteChore(){
   if(!chore || !canMarkChoreDone(chore)) return;
   const time = document.getElementById('f_complete_time').value;
   if(!time) return;
-  const logEntry = {
+  state.choreLogs.push({
     id:cid(),
     choreId: chore.id,
     date: ui.completingDate,
     completedAt: time,
     loggedBy: ui.profileId,
     timestamp: new Date().toISOString()
-  };
-  state.choreLogs.push(logEntry);
-  saveData(); // saves everything else (unaffected by this)
-  pushChoreLog({ familyId: state.family.id, ...logEntry }); // syncs just this one log entry
+  });
+  saveData();
   closeCompleteModal();
 }
 function undoChoreDone(choreId, dateISO){
@@ -2097,7 +2077,6 @@ function undoChoreDone(choreId, dateISO){
   if(!confirm('Undo this — mark it not done yet?')) return;
   state.choreLogs = state.choreLogs.filter(l=>!(l.choreId===choreId && l.date===dateISO));
   saveData();
-  deleteChoreLog(state.family.id, choreId, dateISO);
   render();
 }
 
@@ -2220,12 +2199,7 @@ function importData(evt){
         });
         if(!parsed.family){ parsed.family = state.family || {id:cid(), name:'My Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''}; }
         if(!parsed.chores) parsed.chores = [];
-        parsed.chores.forEach(c=>{
-          if(!('anchorDate' in c)) c.anchorDate = null;
-          if(!('startDate' in c)) c.startDate = null; // null = unrestricted, preserves behavior for tasks that existed before this field
-          if(!('dueDate' in c)) c.dueDate = null;
-          if(!('dueTime' in c)) c.dueTime = null;
-        });
+        parsed.chores.forEach(c=>{ if(!('anchorDate' in c)) c.anchorDate = null; });
         if(!parsed.choreLogs) parsed.choreLogs = [];
         if(!parsed.choreLibrary){
           const fromExisting = [...new Set(parsed.chores.map(c=>c.title))];
