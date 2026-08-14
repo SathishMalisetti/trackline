@@ -1,10 +1,11 @@
-// Trackline family-data API (v4 — explicit response body construction)
+// Trackline family-data API (v5 — adds shopping trips merge, same pattern as chore_logs)
 //
-// Same behavior as v3, with one more reliability fix: the `jsonBody`
-// convenience property was silently producing empty responses in this
-// runtime (confirmed via HAR capture: status 200, Content-Length 0). Every
-// response is now built the fully explicit way — JSON.stringify() into
-// `body`, with `Content-Type` set by hand — which has no such ambiguity.
+// Everything from v4 unchanged (node-fetch, explicit response bodies).
+// New in v5: also fetches this family's shopping trips from their own table
+// and merges them into the GET response as data.shoppingTrips — exactly the
+// same pattern already used for choreLogs, since trips have the same
+// "grows every day forever" shape that justified giving choreLogs its own
+// table in the first place.
 //
 // Required Application Settings (server-only):
 //   SUPABASE_URL
@@ -47,6 +48,16 @@ async function fetchChoreLogsForFamily(familyId){
   }));
 }
 
+async function fetchTripsForFamily(familyId){
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/shopping_lists?family_id=eq.${encodeURIComponent(familyId)}&select=data`,
+    { headers: supabaseHeaders() }
+  );
+  if(!res.ok) return [];
+  const rows = await res.json();
+  return rows.map(r => r.data); // each row's data column IS the whole trip object
+}
+
 module.exports = async function (context, req) {
   context.log('family-data invoked:', req.method, req.query);
 
@@ -86,6 +97,7 @@ module.exports = async function (context, req) {
 
       const data = rows[0].data;
       data.choreLogs = await fetchChoreLogsForFamily(familyId);
+      data.shoppingTrips = await fetchTripsForFamily(familyId);
       context.res = jsonRes(200, data);
       return;
     }
@@ -98,7 +110,7 @@ module.exports = async function (context, req) {
         context.res = jsonRes(400, { error: 'familyId and data are required' });
         return;
       }
-      const { choreLogs, ...rest } = data;
+      const { choreLogs, shoppingTrips, ...rest } = data;
       const res = await fetch(`${SUPABASE_URL}/rest/v1/families?on_conflict=id`, {
         method: 'POST',
         headers: supabaseHeaders({
