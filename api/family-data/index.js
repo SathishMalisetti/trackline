@@ -1,11 +1,12 @@
-// Trackline family-data API (v5 — adds shopping trips merge, same pattern as chore_logs)
+// Trackline family-data API (v6 — relational storage via Postgres functions)
 //
-// Everything from v4 unchanged (node-fetch, explicit response bodies).
-// New in v5: also fetches this family's shopping trips from their own table
-// and merges them into the GET response as data.shoppingTrips — exactly the
-// same pattern already used for choreLogs, since trips have the same
-// "grows every day forever" shape that justified giving choreLogs its own
-// table in the first place.
+// Same external behavior as v5 (GET/POST, same response shape) but the
+// database itself now stores members/events/chores/etc. in real tables
+// instead of one JSONB blob. The decomposition (on save) and reassembly
+// (on read) happens INSIDE Postgres via two functions — save_family_data
+// and get_family_data — called here as simple RPC calls. This keeps this
+// Function's code (and the frontend, which needs zero changes) almost
+// identical to before, while the actual stored data is now fully relational.
 //
 // Required Application Settings (server-only):
 //   SUPABASE_URL
@@ -39,12 +40,8 @@ async function fetchChoreLogsForFamily(familyId){
   if(!res.ok) return [];
   const rows = await res.json();
   return rows.map(r => ({
-    id: r.id,
-    choreId: r.chore_id,
-    date: r.date,
-    completedAt: r.completed_at,
-    loggedBy: r.logged_by,
-    timestamp: r.created_at,
+    id: r.id, choreId: r.chore_id, date: r.date,
+    completedAt: r.completed_at, loggedBy: r.logged_by, timestamp: r.created_at,
   }));
 }
 
@@ -55,7 +52,7 @@ async function fetchTripsForFamily(familyId){
   );
   if(!res.ok) return [];
   const rows = await res.json();
-  return rows.map(r => r.data); // each row's data column IS the whole trip object
+  return rows.map(r => r.data);
 }
 
 module.exports = async function (context, req) {
@@ -75,27 +72,25 @@ module.exports = async function (context, req) {
         return;
       }
 
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=data`,
-        { headers: supabaseHeaders() }
-      );
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_family_data`, {
+        method: 'POST',
+        headers: supabaseHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ p_family_id: familyId }),
+      });
 
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
-        context.log.error('Supabase families GET failed:', res.status, bodyText);
+        context.log.error('get_family_data RPC failed:', res.status, bodyText);
         context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
         return;
       }
 
-      const rows = await res.json();
-      context.log('families query returned', rows ? rows.length : 0, 'row(s) for familyId', familyId);
-
-      if (!rows || rows.length === 0) {
+      const data = await res.json(); // the jsonb result, or null if not found
+      if (!data) {
         context.res = jsonRes(200, null);
         return;
       }
 
-      const data = rows[0].data;
       data.choreLogs = await fetchChoreLogsForFamily(familyId);
       data.shoppingTrips = await fetchTripsForFamily(familyId);
       context.res = jsonRes(200, data);
@@ -111,17 +106,16 @@ module.exports = async function (context, req) {
         return;
       }
       const { choreLogs, shoppingTrips, ...rest } = data;
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/families?on_conflict=id`, {
+
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/save_family_data`, {
         method: 'POST',
-        headers: supabaseHeaders({
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates,return=minimal',
-        }),
-        body: JSON.stringify({ id: familyId, data: rest, updated_at: new Date().toISOString() }),
+        headers: supabaseHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ p_family_id: familyId, p_data: rest }),
       });
+
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
-        context.log.error('Supabase families POST failed:', res.status, bodyText);
+        context.log.error('save_family_data RPC failed:', res.status, bodyText);
         context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
         return;
       }

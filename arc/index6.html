@@ -760,8 +760,6 @@ let ui = {
   editingTripId: null,
   toast: null, // { message, undoFn, timeoutId }
   rescheduleModalOpen: false,
-  exportModalOpen: false,
-  exportError: null,
   boardViewMode: 'week', // 'week' | 'month'
   monthCursor: todayISO(),
   joinFamilyMode: false,
@@ -1746,7 +1744,7 @@ function renderSettings(){
         Storage mode: <strong>${hasClaudeStorage?'Claude account storage':backendReachable?'Cloud (synced across devices)':backendReachable===false?'This browser only (localStorage) — backend unreachable':'Checking connection…'}</strong>${(!hasClaudeStorage && backendReachable===false)?' — this device won\u2019t automatically see schedules saved on other devices until the backend is reachable again.':''}${(!hasClaudeStorage && backendReachable)?' — this family\u2019s data is synced through the backend, so any device pointed at the same deployment sees the same schedule.':''}
       </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn ghost" onclick="openExportModal()">Export data</button>
+        <button class="btn ghost" onclick="exportData()">Export data</button>
         <button class="btn ghost" onclick="document.getElementById('importFile').click()">Import data</button>
         <button class="btn danger" onclick="resetDefaults()">Reset to example data</button>
       </div>
@@ -2570,7 +2568,6 @@ function render(){
     ${renderConfirmModal()}
     ${renderAlertModal()}
     ${renderToast()}
-    ${renderExportModal()}
     `;
     return;
   }
@@ -2610,7 +2607,6 @@ function render(){
     ${renderConfirmModal()}
     ${renderAlertModal()}
     ${renderToast()}
-    ${renderExportModal()}
   `;
   document.querySelectorAll('.kid-select-btn.active').forEach(b=>{ b.style.color = '#181C2A'; });
 }
@@ -3303,83 +3299,13 @@ function resetMemberPin(id){
   });
 }
 
-function openExportModal(){
-  if(!isParentLoggedIn()) return;
-  ui.exportModalOpen = true;
-  ui.exportError = null;
-  render();
-}
-function closeExportModal(){
-  ui.exportModalOpen = false;
-  ui.exportError = null;
-  render();
-}
-function renderExportModal(){
-  if(!ui.exportModalOpen) return '';
-  return `
-  <div class="overlay" onclick="if(event.target===this) closeExportModal()">
-    <div class="modal" style="max-width:360px;">
-      <h2>Confirm export</h2>
-      <p style="font-size:13.5px;color:#5c5847;margin:0 0 16px;">Enter your family password to export a backup. This is verified on the server — PIN and password hashes are never included in the download.</p>
-      <input type="password" id="f_export_password" placeholder="Family password" style="width:100%;padding:11px;border-radius:8px;border:1px solid #c9c2ab;font-size:15px;">
-      ${ui.exportError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.exportError)}</div>`:''}
-      <div class="modal-actions" style="margin-top:16px;">
-        <div></div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn ghost" onclick="closeExportModal()">Cancel</button>
-          <button class="btn primary" onclick="submitExport()">Export</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-function downloadExportFile(data){
-  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+function exportData(){
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'trackline-backup.json';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
-async function submitExport(){
-  const pwd = (document.getElementById('f_export_password').value||'').trim();
-  if(!pwd){ ui.exportError = 'Enter the family password.'; render(); return; }
-
-  if(hasClaudeStorage){
-    // No standalone backend endpoint exists in Claude-testing mode — fall back
-    // to a direct export, still sanitized client-side for consistency.
-    if(simpleHash(pwd) !== (state.family && state.family.passwordHash)){
-      ui.exportError = 'Incorrect family password.';
-      render();
-      return;
-    }
-    const sanitized = JSON.parse(JSON.stringify(state));
-    if(sanitized.family) delete sanitized.family.passwordHash;
-    if(Array.isArray(sanitized.members)) sanitized.members.forEach(m=>{ delete m.pinHash; });
-    downloadExportFile(sanitized);
-    closeExportModal();
-    return;
-  }
-
-  try{
-    const res = await fetch(`${API_BASE}/api/export-family`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ familyId: state.family.id, passwordHash: simpleHash(pwd) })
-    });
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      ui.exportError = err.error || 'Export failed — check the password and try again.';
-      render();
-      return;
-    }
-    const result = await res.json();
-    downloadExportFile(result.data);
-    closeExportModal();
-  } catch(e){
-    ui.exportError = 'Could not reach the server. Check your connection and try again.';
-    render();
-  }
 }
 function importData(evt){
   if(!isParentLoggedIn()) return;
