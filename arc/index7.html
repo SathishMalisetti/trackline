@@ -356,9 +356,6 @@
   .trip-meta{font-size:11.5px;color:#6b6650;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
   .trip-chevron{font-size:20px;color:#8a8468;}
   .trip-done-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#dcecdf;color:#3d7a4f;border-radius:10px;padding:2px 8px;}
-  .trip-pending-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#f3e6c6;color:#8a6a1f;border-radius:10px;padding:2px 8px;}
-  .approval-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
-  .approval-row:last-child{border-bottom:none;}
   .trip-item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
   .trip-item-row:last-child{border-bottom:none;}
   .trip-item-name{flex:1;font-weight:600;font-size:14.5px;}
@@ -875,7 +872,6 @@ function transitBlocksForDateDriver(dateISO, driverId){
 // ---- chores (recurring checklist items, separate from time-blocked activities) ----
 function choreDue(chore, dateISO){
   if(!chore.active) return false;
-  if(chore.pendingApproval) return false; // waits for a parent to approve before it's a real, active task
   // Never show a task as due before it actually started existing — prevents
   // a newly-created weekly/daily task from retroactively appearing on past dates.
   if(chore.startDate && dateISO < chore.startDate) return false;
@@ -1047,7 +1043,7 @@ function renderMonthGrid(){
       const dotsHtml = memberDots.slice(0,4).map(c=>`<span class="month-dot" style="background:${c}"></span>`).join('')
         + (memberDots.length>4 ? `<span class="month-more">+${memberDots.length-4}</span>` : '');
       const hasTasks = choresForDate(dateISO).length>0;
-      const hasTrips = (state.shoppingTrips||[]).some(t=>t.date===dateISO && !t.pendingApproval);
+      const hasTrips = (state.shoppingTrips||[]).some(t=>t.date===dateISO);
       return `<div class="month-cell ${inMonth?'':'month-cell-out'} ${isToday?'month-cell-today':''}" onclick="jumpToDayFromMonth('${dateISO}')">
         <div class="month-daynum">${d.getDate()}</div>
         <div class="month-dots">${dotsHtml}</div>
@@ -1152,7 +1148,7 @@ function renderBoard(){
       });
     // shopping trips with a time set show here too, same reasoning
     const tripItemsForBoard = (state.shoppingTrips||[])
-      .filter(t => t.memberId===m.id && t.date===dateISO && t.time && !t.pendingApproval)
+      .filter(t => t.memberId===m.id && t.date===dateISO && t.time)
       .map(t => {
         const startMin = timeInputToMin(t.time);
         return { kind:'trip', id:t.id, title:t.name, start:startMin, end:startMin+45, color: m.color };
@@ -1238,9 +1234,7 @@ function setShoppingMode(mode){
 }
 
 function renderShoppingList(){
-  const allItems = state.shoppingList || [];
-  const items = allItems.filter(i=>!i.pendingApproval);
-  const myPending = allItems.filter(i=>i.pendingApproval && i.addedBy===ui.profileId);
+  const items = state.shoppingList || [];
   const selectedIds = ui.selectedQuickListIds || [];
 
   const rowHtml = (item) => `
@@ -1256,13 +1250,8 @@ function renderShoppingList(){
     ? `<div class="chore-empty-day">Nothing on the list yet.</div>`
     : items.map(rowHtml).join('');
 
-  const pendingNote = myPending.length>0 ? `
-    <div class="skip-note">Waiting on a parent to approve: ${myPending.map(i=>escapeHtml(i.name)).join(', ')}</div>
-  ` : '';
-
   return `
     ${renderShoppingModeToggle()}
-    ${pendingNote}
     <div class="chore-group">
       ${body}
     </div>
@@ -1292,7 +1281,7 @@ function renderTripsList(){
     const bought = items.filter(i=>i.status==='bought').length;
     return `<div class="trip-row" onclick="openTripDetail('${t.id}')">
       <div>
-        <div class="trip-title">${escapeHtml(t.name)}${t.status==='completed'?' <span class="trip-done-badge">Done</span>':''}${t.pendingApproval?' <span class="trip-pending-badge">Pending approval</span>':''}</div>
+        <div class="trip-title">${escapeHtml(t.name)}${t.status==='completed'?' <span class="trip-done-badge">Done</span>':''}</div>
         <div class="trip-meta">${formatDateNice(t.date)}${t.time? ' · '+minToLabel(timeInputToMin(t.time)):''} · ${member?escapeHtml(member.name):'Unassigned'} · ${bought}/${items.length} bought${t.choreId?' · linked to a task':''}</div>
       </div>
       <span class="trip-chevron">›</span>
@@ -1337,7 +1326,7 @@ function renderTripDetail(tripId){
   return `
     <button class="btn ghost" style="margin-bottom:14px;" onclick="setShoppingMode('trips')">← Back to trips</button>
     <div class="kid-big">
-      <h2>${escapeHtml(trip.name)}${trip.status==='completed'?' <span class="trip-done-badge">Done</span>':''}${trip.pendingApproval?' <span class="trip-pending-badge">Pending approval</span>':''}</h2>
+      <h2>${escapeHtml(trip.name)}${trip.status==='completed'?' <span class="trip-done-badge">Done</span>':''}</h2>
       <div class="kd">${formatDateNice(trip.date)}${trip.time? ' · '+minToLabel(timeInputToMin(trip.time)):''} · ${member?escapeHtml(member.name):'Unassigned'}${trip.choreId?' · linked to a task':''}</div>
       ${items.length===0? '<div class="kid-empty">No items yet — add some below.</div>' : itemRows}
       <div class="shop-add-bar" style="margin-top:16px;">
@@ -1526,7 +1515,7 @@ function renderParentView(){
   const anyChoresDue = kids.some(k=>choresForDateMember(dateISO,k.id).length>0);
 
   // shopping trips scheduled for this date, for anyone in the family
-  const tripsToday = (state.shoppingTrips||[]).filter(t=>t.date===dateISO && !t.pendingApproval);
+  const tripsToday = (state.shoppingTrips||[]).filter(t=>t.date===dateISO);
   const tripsHtml = tripsToday.map(t=>{
     const member = memberById(t.memberId);
     const items = t.items||[];
@@ -1636,7 +1625,7 @@ function renderKidView(){
         const bought = items2.filter(i=>i.status==='bought').length;
         return `<div class="trip-row" onclick="jumpToTripFromElsewhere('${t.id}')">
           <div>
-            <div class="trip-title">${escapeHtml(t.name)}${t.status==='completed'?' <span class="trip-done-badge">Done</span>':''}${t.pendingApproval?' <span class="trip-pending-badge">Pending</span>':''}</div>
+            <div class="trip-title">${escapeHtml(t.name)}${t.status==='completed'?' <span class="trip-done-badge">Done</span>':''}</div>
             <div class="trip-meta">${bought}/${items2.length} bought</div>
           </div>
           <span class="trip-chevron">›</span>
@@ -1667,63 +1656,6 @@ function renderKidView(){
     ${taskItems}
     ${tripItems}
   `;
-}
-
-function renderPendingApprovals(){
-  const pendingChores = (state.chores||[]).filter(c=>c.pendingApproval);
-  const pendingShopItems = (state.shoppingList||[]).filter(i=>i.pendingApproval);
-  const pendingTrips = (state.shoppingTrips||[]).filter(t=>t.pendingApproval);
-  const total = pendingChores.length + pendingShopItems.length + pendingTrips.length;
-  if(total===0) return '';
-
-  const choreRows = pendingChores.map(c=>{
-    const m = memberById(c.memberId);
-    return `<div class="approval-row">
-      <div>
-        <div class="trip-title">${escapeHtml(c.title)} <span class="trip-pending-badge">Task</span></div>
-        <div class="trip-meta">${m?escapeHtml(m.name):''} · ${frequencyLabel(c)}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingChore('${c.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingChore('${c.id}')">Approve</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  const itemRows = pendingShopItems.map(i=>{
-    const m = memberById(i.addedBy);
-    return `<div class="approval-row">
-      <div>
-        <div class="trip-title">${escapeHtml(i.name)} <span class="trip-pending-badge">Quick List</span></div>
-        <div class="trip-meta">${m?escapeHtml(m.name):''}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingShopItem('${i.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingShopItem('${i.id}')">Approve</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  const tripRows = pendingTrips.map(t=>{
-    const m = memberById(t.memberId);
-    return `<div class="approval-row">
-      <div>
-        <div class="trip-title">${escapeHtml(t.name)} <span class="trip-pending-badge">Trip</span></div>
-        <div class="trip-meta">${formatDateNice(t.date)} · ${m?escapeHtml(m.name):''} · ${(t.items||[]).length} item${(t.items||[]).length===1?'':'s'}</div>
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingTrip('${t.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingTrip('${t.id}')">Approve</button>
-      </div>
-    </div>`;
-  }).join('');
-
-  return `
-    <div class="settings-card">
-      <h3>Pending approval (${total})</h3>
-      <p style="font-size:12.5px;color:#5c5847;margin-top:0;">Things kids have added, waiting for a parent to approve before they go live.</p>
-      ${choreRows}${itemRows}${tripRows}
-    </div>`;
 }
 
 function renderSettings(){
@@ -1784,21 +1716,8 @@ function renderSettings(){
           <input type="tel" value="${escapeHtml(fam.primaryHolderPhone||'')}" onchange="updateFamily('primaryHolderPhone',this.value)">
         </div>
       </div>
-      <p style="font-size:12px;color:#6b6650;margin:0 0 16px;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
-      <div class="field" style="margin-bottom:0;">
-        <label>Kids' permissions</label>
-        <label class="notify-check" style="margin-bottom:8px;">
-          <input type="checkbox" ${fam.allowKidsAddTasks!==false?'checked':''} onchange="updateFamily('allowKidsAddTasks',this.checked)">
-          Kids can add tasks
-        </label>
-        <label class="notify-check">
-          <input type="checkbox" ${fam.allowKidsAddShopping!==false?'checked':''} onchange="updateFamily('allowKidsAddShopping',this.checked)">
-          Kids can add shopping items &amp; trips
-        </label>
-        <p style="font-size:11.5px;color:#8a8468;margin:8px 0 0;">Even when allowed, anything a kid adds waits for a parent's approval below before it becomes active.</p>
-      </div>
+      <p style="font-size:12px;color:#6b6650;margin:0;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
     </div>
-    ${renderPendingApprovals()}
     <div class="settings-card">
       <h3>Family members</h3>
       ${memberRows}
@@ -2541,7 +2460,7 @@ function submitOnboarding(){
   const palette = ['#4C8577','#C1555F','#CE8A2E','#5C6BA0','#7C6BA0','#4A9B8E','#B0703C'];
   const holderId = cid();
   const familyId = genFamilyId();
-  state.family = {id:familyId, name:familyName, primaryHolderName:holderName, primaryHolderEmail:holderEmail, primaryHolderPhone:holderPhone, passwordHash: simpleHash(familyPassword), allowKidsAddTasks:true, allowKidsAddShopping:true};
+  state.family = {id:familyId, name:familyName, primaryHolderName:holderName, primaryHolderEmail:holderEmail, primaryHolderPhone:holderPhone, passwordHash: simpleHash(familyPassword)};
   state.members = [{id:holderId, name:holderName, role:'parent', color:palette[0], pinHash:null, email:holderEmail, phone:holderPhone}];
   state.events = [];
   state.chores = [];
@@ -2946,10 +2865,6 @@ function openTripDetail(tripId){
 }
 function openTripModal(){
   if(!requireAuth()) return;
-  if(!isParentLoggedIn() && !kidsCanAddShopping()){
-    showAlert('Adding shopping trips is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
-    return;
-  }
   ui.tripModalOpen = true;
   render();
 }
@@ -2971,10 +2886,6 @@ function toggleQuickListItemSelected(id){
 }
 function createTripFromSelectedQuickItems(){
   if(!requireAuth()) return;
-  if(!isParentLoggedIn() && !kidsCanAddShopping()){
-    showAlert('Adding shopping trips is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
-    return;
-  }
   ui.tripPrefillItemIds = (ui.selectedQuickListIds||[]).slice();
   ui.tripModalOpen = true;
   render();
@@ -3002,10 +2913,6 @@ function deleteSelectedQuickListItems(){
 }
 function saveTrip(){
   if(!isLoggedIn()) return;
-  if(!isParentLoggedIn() && !kidsCanAddShopping()){
-    showAlert('Adding shopping trips is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
-    return;
-  }
   const name = document.getElementById('f_trip_name').value.trim() || 'Shopping trip';
   const date = document.getElementById('f_trip_date').value || todayISO();
   const time = document.getElementById('f_trip_time').value || null;
@@ -3035,8 +2942,7 @@ function saveTrip(){
     });
   }
 
-  const pendingApproval = !isParentLoggedIn();
-  const trip = {id:cid(), choreId, name, date, time, memberId, status:'open', pendingApproval, items, createdBy: ui.profileId, createdAt: new Date().toISOString()};
+  const trip = {id:cid(), choreId, name, date, time, memberId, status:'open', items, createdBy: ui.profileId, createdAt: new Date().toISOString()};
   state.shoppingTrips = state.shoppingTrips || [];
   state.shoppingTrips.push(trip);
   saveData();
@@ -3132,15 +3038,10 @@ function deleteTrip(tripId){
 
 function addShoppingItem(){
   if(!requireAuth()) return;
-  if(!isParentLoggedIn() && !kidsCanAddShopping()){
-    showAlert('Adding shopping items is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
-    return;
-  }
   const input = document.getElementById('newShoppingItem');
   const name = (input.value||'').trim();
   if(!name) return;
-  const pendingApproval = !isParentLoggedIn();
-  state.shoppingList.push({id:cid(), name, checked:false, addedBy: ui.profileId, pendingApproval});
+  state.shoppingList.push({id:cid(), name, checked:false, addedBy: ui.profileId});
   saveData();
   render();
   // keep focus in the input for fast repeated entry
@@ -3177,87 +3078,8 @@ function clearCheckedShoppingItems(){
   });
 }
 
-function kidsCanAddTasks(){
-  return !!(state.family && state.family.allowKidsAddTasks !== false);
-}
-function kidsCanAddShopping(){
-  return !!(state.family && state.family.allowKidsAddShopping !== false);
-}
-
-// ---- approval handlers (parent-only) ----
-function approvePendingChore(id){
-  if(!isParentLoggedIn()) return;
-  const c = state.chores.find(c=>c.id===id);
-  if(!c) return;
-  c.pendingApproval = false;
-  saveData();
-  render();
-}
-function rejectPendingChore(id){
-  if(!isParentLoggedIn()) return;
-  const removed = state.chores.find(c=>c.id===id);
-  if(!removed) return;
-  state.chores = state.chores.filter(c=>c.id!==id);
-  saveData();
-  render();
-  showUndoToast(`"${removed.title}" rejected.`, ()=>{
-    state.chores.push(removed);
-    saveData();
-    render();
-  });
-}
-function approvePendingShopItem(id){
-  if(!isParentLoggedIn()) return;
-  const i = state.shoppingList.find(i=>i.id===id);
-  if(!i) return;
-  i.pendingApproval = false;
-  saveData();
-  render();
-}
-function rejectPendingShopItem(id){
-  if(!isParentLoggedIn()) return;
-  const removed = state.shoppingList.find(i=>i.id===id);
-  if(!removed) return;
-  state.shoppingList = state.shoppingList.filter(i=>i.id!==id);
-  saveData();
-  render();
-  showUndoToast(`"${removed.name}" rejected.`, ()=>{
-    state.shoppingList.push(removed);
-    saveData();
-    render();
-  });
-}
-function approvePendingTrip(id){
-  if(!isParentLoggedIn()) return;
-  const t = (state.shoppingTrips||[]).find(t=>t.id===id);
-  if(!t) return;
-  t.pendingApproval = false;
-  saveData();
-  pushTrip(t);
-  render();
-}
-function rejectPendingTrip(id){
-  if(!isParentLoggedIn()) return;
-  const removed = (state.shoppingTrips||[]).find(t=>t.id===id);
-  if(!removed) return;
-  state.shoppingTrips = (state.shoppingTrips||[]).filter(t=>t.id!==id);
-  saveData();
-  deleteTripRemote(id);
-  render();
-  showUndoToast(`"${removed.name}" trip rejected.`, ()=>{
-    state.shoppingTrips.push(removed);
-    saveData();
-    pushTrip(removed);
-    render();
-  });
-}
-
 function openChoreAdd(){
   if(!requireAuth()) return;
-  if(!isParentLoggedIn() && !kidsCanAddTasks()){
-    showAlert('Adding tasks is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
-    return;
-  }
   ui.choreModalOpen = true;
   ui.editingChoreId = null;
   ui.choreFormPrefill = {};
@@ -3293,10 +3115,6 @@ function addToChoreLibrary(title){
 function saveChore(){
   if(ui.editingChoreId && !isParentLoggedIn()) return; // editing existing: parent only
   if(!ui.editingChoreId && !isLoggedIn()) return; // creating new: must be logged in
-  if(!ui.editingChoreId && !isParentLoggedIn() && !kidsCanAddTasks()){
-    showAlert('Adding tasks is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
-    return;
-  }
 
   const today = todayISO();
   const title = document.getElementById('f_chore_title').value.trim() || 'Untitled task';
@@ -3324,8 +3142,7 @@ function saveChore(){
     const c = state.chores.find(c=>c.id===ui.editingChoreId);
     Object.assign(c, {title, memberId, frequency, days, dayOfMonth, startDate, dueDate, dueTime, points, active:true});
   } else {
-    const pendingApproval = !isParentLoggedIn(); // kid-created tasks wait for a parent to approve
-    state.chores.push({id:cid(), title, memberId, frequency, days, dayOfMonth, startDate, dueDate, dueTime, points, active:true, pendingApproval});
+    state.chores.push({id:cid(), title, memberId, frequency, days, dayOfMonth, startDate, dueDate, dueTime, points, active:true});
   }
   addToChoreLibrary(title);
   saveData();
