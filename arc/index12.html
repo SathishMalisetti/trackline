@@ -42,7 +42,7 @@
     --chrome:#F7F3E8;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+  html,body{margin:0;padding:0;}
   body{
     background:var(--chrome);
     color:var(--text-on-ink);
@@ -50,14 +50,13 @@
     min-height:100vh;
     -webkit-tap-highlight-color:transparent;
   }
-  .app{max-width:1400px;margin:0 auto;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+  .app{max-width:1400px;margin:0 auto;padding:0 0 60px;}
 
   /* HEADER / BOARD MASTHEAD */
   header.board{
     padding:22px 20px 16px;
     border-bottom:1px solid var(--line);
     display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
-    flex:none;background:var(--chrome);
   }
   .brand{display:flex;align-items:baseline;gap:12px;}
   .brand .flap{
@@ -195,7 +194,7 @@
   .dash-stat .label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-top:4px;}
   .dash-cta{background:var(--amber);color:var(--ink);border:none;font-family:'Archivo Narrow',sans-serif;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:14px 28px;border-radius:30px;font-size:14px;cursor:pointer;}
 
-  main{padding:18px 20px 60px;flex:1;overflow-y:auto;}
+  main{padding:18px 20px;}
 
   /* DAY SELECTOR */
   .week-nav{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
@@ -625,7 +624,7 @@ const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const DAY_START = 6*60;      // 6:00am
 const DAY_END = 21*60+30;    // 9:30pm
 const RANGE = DAY_END - DAY_START;
-const PX_PER_MIN = 0.85;
+const PX_PER_MIN = 1.15;
 
 const DEFAULT_MEMBERS = [
   {id:'dad',  name:'Dad',  role:'parent', color:'#4C8577', pinHash:null, email:'', phone:''},
