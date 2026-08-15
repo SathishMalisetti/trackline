@@ -777,40 +777,6 @@ function buildDefaultShoppingTrips(){
   }];
 }
 
-// Demo Screen Time data for the example family — the example family is
-// purely local/client-side (never actually synced to a real backend), so
-// this is served directly instead of hitting the network. Deliberately
-// includes BOTH a healthy device (Mia, still syncing today) and one that's
-// gone quiet (Leo, nothing for the last 2 days) — so someone browsing the
-// demo sees the gap-detection warning naturally, not just a clean happy
-// path that never shows what that feature actually looks like.
-function buildDefaultDeviceUsage(){
-  const now = Date.now();
-  const usage = [];
-
-  const miaMinutesByDaysAgo = {0:130, 1:175, 2:210, 3:98, 4:145};
-  Object.keys(miaMinutesByDaysAgo).forEach(daysAgoStr=>{
-    const daysAgo = parseInt(daysAgoStr,10);
-    const date = toISODate(addDays(todayISO(), -daysAgo));
-    usage.push({ memberId:'kid1', deviceName:'DESKTOP-MIA', date, minutesUsed: miaMinutesByDaysAgo[daysAgo] });
-  });
-
-  // Leo — had usage 4/3/2 days ago, then nothing — simulating the agent going quiet
-  const leoMinutesByDaysAgo = {2:190, 3:120, 4:160};
-  Object.keys(leoMinutesByDaysAgo).forEach(daysAgoStr=>{
-    const daysAgo = parseInt(daysAgoStr,10);
-    const date = toISODate(addDays(todayISO(), -daysAgo));
-    usage.push({ memberId:'kid2', deviceName:'DESKTOP-LEO', date, minutesUsed: leoMinutesByDaysAgo[daysAgo] });
-  });
-
-  const devices = [
-    { id:'demo-dev-mia', memberId:'kid1', hostname:'DESKTOP-MIA', label:"Mia's Laptop", lastSyncAt: new Date(now - 12*60000).toISOString() },
-    { id:'demo-dev-leo', memberId:'kid2', hostname:'DESKTOP-LEO', label:"Leo's Laptop", lastSyncAt: new Date(now - (2*24*60 + 15)*60000).toISOString() },
-  ];
-
-  return { usage, devices };
-}
-
 const DEFAULT_CHORE_LIBRARY = [
   // Morning — Bedroom & Personal
   'Make your bed', 'Fold blanket neatly', 'Put pillows in place', 'Put dirty clothes in laundry basket',
@@ -2441,15 +2407,6 @@ function toggleBoardMemberFilter(memberId){
 
 async function fetchDeviceUsage(){
   if(!state.family) return;
-  if(state.family.isExample){
-    const demo = buildDefaultDeviceUsage();
-    ui.deviceUsageData = demo.usage;
-    ui.deviceInfoData = demo.devices;
-    ui.deviceUsageError = null;
-    ui.deviceUsageLoading = false;
-    render();
-    return;
-  }
   if(hasClaudeStorage){
     ui.deviceUsageData = [];
     ui.deviceInfoData = [];
@@ -3109,7 +3066,7 @@ function loadExampleData(){
   doLoadExampleData();
 }
 function doLoadExampleData(){
-  state.family = {id:genFamilyId(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:'', passwordHash: simpleHash('demo1234'), isExample:true};
+  state.family = {id:genFamilyId(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:'', passwordHash: simpleHash('demo1234')};
   state.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
   state.events = JSON.parse(JSON.stringify(DEFAULT_EVENTS));
   state.chores = JSON.parse(JSON.stringify(DEFAULT_CHORES));
@@ -4368,7 +4325,7 @@ function resetDefaults(){
   if(!isParentLoggedIn()) return;
   showConfirm('Reset to the example data? This replaces your current schedule and clears all PINs.', ()=>{
     state = {
-      family: {id:genFamilyId(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:'', passwordHash: simpleHash('demo1234'), isExample:true},
+      family: {id:genFamilyId(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:'', passwordHash: simpleHash('demo1234')},
       members: JSON.parse(JSON.stringify(DEFAULT_MEMBERS)),
       events: JSON.parse(JSON.stringify(DEFAULT_EVENTS)),
       chores: JSON.parse(JSON.stringify(DEFAULT_CHORES)),
