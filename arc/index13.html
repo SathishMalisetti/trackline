@@ -417,11 +417,6 @@
     font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.02em;
     background:var(--amber);color:var(--ink);padding:3px 8px;border-radius:10px;flex:none;
   }
-  .screentime-bars{display:flex;gap:6px;align-items:flex-end;height:70px;}
-  .screentime-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end;}
-  .screentime-bar-track{width:100%;flex:1;display:flex;align-items:flex-end;}
-  .screentime-bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:2px;background:var(--amber);}
-  .screentime-bar-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);}
   .approval-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
   .approval-row:last-child{border-bottom:none;}
   .trip-item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
@@ -498,7 +493,6 @@ const API_BASE = ''; // '' = same origin (normal case, since the API is hosted a
 const FAMILY_ENDPOINT = API_BASE + '/api/family-data';
 const CHORE_LOG_ENDPOINT = API_BASE + '/api/chore-log';
 const TRIP_ENDPOINT = API_BASE + '/api/shopping-trip';
-const DEVICE_USAGE_ENDPOINT = API_BASE + '/api/device-usage';
 const JOIN_FAMILY_ENDPOINT = API_BASE + '/api/join-family';
 
 // ---- portable storage layer -------------------------------------------------
@@ -889,10 +883,6 @@ let ui = {
   exportModalOpen: false,
   exportError: null,
   loginAttempts: {},
-  deviceUsageData: null,     // null = not fetched yet; array once loaded
-  deviceUsageLoading: false,
-  deviceUsageError: null,
-  deviceUsageDays: 7,
   taskLibraryModalOpen: false,
   activityLibraryModalOpen: false, // { memberId: { count, lockedUntil } } — client-side speed bump against rapid PIN guessing
   libraryPickerOpen: false,
@@ -1835,82 +1825,6 @@ function renderKidView(){
   `;
 }
 
-function renderScreenTime(){
-  if(ui.deviceUsageLoading && ui.deviceUsageData===null){
-    return `<div class="chore-empty-day">Loading screen time…</div>`;
-  }
-  if(ui.deviceUsageError){
-    return `<div class="chore-empty-day">${escapeHtml(ui.deviceUsageError)}</div>
-      <button class="btn ghost" style="margin-top:10px;" onclick="refreshDeviceUsage()">Try again</button>`;
-  }
-
-  const isParent = isParentLoggedIn();
-  const kidsToShow = isParent
-    ? state.members.filter(m=>m.role==='kid')
-    : state.members.filter(m=>m.id===ui.profileId && m.role==='kid');
-
-  if(kidsToShow.length===0){
-    return `<div class="chore-empty-day">${isParent? 'No kids to show screen time for yet.' : 'Screen time reporting is for kid profiles.'}</div>`;
-  }
-
-  const noDataAtAll = (ui.deviceUsageData||[]).length===0;
-  const cards = kidsToShow.map(m => renderScreenTimeCard(m)).join('');
-
-  return `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-      <p style="font-size:13px;color:var(--text-dim);margin:0;max-width:480px;">Laptop/mobile usage, reported automatically every 30 minutes once device tracking is connected.</p>
-      <button class="btn ghost" onclick="refreshDeviceUsage()">Refresh</button>
-    </div>
-    ${noDataAtAll ? `<div class="chore-empty-day">No usage data yet — this will populate automatically once device tracking is connected.</div>` : ''}
-    <div class="person-tiles-grid">${cards}</div>
-  `;
-}
-
-function renderScreenTimeCard(m){
-  const todayByDevice = todayUsageByDevice(m.id);
-  const deviceNames = Object.keys(todayByDevice);
-  const todayTotal = deviceNames.reduce((sum,d)=>sum+todayByDevice[d],0);
-  const trend = dailyTotalsForMember(m.id, ui.deviceUsageDays);
-  const maxDay = Math.max(1, ...trend.map(t=>t.totalMinutes));
-
-  const deviceRows = deviceNames.length===0
-    ? `<div class="tile-empty">No usage recorded today</div>`
-    : deviceNames.map(d=>`
-      <div class="tile-sched-row">
-        <span class="tile-sched-time">${formatMinutesAsHM(todayByDevice[d])}</span>
-        <span class="tile-sched-title">${escapeHtml(d)}</span>
-      </div>`).join('');
-
-  const bars = trend.map(t=>{
-    const pct = t.totalMinutes>0 ? Math.max(Math.round((t.totalMinutes / maxDay) * 100), 4) : 0;
-    const d = fromISODate(t.date);
-    const dayLabel = d.toLocaleDateString(undefined,{weekday:'narrow'});
-    return `<div class="screentime-bar-col" title="${formatDateNice(t.date)}: ${formatMinutesAsHM(t.totalMinutes)}">
-      <div class="screentime-bar-track"><div class="screentime-bar-fill" style="height:${pct}%;background:${m.color};"></div></div>
-      <div class="screentime-bar-label">${dayLabel}</div>
-    </div>`;
-  }).join('');
-
-  return `
-    <div class="person-tile" style="border-top-color:${m.color};">
-      <div class="tile-header">
-        <span class="profile-avatar" style="background:${m.color};width:38px;height:38px;font-size:14px;">${initials(m.name)}</span>
-        <div>
-          <div class="tile-name">${escapeHtml(m.name)}</div>
-          <div class="tile-role">Today: ${formatMinutesAsHM(todayTotal)}</div>
-        </div>
-      </div>
-      <div class="tile-section">
-        <div class="tile-section-head"><span>Today by device</span></div>
-        ${deviceRows}
-      </div>
-      <div class="tile-section">
-        <div class="tile-section-head"><span>Last ${ui.deviceUsageDays} days</span></div>
-        <div class="screentime-bars">${bars}</div>
-      </div>
-    </div>`;
-}
-
 function totalPendingApprovals(){
   const pendingChores = (state.chores||[]).filter(c=>c.pendingApproval).length;
   const pendingShopItems = (state.shoppingList||[]).filter(i=>i.pendingApproval).length;
@@ -2382,68 +2296,6 @@ function toggleBoardMemberFilter(memberId){
   if(idx===-1) ui.hiddenBoardMembers.push(memberId);
   else ui.hiddenBoardMembers.splice(idx,1);
   render();
-}
-
-async function fetchDeviceUsage(){
-  if(!state.family) return;
-  if(hasClaudeStorage){
-    ui.deviceUsageData = [];
-    ui.deviceUsageError = 'Screen time reporting needs the deployed backend — not available while running inside Claude.';
-    render();
-    return;
-  }
-  ui.deviceUsageLoading = true;
-  ui.deviceUsageError = null;
-  render();
-  try{
-    const res = await fetch(`${DEVICE_USAGE_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&days=${ui.deviceUsageDays}`);
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      ui.deviceUsageError = err.error || 'Could not load screen time data.';
-      ui.deviceUsageData = [];
-    } else {
-      const result = await res.json();
-      ui.deviceUsageData = result.usage || [];
-    }
-  } catch(e){
-    ui.deviceUsageError = 'Could not reach the server. Check your connection and try again.';
-    ui.deviceUsageData = [];
-  }
-  ui.deviceUsageLoading = false;
-  render();
-}
-function refreshDeviceUsage(){
-  ui.deviceUsageData = null;
-  fetchDeviceUsage();
-}
-
-function deviceUsageForMember(memberId){
-  return (ui.deviceUsageData||[]).filter(u=>u.memberId===memberId);
-}
-function todayUsageByDevice(memberId){
-  const today = todayISO();
-  const byDevice = {};
-  deviceUsageForMember(memberId).filter(u=>u.date===today).forEach(u=>{
-    byDevice[u.deviceName] = (byDevice[u.deviceName]||0) + u.minutesUsed;
-  });
-  return byDevice;
-}
-function dailyTotalsForMember(memberId, days){
-  const totals = {};
-  deviceUsageForMember(memberId).forEach(u=>{ totals[u.date] = (totals[u.date]||0) + u.minutesUsed; });
-  const result = [];
-  for(let i=days-1;i>=0;i--){
-    const d = toISODate(addDays(todayISO(), -i));
-    result.push({ date:d, totalMinutes: totals[d]||0 });
-  }
-  return result;
-}
-function formatMinutesAsHM(mins){
-  if(!mins) return '0m';
-  const h = Math.floor(mins/60), m = mins%60;
-  if(h===0) return `${m}m`;
-  if(m===0) return `${h}h`;
-  return `${h}h ${m}m`;
 }
 
 function toggleDayMode(){
@@ -3019,7 +2871,6 @@ function render(){
           <button class="${ui.tab==='chores'?'active':''}" onclick="setTab('chores')">Tasks</button>
           <button class="${ui.tab==='shopping'?'active':''}" onclick="setTab('shopping')">Shopping</button>
           <button class="${ui.tab==='kid'?'active':''}" onclick="setTab('kid')">Kid View</button>
-          <button class="${ui.tab==='screentime'?'active':''}" onclick="setTab('screentime')">Screen Time</button>
           <button class="${ui.tab==='settings'?'active':''}" onclick="setTab('settings')">Settings${(isParentLoggedIn() && totalPendingApprovals()>0) ? ` <span class="nav-badge">${totalPendingApprovals()}</span>` : ''}</button>
         </nav>
         <button class="search-btn" onclick="openSearch()" title="Search activities and tasks">🔍</button>
@@ -3033,7 +2884,6 @@ function render(){
       ${ui.tab==='chores'? renderChores() : ''}
       ${ui.tab==='shopping'? renderShoppingTab() : ''}
       ${ui.tab==='kid'? renderKidView() : ''}
-      ${ui.tab==='screentime'? renderScreenTime() : ''}
       ${ui.tab==='settings'? renderSettings() : ''}
     </main>
     ${renderModal()}
@@ -3056,9 +2906,6 @@ function setTab(t){
   if(t==='kid' && ui.profileId){
     const p = memberById(ui.profileId);
     if(p && p.role==='kid') ui.kidId = p.id;
-  }
-  if(t==='screentime' && ui.deviceUsageData===null && !ui.deviceUsageLoading){
-    fetchDeviceUsage();
   }
   render();
 }
