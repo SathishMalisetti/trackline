@@ -2719,6 +2719,10 @@ function submitOnboarding(){
 }
 
 function loadExampleData(){
+  if(ui.priorFamilySnapshot){
+    showConfirm('This replaces your current family\u2019s data on this device with example data. Continue?', doLoadExampleData);
+    return;
+  }
   doLoadExampleData();
 }
 function doLoadExampleData(){
