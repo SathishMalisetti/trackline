@@ -19,32 +19,22 @@
     --text-dim:#9AA0C0;
     --transit:#8C8676;
     --radius:10px;
-    /* --ink is used in two very different ways throughout this file: as the
-       dark TEXT color on light paper/amber surfaces (modals, buttons, forms —
-       the majority of its uses), and — separately — as the app's dark
-       BACKGROUND chrome (just body, the undo-toast, and the shop-add-bar
-       input). Day mode only needs to flip the second kind. --chrome exists
-       specifically for that, so --ink itself can stay fixed as "dark text"
-       everywhere else, in both modes. */
-    --chrome:#181C2A;
   }
-  /* DAY MODE — the dark app-chrome background (header, board, tabs, month
-     view, tiles) flips to a light, warm tone. Modals/cards/buttons are
-     deliberately untouched here — they already use --paper (light) with
-     --ink (dark text), which is correct in both modes and never needs to
-     change. */
+  /* DAY MODE — same paper/amber accents (modals already use these regardless
+     of mode), but the main dark "ink" chrome (header, board, tabs) flips to
+     a light, warm tone instead. Toggled via a class on <body>. */
   body.day-mode{
-    --ink-2:#EDE7D6;
-    --ink-3:#DFD8C0;
-    --line:#B8AF92;
-    --text-on-ink:#1E1B0F;
-    --text-dim:#4A4530;
-    --chrome:#F7F3E8;
+    --ink:#F3EEE1;
+    --ink-2:#E7E0CC;
+    --ink-3:#DBD3B9;
+    --line:#C9C2AB;
+    --text-on-ink:#2B2818;
+    --text-dim:#6B6650;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--chrome);
+    background:var(--ink);
     color:var(--text-on-ink);
     font-family:'Inter',sans-serif;
     min-height:100vh;
@@ -164,7 +154,7 @@
     background:var(--paper);color:var(--ink);border-radius:10px;
     box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden;z-index:40;
   }
-  .profile-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink);}
+  .profile-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:13.5px;font-weight:600;}
   .profile-item:hover{background:#e3dcc6;}
   .profile-item.current{background:#e3dcc6;}
   .profile-item .dot{width:20px;height:20px;border-radius:50%;flex:none;}
@@ -278,7 +268,7 @@
   /* FAB */
   .undo-toast{
     position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:60;
-    background:var(--chrome);color:var(--text-on-ink);border:1px solid var(--line);
+    background:var(--ink);color:var(--text-on-ink);border:1px solid var(--line);
     border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:14px;
     box-shadow:0 8px 24px rgba(0,0,0,.5);font-size:13.5px;max-width:90vw;
   }
@@ -364,7 +354,7 @@
   .shop-remove{background:none;border:none;color:#a5323a;cursor:pointer;font-size:16px;padding:4px 8px;}
   .shop-divider{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#8a8468;padding:14px 0 6px;border-top:1px solid #cfc7ac;margin-top:6px;}
   .shop-add-bar{position:fixed;left:0;right:0;bottom:0;background:var(--ink-2);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;z-index:15;}
-  .shop-add-bar input{flex:1;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--chrome);color:var(--text-on-ink);font-size:15px;}
+  .shop-add-bar input{flex:1;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--ink);color:var(--text-on-ink);font-size:15px;}
   .shop-add-bar input::placeholder{color:var(--text-dim);}
 
   /* SHOPPING TRIPS */
