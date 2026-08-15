@@ -499,8 +499,6 @@ const FAMILY_ENDPOINT = API_BASE + '/api/family-data';
 const CHORE_LOG_ENDPOINT = API_BASE + '/api/chore-log';
 const TRIP_ENDPOINT = API_BASE + '/api/shopping-trip';
 const DEVICE_USAGE_ENDPOINT = API_BASE + '/api/device-usage';
-const DEVICE_LIST_ENDPOINT = API_BASE + '/api/device-list';
-const DEVICE_DEREGISTER_ENDPOINT = API_BASE + '/api/device-deregister';
 const JOIN_FAMILY_ENDPOINT = API_BASE + '/api/join-family';
 
 // ---- portable storage layer -------------------------------------------------
@@ -892,16 +890,9 @@ let ui = {
   exportError: null,
   loginAttempts: {},
   deviceUsageData: null,     // null = not fetched yet; array once loaded
-  deviceInfoData: null,      // paired devices with lastSyncAt, for gap detection
   deviceUsageLoading: false,
   deviceUsageError: null,
   deviceUsageDays: 7,
-  deviceManagerOpen: false,
-  deviceManagerPasswordEntered: false,
-  deviceManagerPasswordHash: null,
-  deviceManagerDevices: null,
-  deviceManagerError: null,
-  deviceManagerLoading: false,
   taskLibraryModalOpen: false,
   activityLibraryModalOpen: false, // { memberId: { count, lockedUntil } } — client-side speed bump against rapid PIN guessing
   libraryPickerOpen: false,
@@ -1876,26 +1867,19 @@ function renderScreenTime(){
 }
 
 function renderScreenTimeCard(m){
-  const myDevices = (ui.deviceInfoData||[]).filter(d=>d.memberId===m.id);
   const todayByDevice = todayUsageByDevice(m.id);
-  const todayTotal = Object.values(todayByDevice).reduce((sum,v)=>sum+v,0);
+  const deviceNames = Object.keys(todayByDevice);
+  const todayTotal = deviceNames.reduce((sum,d)=>sum+todayByDevice[d],0);
   const trend = dailyTotalsForMember(m.id, ui.deviceUsageDays);
   const maxDay = Math.max(1, ...trend.map(t=>t.totalMinutes));
 
-  const anyStale = myDevices.some(d=>deviceSyncStatus(d).status==='stale');
-
-  const deviceRows = myDevices.length===0
-    ? `<div class="tile-empty">No device paired yet</div>`
-    : myDevices.map(d=>{
-        const status = deviceSyncStatus(d);
-        const todayMins = todayByDevice[d.hostname] || 0;
-        const label = d.label || d.hostname || 'Device';
-        const extra = (status.status!=='stale' && todayMins>0) ? ` — ${formatMinutesAsHM(todayMins)} today` : '';
-        return `<div class="tile-task-row ${status.status==='stale'?'tile-task-overdue':''}" style="cursor:default;">
-          <span>${status.status==='stale'?'⚠ ':'✓ '}${escapeHtml(label)}${extra}</span>
-          <span class="tile-task-mark" style="${status.status==='stale'?'background:#D6484E;color:#fff;':''}">${escapeHtml(status.label)}</span>
-        </div>`;
-      }).join('');
+  const deviceRows = deviceNames.length===0
+    ? `<div class="tile-empty">No usage recorded today</div>`
+    : deviceNames.map(d=>`
+      <div class="tile-sched-row">
+        <span class="tile-sched-time">${formatMinutesAsHM(todayByDevice[d])}</span>
+        <span class="tile-sched-title">${escapeHtml(d)}</span>
+      </div>`).join('');
 
   const bars = trend.map(t=>{
     const pct = t.totalMinutes>0 ? Math.max(Math.round((t.totalMinutes / maxDay) * 100), 4) : 0;
@@ -1908,7 +1892,7 @@ function renderScreenTimeCard(m){
   }).join('');
 
   return `
-    <div class="person-tile ${anyStale?'person-tile-attention':''}" style="border-top-color:${m.color};">
+    <div class="person-tile" style="border-top-color:${m.color};">
       <div class="tile-header">
         <span class="profile-avatar" style="background:${m.color};width:38px;height:38px;font-size:14px;">${initials(m.name)}</span>
         <div>
@@ -1917,7 +1901,7 @@ function renderScreenTimeCard(m){
         </div>
       </div>
       <div class="tile-section">
-        <div class="tile-section-head"><span>Devices</span></div>
+        <div class="tile-section-head"><span>Today by device</span></div>
         ${deviceRows}
       </div>
       <div class="tile-section">
@@ -2081,11 +2065,6 @@ function renderSettings(){
       <h3>Activity list</h3>
       <p style="font-size:13px;color:#5c5847;margin-top:0;">Same idea for activities — "Dentist," "Swimming," "GP appointment" show up as suggestions instead of typing them fresh every time.</p>
       <button class="btn ghost" onclick="openActivityLibraryModal()">Manage activity list (${(state.activityLibrary||[]).length})</button>
-    </div>
-    <div class="settings-card">
-      <h3>Screen time devices</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Laptops paired for automatic screen-time reporting. Removing one deletes its usage history permanently.</p>
-      <button class="btn ghost" onclick="openDeviceManager()">Manage registered devices</button>
     </div>
     <div class="settings-card">
       <h3>Data</h3>
@@ -2409,7 +2388,6 @@ async function fetchDeviceUsage(){
   if(!state.family) return;
   if(hasClaudeStorage){
     ui.deviceUsageData = [];
-    ui.deviceInfoData = [];
     ui.deviceUsageError = 'Screen time reporting needs the deployed backend — not available while running inside Claude.';
     render();
     return;
@@ -2423,16 +2401,13 @@ async function fetchDeviceUsage(){
       const err = await res.json().catch(()=>({}));
       ui.deviceUsageError = err.error || 'Could not load screen time data.';
       ui.deviceUsageData = [];
-      ui.deviceInfoData = [];
     } else {
       const result = await res.json();
       ui.deviceUsageData = result.usage || [];
-      ui.deviceInfoData = result.devices || [];
     }
   } catch(e){
     ui.deviceUsageError = 'Could not reach the server. Check your connection and try again.';
     ui.deviceUsageData = [];
-    ui.deviceInfoData = [];
   }
   ui.deviceUsageLoading = false;
   render();
@@ -2445,27 +2420,6 @@ function refreshDeviceUsage(){
 function deviceUsageForMember(memberId){
   return (ui.deviceUsageData||[]).filter(u=>u.memberId===memberId);
 }
-const SYNC_STALE_THRESHOLD_MINUTES = 90; // agent syncs every 30 min per design; this allows a couple of missed cycles before flagging
-
-function deviceSyncStatus(device){
-  if(!device.lastSyncAt) return { status:'never', label:'Never synced yet' };
-  const lastSync = new Date(device.lastSyncAt);
-  const minutesAgo = (Date.now() - lastSync.getTime()) / 60000;
-  if(minutesAgo > SYNC_STALE_THRESHOLD_MINUTES){
-    return { status:'stale', label:`No data since ${formatSyncTimeLabel(lastSync)}`, minutesAgo };
-  }
-  return { status:'ok', label:`Synced ${minutesAgoLabel(minutesAgo)}`, minutesAgo };
-}
-function minutesAgoLabel(minutesAgo){
-  if(minutesAgo < 1) return 'just now';
-  if(minutesAgo < 60) return `${Math.round(minutesAgo)} min ago`;
-  return `${Math.round(minutesAgo/60)}h ago`;
-}
-function formatSyncTimeLabel(dateObj){
-  const iso = toISODate(dateObj);
-  return `${formatDateNice(iso)}, ${minToLabel(dateObj.getHours()*60 + dateObj.getMinutes())}`;
-}
-
 function todayUsageByDevice(memberId){
   const today = todayISO();
   const byDevice = {};
@@ -2490,113 +2444,6 @@ function formatMinutesAsHM(mins){
   if(h===0) return `${m}m`;
   if(m===0) return `${h}h`;
   return `${h}h ${m}m`;
-}
-
-function openDeviceManager(){
-  if(!isParentLoggedIn()) return;
-  ui.deviceManagerOpen = true;
-  ui.deviceManagerPasswordEntered = false;
-  ui.deviceManagerDevices = null;
-  ui.deviceManagerError = null;
-  render();
-}
-function closeDeviceManager(){
-  ui.deviceManagerOpen = false;
-  ui.deviceManagerPasswordHash = null;
-  render();
-}
-async function submitDeviceManagerPassword(){
-  const pwd = (document.getElementById('f_devicemgr_password').value||'').trim();
-  if(!pwd) return;
-  const hash = simpleHash(pwd);
-  ui.deviceManagerLoading = true;
-  ui.deviceManagerError = null;
-  render();
-  try{
-    const res = await fetch(DEVICE_LIST_ENDPOINT, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ familyId: state.family.id, passwordHash: hash })
-    });
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      ui.deviceManagerError = err.error || 'Could not load devices.';
-      ui.deviceManagerLoading = false;
-      render();
-      return;
-    }
-    const result = await res.json();
-    ui.deviceManagerDevices = result.devices || [];
-    ui.deviceManagerPasswordEntered = true;
-    ui.deviceManagerPasswordHash = hash;
-  } catch(e){
-    ui.deviceManagerError = 'Could not reach the server. Check your connection and try again.';
-  }
-  ui.deviceManagerLoading = false;
-  render();
-}
-function confirmRemoveDeviceByIndex(idx){
-  const d = (ui.deviceManagerDevices||[])[idx];
-  if(!d) return;
-  const label = d.label || d.hostname || 'this device';
-  showConfirm(`Permanently delete "${label}" and all its usage history? This cannot be undone.`, ()=>removeDevice(d.id), {danger:true});
-}
-async function removeDevice(deviceId){
-  try{
-    await fetch(DEVICE_DEREGISTER_ENDPOINT, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ familyId: state.family.id, passwordHash: ui.deviceManagerPasswordHash, deviceId })
-    });
-  } catch(e){ /* still remove from the local list — worst case they see it again next open and can retry */ }
-  ui.deviceManagerDevices = (ui.deviceManagerDevices||[]).filter(d=>d.id!==deviceId);
-  render();
-}
-function renderDeviceManagerModal(){
-  if(!ui.deviceManagerOpen) return '';
-
-  if(!ui.deviceManagerPasswordEntered){
-    return `
-    <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
-      <div class="modal" style="max-width:360px;">
-        <h2>Registered devices</h2>
-        <p style="font-size:13px;color:#5c5847;margin:0 0 16px;">Enter your family password to view and manage paired devices.</p>
-        <input type="password" id="f_devicemgr_password" placeholder="Family password" onkeydown="if(event.key==='Enter') submitDeviceManagerPassword()" style="width:100%;padding:11px;border-radius:8px;border:1px solid #c9c2ab;font-size:15px;">
-        ${ui.deviceManagerError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.deviceManagerError)}</div>`:''}
-        <div class="modal-actions" style="margin-top:16px;">
-          <div></div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn ghost" onclick="closeDeviceManager()">Cancel</button>
-            <button class="btn primary" onclick="submitDeviceManagerPassword()">${ui.deviceManagerLoading?'Loading…':'View devices'}</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  const devices = ui.deviceManagerDevices || [];
-  const rows = devices.map((d, idx)=>{
-    const m = memberById(d.memberId);
-    const lastSync = d.lastSyncAt ? formatDateNice(d.lastSyncAt.slice(0,10)) : 'Never synced yet';
-    return `<div class="approval-row">
-      <div>
-        <div class="trip-title">${escapeHtml(d.label || d.hostname || 'Unnamed device')}</div>
-        <div class="trip-meta">${m?escapeHtml(m.name):'Unknown member'} · Last sync: ${lastSync}</div>
-      </div>
-      <button class="btn danger" style="padding:7px 12px;font-size:11.5px;" onclick="confirmRemoveDeviceByIndex(${idx})">Remove</button>
-    </div>`;
-  }).join('');
-
-  return `
-  <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
-    <div class="modal" style="max-width:440px;">
-      <h2>Registered devices</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Removing a device deletes all of its usage history permanently. To pair a new laptop, run the Trackline agent's setup on that device — see the setup guide for the command.</p>
-      ${devices.length===0? '<p style="font-size:13px;color:#8a8468;">No devices paired yet.</p>' : rows}
-      <div class="modal-actions" style="margin-top:16px;">
-        <div></div>
-        <button class="btn primary" onclick="closeDeviceManager()">Done</button>
-      </div>
-    </div>
-  </div>`;
 }
 
 function toggleDayMode(){
@@ -3155,7 +3002,6 @@ function render(){
     ${renderToast()}
     ${renderTaskLibraryModal()}
     ${renderActivityLibraryModal()}
-    ${renderDeviceManagerModal()}
     `;
     return;
   }
@@ -3200,7 +3046,6 @@ function render(){
     ${renderToast()}
     ${renderTaskLibraryModal()}
     ${renderActivityLibraryModal()}
-    ${renderDeviceManagerModal()}
   `;
   document.querySelectorAll('.kid-select-btn.active').forEach(b=>{ b.style.color = '#181C2A'; });
 }
