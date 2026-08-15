@@ -20,17 +20,6 @@
     --transit:#8C8676;
     --radius:10px;
   }
-  /* DAY MODE — same paper/amber accents (modals already use these regardless
-     of mode), but the main dark "ink" chrome (header, board, tabs) flips to
-     a light, warm tone instead. Toggled via a class on <body>. */
-  body.day-mode{
-    --ink:#F3EEE1;
-    --ink-2:#E7E0CC;
-    --ink-3:#DBD3B9;
-    --line:#C9C2AB;
-    --text-on-ink:#2B2818;
-    --text-dim:#6B6650;
-  }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
@@ -218,7 +207,7 @@
 
   /* BOARD GRID */
   .board-wrap{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--ink-2);}
-  .time-axis{width:56px;flex:none;border-right:1px solid var(--line);}
+  .time-axis{width:56px;flex:none;position:relative;border-right:1px solid var(--line);}
   .time-axis .tick{
     position:absolute;left:0;right:0;
     font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);
@@ -830,7 +819,6 @@ let state = {
 };
 let ui = {
   tab: 'board',
-  dayMode: (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('trackline-day-mode')==='1'),
   weekStart: toISODate(mondayOf(todayISO())),
   selectedOffset: dowMonIndexed(todayISO()),
   modalOpen: false,
@@ -1060,16 +1048,7 @@ function renderTimeAxis(){
     const top = (m-DAY_START)*PX_PER_MIN;
     ticks += `<div class="tick" style="top:${top}px">${minToLabel(m).replace(':00','')}</div>`;
   }
-  // The invisible header spacer below MUST match .col-head exactly (same
-  // class, same markup shape) — every day column has a real header row
-  // (avatar + name) that pushes its grid content down; without a matching
-  // spacer here, the time labels start higher than the actual grid,
-  // making every block and the now-line appear to sit lower than the
-  // time it's actually at.
-  return `<div class="time-axis">
-    <div class="col-head" style="visibility:hidden;"><span class="swatch"></span><span class="name">&nbsp;</span></div>
-    <div class="time-axis-ticks" style="position:relative;height:${RANGE*PX_PER_MIN}px;">${ticks}</div>
-  </div>`;
+  return `<div class="time-axis" style="height:${RANGE*PX_PER_MIN}px">${ticks}</div>`;
 }
 
 function renderGridlines(){
@@ -2287,17 +2266,6 @@ function toggleBoardMemberFilter(memberId){
   render();
 }
 
-function toggleDayMode(){
-  ui.dayMode = !ui.dayMode;
-  applyDayModeClass();
-  try{ window.localStorage.setItem('trackline-day-mode', ui.dayMode ? '1' : '0'); }catch(e){}
-  render();
-}
-function applyDayModeClass(){
-  if(typeof document === 'undefined' || !document.body) return;
-  document.body.classList.toggle('day-mode', !!ui.dayMode);
-}
-
 function openSearch(){
   ui.searchOpen = true;
   ui.searchQuery = '';
@@ -2610,11 +2578,11 @@ function renderOnboarding(){
 
       <div class="field">
         <label>Family name</label>
-        <input type="text" id="ob_familyName" placeholder="e.g. The Smith Family">
+        <input type="text" id="ob_familyName" placeholder="e.g. The Sathish Family">
       </div>
       <div class="field">
         <label>Your name (primary holder)</label>
-        <input type="text" id="ob_holderName" placeholder="e.g. Alex">
+        <input type="text" id="ob_holderName" placeholder="e.g. Sathish">
       </div>
       <div class="row2">
         <div class="field">
@@ -2830,7 +2798,6 @@ function render(){
           <div class="sub">Family Tracker</div>
         </div>
         <div class="header-right">
-          <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${ui.dayMode?'🌙':'☀️'}</button>
           ${renderProfileDropdown()}
         </div>
       </header>
@@ -2863,7 +2830,6 @@ function render(){
           <button class="${ui.tab==='settings'?'active':''}" onclick="setTab('settings')">Settings${(isParentLoggedIn() && totalPendingApprovals()>0) ? ` <span class="nav-badge">${totalPendingApprovals()}</span>` : ''}</button>
         </nav>
         <button class="search-btn" onclick="openSearch()" title="Search activities and tasks">🔍</button>
-        <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${ui.dayMode?'🌙':'☀️'}</button>
         ${renderProfileDropdown()}
       </div>
     </header>
@@ -4023,7 +3989,6 @@ function resetDefaults(){
   }, {danger:true});
 }
 
-applyDayModeClass();
 loadData();
 setInterval(()=>{ if(ui.tab==='board') render(); }, 60000); // refresh now-line each minute
 </script>
