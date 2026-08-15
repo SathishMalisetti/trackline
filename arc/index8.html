@@ -71,6 +71,10 @@
   }
   nav.tabs button:hover{color:var(--text-on-ink);border-color:var(--text-dim);}
   nav.tabs button.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
+  .nav-badge{
+    display:inline-block;background:#D6484E;color:#fff;font-size:10px;font-weight:800;
+    border-radius:9px;padding:1px 6px;margin-left:2px;vertical-align:middle;
+  }
 
   /* PROFILE DROPDOWN */
   .header-right{display:flex;align-items:center;gap:14px;}
@@ -357,6 +361,40 @@
   .trip-chevron{font-size:20px;color:#8a8468;}
   .trip-done-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#dcecdf;color:#3d7a4f;border-radius:10px;padding:2px 8px;}
   .trip-pending-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#f3e6c6;color:#8a6a1f;border-radius:10px;padding:2px 8px;}
+
+  /* PARENT VIEW — per-person tiles */
+  .person-tiles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding-bottom:40px;}
+  .person-tile{
+    background:var(--ink-2);border:1px solid var(--line);border-top:4px solid #888;border-radius:10px;
+    padding:16px;display:flex;flex-direction:column;gap:14px;
+  }
+  .person-tile-attention{box-shadow:0 0 0 1px #D6484E, 0 2px 10px rgba(214,72,78,.25);}
+  .tile-header{display:flex;align-items:center;gap:10px;}
+  .tile-name{font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:16px;color:var(--text-on-ink);}
+  .tile-role{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-family:'IBM Plex Mono',monospace;}
+  .tile-section{display:flex;flex-direction:column;gap:6px;}
+  .tile-section-head{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;
+    color:var(--text-dim);border-bottom:1px solid var(--line);padding-bottom:5px;
+  }
+  .tile-progress-label{font-family:'IBM Plex Mono',monospace;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-on-ink);}
+  .tile-progress-bar{height:5px;background:var(--ink-3);border-radius:3px;overflow:hidden;}
+  .tile-progress-fill{height:100%;border-radius:3px;}
+  .tile-empty{font-size:12.5px;color:var(--text-dim);font-style:italic;}
+  .tile-sched-row{display:flex;gap:8px;font-size:13px;color:var(--text-on-ink);align-items:baseline;}
+  .tile-sched-time{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);flex:none;min-width:44px;}
+  .tile-sched-title{flex:1;}
+  .tile-task-row{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    font-size:13px;color:var(--text-on-ink);cursor:pointer;padding:4px 0;
+  }
+  .tile-task-done{color:#7fbf8c;cursor:default;}
+  .tile-task-overdue{color:#e08a8f;}
+  .tile-task-mark{
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.02em;
+    background:var(--amber);color:var(--ink);padding:3px 8px;border-radius:10px;flex:none;
+  }
   .approval-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
   .approval-row:last-child{border-bottom:none;}
   .trip-item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
@@ -378,6 +416,7 @@
     background:#fff;border:1px solid #c9c2ab;color:#5c5847;padding:6px 12px;border-radius:16px;cursor:pointer;
   }
   .quick-add-chip:hover{background:#e3dcc6;}
+  .quick-add-chip-added{background:#dcecdf !important;border-color:#a8d3af !important;color:#3d7a4f !important;cursor:default !important;opacity:.85;}
   .days-picker{display:flex;gap:6px;flex-wrap:wrap;}
   .days-picker label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#5c5847;cursor:pointer;}
   .days-picker input{width:16px;height:16px;}
@@ -394,6 +433,9 @@
   .member-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
   .member-contact-row{display:flex;gap:8px;margin:0 0 14px 44px;}
   .member-contact-row input{flex:1;padding:7px 9px;border-radius:6px;border:1px solid #c9c2ab;font-size:12.5px;color:#5c5847;}
+  .member-notify-row{display:flex;gap:16px;margin:0 0 16px 44px;flex-wrap:wrap;}
+  .notify-check{display:flex;align-items:center;gap:6px;font-size:12px;color:#5c5847;cursor:pointer;}
+  .notify-check input{width:14px;height:14px;}
   .member-row input[type=color]{width:34px;height:34px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;}
   .member-row input[type=text]{flex:1;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;font-size:14px;}
   .member-row select{padding:9px 8px;border-radius:7px;border:1px solid #c9c2ab;font-size:13px;}
@@ -429,6 +471,7 @@ const API_BASE = ''; // '' = same origin (normal case, since the API is hosted a
 const FAMILY_ENDPOINT = API_BASE + '/api/family-data';
 const CHORE_LOG_ENDPOINT = API_BASE + '/api/chore-log';
 const TRIP_ENDPOINT = API_BASE + '/api/shopping-trip';
+const JOIN_FAMILY_ENDPOINT = API_BASE + '/api/join-family';
 
 // ---- portable storage layer -------------------------------------------------
 // Two modes, auto-detected:
@@ -765,6 +808,8 @@ let ui = {
   rescheduleModalOpen: false,
   exportModalOpen: false,
   exportError: null,
+  loginAttempts: {}, // { memberId: { count, lockedUntil } } — client-side speed bump against rapid PIN guessing
+  libraryPickerOpen: false,
   boardViewMode: 'week', // 'week' | 'month'
   monthCursor: todayISO(),
   joinFamilyMode: false,
@@ -795,6 +840,8 @@ async function loadData(){
         });
         parsed.members.forEach(m=>{
           if(!('pinHash' in m)) m.pinHash = null;
+          if(!('canAddTasks' in m)) m.canAddTasks = true;
+          if(!('canAddShopping' in m)) m.canAddShopping = true;
           if(!('email' in m)) m.email = '';
           if(!('phone' in m)) m.phone = '';
         });
@@ -1269,9 +1316,13 @@ function renderShoppingList(){
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:80px;">
       ${selectedIds.length>0 ? `<button class="btn danger" onclick="confirmDeleteSelectedQuickListItems()">Delete ${selectedIds.length} selected</button>` : ''}
       ${selectedIds.length>0 ? `<button class="btn primary" onclick="createTripFromSelectedQuickItems()">Create trip from ${selectedIds.length} selected</button>` : ''}
+      <button class="btn ghost" onclick="openLibraryPicker()">Add from list</button>
     </div>
     <div class="shop-add-bar">
-      <input type="text" id="newShoppingItem" placeholder="Add an item — milk, bread, ..." onkeydown="if(event.key==='Enter') addShoppingItem()">
+      <input type="text" id="newShoppingItem" list="quickListLibraryOptions" placeholder="Add an item — milk, bread, ..." onkeydown="if(event.key==='Enter') addShoppingItem()">
+      <datalist id="quickListLibraryOptions">
+        ${(state.shoppingItemLibrary||[]).map(n=>`<option value="${escapeHtml(n)}"></option>`).join('')}
+      </datalist>
       <button class="btn primary" onclick="addShoppingItem()">Add</button>
     </div>
   `;
@@ -1281,7 +1332,7 @@ function renderShoppingTab(){
   const content = ui.shoppingMode==='trip-detail' && ui.viewingTripId ? renderTripDetail(ui.viewingTripId)
     : ui.shoppingMode==='trips' ? renderTripsList()
     : renderShoppingList();
-  return `${content}${renderTripModal()}`;
+  return `${content}${renderTripModal()}${renderLibraryPickerModal()}`;
 }
 
 function renderTripsList(){
@@ -1337,8 +1388,13 @@ function renderTripDetail(tripId){
   return `
     <button class="btn ghost" style="margin-bottom:14px;" onclick="setShoppingMode('trips')">← Back to trips</button>
     <div class="kid-big">
-      <h2>${escapeHtml(trip.name)}${trip.status==='completed'?' <span class="trip-done-badge">Done</span>':''}${trip.pendingApproval?' <span class="trip-pending-badge">Pending approval</span>':''}</h2>
-      <div class="kd">${formatDateNice(trip.date)}${trip.time? ' · '+minToLabel(timeInputToMin(trip.time)):''} · ${member?escapeHtml(member.name):'Unassigned'}${trip.choreId?' · linked to a task':''}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div>
+          <h2>${escapeHtml(trip.name)}${trip.status==='completed'?' <span class="trip-done-badge">Done</span>':''}${trip.pendingApproval?' <span class="trip-pending-badge">Pending approval</span>':''}</h2>
+          <div class="kd">${formatDateNice(trip.date)}${trip.time? ' · '+minToLabel(timeInputToMin(trip.time)):''} · ${member?escapeHtml(member.name):'Unassigned'}${trip.choreId?' · linked to a task':''}</div>
+        </div>
+        ${canEditMeta? `<button class="btn ghost" style="flex:none;" onclick="openTripEditModal('${trip.id}')">Edit</button>` : ''}
+      </div>
       ${items.length===0? '<div class="kid-empty">No items yet — add some below.</div>' : itemRows}
       <div class="shop-add-bar" style="margin-top:16px;">
         <input type="text" id="newTripItem" list="shoppingItemLibraryList" placeholder="Add an item..." onkeydown="if(event.key==='Enter') addTripItem('${trip.id}')">
@@ -1358,12 +1414,20 @@ function renderTripDetail(tripId){
 
 function renderTripModal(){
   if(!ui.tripModalOpen) return '';
+  const isEdit = !!ui.editingTripId;
+  const editingTrip = isEdit ? (state.shoppingTrips||[]).find(t=>t.id===ui.editingTripId) : null;
+  if(isEdit && !editingTrip) return '';
+
   const today = todayISO();
-  const memberOptions = state.members.map(m=>`<option value="${m.id}">${escapeHtml(m.name)}</option>`).join('');
-  const choreOptions = state.chores.map(c=>`<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('');
+  const memberOptions = state.members.map(m=>`<option value="${m.id}" ${editingTrip && editingTrip.memberId===m.id?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
+  const choreOptions = state.chores.map(c=>`<option value="${c.id}" ${editingTrip && editingTrip.choreId===c.id?'selected':''}>${escapeHtml(c.title)}</option>`).join('');
+  const nameVal = editingTrip ? editingTrip.name : '';
+  const dateVal = editingTrip ? editingTrip.date : today;
+  const timeVal = editingTrip ? (editingTrip.time||'') : '';
+
   const quickListItems = state.shoppingList || [];
   const prefillIds = ui.tripPrefillItemIds || [];
-  const quickListPicker = quickListItems.length>0 ? `
+  const quickListPicker = (!isEdit && quickListItems.length>0) ? `
     <div class="field">
       <label>Add items from your Quick List (optional)</label>
       <div class="trip-quicklist-picker">
@@ -1377,19 +1441,19 @@ function renderTripModal(){
   return `
   <div class="overlay" onclick="if(event.target===this) closeTripModal()">
     <div class="modal">
-      <h2>New shopping trip</h2>
+      <h2>${isEdit? 'Edit trip' : 'New shopping trip'}</h2>
       <div class="field">
         <label>Trip name</label>
-        <input type="text" id="f_trip_name" placeholder="e.g. Coles run">
+        <input type="text" id="f_trip_name" placeholder="e.g. Coles run" value="${escapeHtml(nameVal)}">
       </div>
       <div class="row2">
         <div class="field">
           <label>Date</label>
-          <input type="date" id="f_trip_date" value="${today}" min="${today}">
+          <input type="date" id="f_trip_date" value="${dateVal}" min="${today}">
         </div>
         <div class="field">
           <label>Time (optional)</label>
-          <input type="time" id="f_trip_time" value="">
+          <input type="time" id="f_trip_time" value="${timeVal}">
         </div>
       </div>
       <div class="field">
@@ -1406,15 +1470,16 @@ function renderTripModal(){
         <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Linking just shows on the trip that it's tied to that task — marking the task done and completing the trip stay independent.</p>
       </div>
       ${quickListPicker}
+      ${!isEdit ? `
       <div class="field">
         <label>Or add new items now (comma-separated, optional)</label>
         <input type="text" id="f_trip_new_items" placeholder="e.g. Strawberries, Chocolate, Toilet paper">
-      </div>
+      </div>` : ''}
       <div class="modal-actions">
         <div></div>
         <div style="display:flex;gap:8px;">
           <button class="btn ghost" onclick="closeTripModal()">Cancel</button>
-          <button class="btn primary" onclick="saveTrip()">Create</button>
+          <button class="btn primary" onclick="saveTrip()">${isEdit?'Save changes':'Create'}</button>
         </div>
       </div>
     </div>
@@ -1469,90 +1534,95 @@ function renderChores(){
 function renderParentView(){
   const dateISO = selectedDateISO();
 
-  // combine every family member's activities + every driver's transit blocks into one sorted timeline
-  const combined = [];
-  eventsForDate(dateISO).forEach(e=>{
-    const owner = memberById(e.memberId);
-    if(!owner) return;
-    combined.push({
-      kind:'event', start:e.start, end:e.end, title:e.title, location:e.location,
-      color: e.color || owner.color, ownerName: owner.name
+  const tiles = state.members.map(m=>{
+    // this person's activities + any transit blocks they're driving, merged and time-sorted
+    const scheduleItems = [];
+    eventsForDateMember(dateISO, m.id).forEach(e=>{
+      scheduleItems.push({ start:e.start, end:e.end, title:e.title, location:e.location, kind:'event' });
     });
-  });
-  state.members.forEach(m=>{
     transitBlocksForDateDriver(dateISO, m.id).forEach(t=>{
-      combined.push({
-        kind:'transit', start:t.start, end:t.end, title:t.label,
-        color: m.color, ownerName: m.name+' driving'
-      });
+      scheduleItems.push({ start:t.start, end:t.end, title:t.label, location:'', kind:'transit' });
     });
-  });
-  combined.sort((a,b)=>a.start-b.start);
+    scheduleItems.sort((a,b)=>a.start-b.start);
 
-  const timelineHtml = combined.length===0
-    ? `<div class="kid-empty">Nothing scheduled for ${formatDateNice(dateISO)}. Free day 🎉</div>`
-    : combined.map(item=>`
-      <div class="kid-item">
-        <div class="kid-time">${minToShort(item.start)}–${minToShort(item.end)}</div>
-        <div>
-          <div class="kid-title" style="display:flex;align-items:center;gap:8px;">
-            <span style="width:10px;height:10px;border-radius:50%;background:${item.color};display:inline-block;flex:none;"></span>
-            ${item.kind==='transit'?'🚗 ':''}${escapeHtml(item.title)}
-          </div>
-          <div class="kid-loc">${escapeHtml(item.ownerName)}${item.location? ' · '+escapeHtml(item.location):''}</div>
-        </div>
-      </div>`).join('');
+    const scheduleHtml = scheduleItems.length===0
+      ? `<div class="tile-empty">Nothing scheduled</div>`
+      : scheduleItems.map(it=>`
+        <div class="tile-sched-row">
+          <span class="tile-sched-time">${minToShort(it.start)}</span>
+          <span class="tile-sched-title">${it.kind==='transit'?'🚗 ':''}${escapeHtml(it.title)}${it.location?` · ${escapeHtml(it.location)}`:''}</span>
+        </div>`).join('');
 
-  // chore status across every kid, for a quick who's-done-what check
-  const kids = state.members.filter(m=>m.role==='kid');
-  const choreGroups = kids.map(k=>{
-    const due = choresForDateMember(dateISO, k.id);
-    if(due.length===0) return '';
-    const rows = due.map(c=>{
+    // tasks due today for this person, with a quick-complete button right on the tile
+    const dueTasks = m.role==='kid' ? choresForDateMember(dateISO, m.id) : [];
+    const doneCount = dueTasks.filter(c=>choreLogFor(c.id, dateISO)).length;
+    const pct = dueTasks.length ? Math.round((doneCount/dueTasks.length)*100) : 0;
+    const taskRows = dueTasks.map(c=>{
       const log = choreLogFor(c.id, dateISO);
-      const status = log
-        ? `<div class="chore-done-badge" style="cursor:default;">✓ Done at ${escapeHtml(log.completedAt)}</div>`
-        : `<span class="chore-locked-btn" style="color:#c0393f;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.03em;">Pending</span>`;
-      return `<div class="chore-row">
-        <div class="chore-info">
-          <div class="chore-title">${escapeHtml(c.title)}</div>
-          <div class="chore-freq">${frequencyLabel(c)}</div>
-        </div>
-        ${status}
+      if(log) return `<div class="tile-task-row tile-task-done">✓ ${escapeHtml(c.title)}</div>`;
+      const overdue = c.dueTime && timeInputToMin(c.dueTime) < nowMinutesOfDay();
+      return `<div class="tile-task-row ${overdue?'tile-task-overdue':''}" onclick="openCompleteChore('${c.id}')">
+        <span>${overdue?'⚠ ':''}${escapeHtml(c.title)}</span>
+        <span class="tile-task-mark">Mark done</span>
       </div>`;
     }).join('');
-    return `<div class="chore-group"><div class="chore-group-head"><span class="swatch" style="background:${k.color}"></span><span class="name">${escapeHtml(k.name)}</span></div>${rows}</div>`;
-  }).join('');
-  const anyChoresDue = kids.some(k=>choresForDateMember(dateISO,k.id).length>0);
+    const tasksSection = m.role==='kid' ? `
+      <div class="tile-section">
+        <div class="tile-section-head">
+          <span>Tasks</span>
+          ${dueTasks.length ? `<span class="tile-progress-label">${doneCount}/${dueTasks.length}</span>` : ''}
+        </div>
+        ${dueTasks.length ? `<div class="tile-progress-bar"><div class="tile-progress-fill" style="width:${pct}%;background:${m.color};"></div></div>` : ''}
+        ${dueTasks.length ? taskRows : `<div class="tile-empty">No tasks today</div>`}
+      </div>` : '';
 
-  // shopping trips scheduled for this date, for anyone in the family
-  const tripsToday = (state.shoppingTrips||[]).filter(t=>t.date===dateISO && !t.pendingApproval);
-  const tripsHtml = tripsToday.map(t=>{
-    const member = memberById(t.memberId);
-    const items = t.items||[];
-    const bought = items.filter(i=>i.status==='bought').length;
-    return `<div class="trip-row" onclick="jumpToTripFromElsewhere('${t.id}')">
-      <div>
-        <div class="trip-title">${escapeHtml(t.name)}${t.status==='completed'?' <span class="trip-done-badge">Done</span>':''}</div>
-        <div class="trip-meta">${member?escapeHtml(member.name):'Unassigned'} · ${bought}/${items.length} bought</div>
-      </div>
-      <span class="trip-chevron">›</span>
-    </div>`;
+    // shopping trips assigned to this person today
+    const myTrips = (state.shoppingTrips||[]).filter(t=>t.memberId===m.id && t.date===dateISO && !t.pendingApproval);
+    const tripsSection = myTrips.length ? `
+      <div class="tile-section">
+        <div class="tile-section-head"><span>Shopping</span></div>
+        ${myTrips.map(t=>{
+          const items = t.items||[];
+          const bought = items.filter(i=>i.status==='bought').length;
+          return `<div class="tile-sched-row" style="cursor:pointer;" onclick="jumpToTripFromElsewhere('${t.id}')">
+            <span class="tile-sched-time">🛒</span>
+            <span class="tile-sched-title">${escapeHtml(t.name)} · ${bought}/${items.length} bought</span>
+          </div>`;
+        }).join('')}
+      </div>` : '';
+
+    const needsAttention = dueTasks.some(c=>!choreLogFor(c.id,dateISO) && c.dueTime && timeInputToMin(c.dueTime) < nowMinutesOfDay());
+
+    return `
+      <div class="person-tile ${needsAttention?'person-tile-attention':''}" style="border-top-color:${m.color};">
+        <div class="tile-header">
+          <span class="profile-avatar" style="background:${m.color};width:38px;height:38px;font-size:14px;">${initials(m.name)}</span>
+          <div>
+            <div class="tile-name">${escapeHtml(m.name)}</div>
+            <div class="tile-role">${m.role==='parent'?'Parent':'Kid'}</div>
+          </div>
+        </div>
+        <div class="tile-section">
+          <div class="tile-section-head"><span>Today</span></div>
+          ${scheduleHtml}
+        </div>
+        ${tasksSection}
+        ${tripsSection}
+      </div>`;
   }).join('');
 
   return `
     ${renderWeekNav()}
     ${renderDayRow()}
-    <div class="kid-big" style="margin-bottom:22px;">
-      <h2>Everyone's day</h2>
-      <div class="kd">${formatDateNice(dateISO)}</div>
-      ${timelineHtml}
+    <div class="person-tiles-grid">
+      ${tiles}
     </div>
-    <h3 style="font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;color:var(--text-on-ink);margin:0 0 12px;">Kids' tasks</h3>
-    ${anyChoresDue ? choreGroups : `<div class="chore-empty-day">No tasks due on ${formatDateNice(dateISO)}.</div>`}
-    <h3 style="font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;color:var(--text-on-ink);margin:22px 0 12px;">Shopping trips</h3>
-    ${tripsToday.length ? `<div class="chore-group">${tripsHtml}</div>` : `<div class="chore-empty-day">No shopping trips scheduled for ${formatDateNice(dateISO)}.</div>`}
   `;
+}
+
+function nowMinutesOfDay(){
+  const n = new Date();
+  return n.getHours()*60 + n.getMinutes();
 }
 
 function jumpToTripFromElsewhere(tripId){
@@ -1669,6 +1739,13 @@ function renderKidView(){
   `;
 }
 
+function totalPendingApprovals(){
+  const pendingChores = (state.chores||[]).filter(c=>c.pendingApproval).length;
+  const pendingShopItems = (state.shoppingList||[]).filter(i=>i.pendingApproval).length;
+  const pendingTrips = (state.shoppingTrips||[]).filter(t=>t.pendingApproval).length;
+  return pendingChores + pendingShopItems + pendingTrips;
+}
+
 function renderPendingApprovals(){
   const pendingChores = (state.chores||[]).filter(c=>c.pendingApproval);
   const pendingShopItems = (state.shoppingList||[]).filter(i=>i.pendingApproval);
@@ -1751,7 +1828,18 @@ function renderSettings(){
     <div class="member-contact-row">
       <input type="email" value="${escapeHtml(m.email||'')}" onchange="updateMember('${m.id}','email',this.value)" placeholder="Email (for future notifications)">
       <input type="tel" value="${escapeHtml(m.phone||'')}" onchange="updateMember('${m.id}','phone',this.value)" placeholder="Phone (for future SMS)">
-    </div>`).join('');
+    </div>
+    ${m.role==='kid' ? `
+    <div class="member-notify-row">
+      <label class="notify-check">
+        <input type="checkbox" ${m.canAddTasks!==false?'checked':''} onchange="updateMember('${m.id}','canAddTasks',this.checked)">
+        Can add tasks
+      </label>
+      <label class="notify-check">
+        <input type="checkbox" ${m.canAddShopping!==false?'checked':''} onchange="updateMember('${m.id}','canAddShopping',this.checked)">
+        Can add shopping items &amp; trips
+      </label>
+    </div>` : ''}`).join('');
 
   return `
     <div class="settings-card">
@@ -1784,19 +1872,7 @@ function renderSettings(){
           <input type="tel" value="${escapeHtml(fam.primaryHolderPhone||'')}" onchange="updateFamily('primaryHolderPhone',this.value)">
         </div>
       </div>
-      <p style="font-size:12px;color:#6b6650;margin:0 0 16px;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
-      <div class="field" style="margin-bottom:0;">
-        <label>Kids' permissions</label>
-        <label class="notify-check" style="margin-bottom:8px;">
-          <input type="checkbox" ${fam.allowKidsAddTasks!==false?'checked':''} onchange="updateFamily('allowKidsAddTasks',this.checked)">
-          Kids can add tasks
-        </label>
-        <label class="notify-check">
-          <input type="checkbox" ${fam.allowKidsAddShopping!==false?'checked':''} onchange="updateFamily('allowKidsAddShopping',this.checked)">
-          Kids can add shopping items &amp; trips
-        </label>
-        <p style="font-size:11.5px;color:#8a8468;margin:8px 0 0;">Even when allowed, anything a kid adds waits for a parent's approval below before it becomes active.</p>
-      </div>
+      <p style="font-size:12px;color:#6b6650;margin:0;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
     </div>
     ${renderPendingApprovals()}
     <div class="settings-card">
@@ -1827,7 +1903,6 @@ function renderSettings(){
         Storage mode: <strong>${hasClaudeStorage?'Claude account storage':backendReachable?'Cloud (synced across devices)':backendReachable===false?'This browser only (localStorage) — backend unreachable':'Checking connection…'}</strong>${(!hasClaudeStorage && backendReachable===false)?' — this device won\u2019t automatically see schedules saved on other devices until the backend is reachable again.':''}${(!hasClaudeStorage && backendReachable)?' — this family\u2019s data is synced through the backend, so any device pointed at the same deployment sees the same schedule.':''}
       </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn ghost" onclick="openExportModal()">Export data</button>
         <button class="btn ghost" onclick="document.getElementById('importFile').click()">Import data</button>
         <button class="btn danger" onclick="resetDefaults()">Reset to example data</button>
       </div>
@@ -2307,12 +2382,14 @@ function renderLoginModal(){
       <p style="font-size:13px;color:#5c5847;margin:0 0 18px;">${isCreate? `Choose a 4-digit PIN for ${escapeHtml(m.name)}. You'll use this to log in from now on.` : `Logging in as ${escapeHtml(m.name)}`}</p>
 
       <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin_input"
-        placeholder="••••" autocomplete="off"
+        placeholder="••••" autocomplete="off" autofocus
+        onkeydown="if(event.key==='Enter'){ ${isCreate? `const c=document.getElementById('pin_confirm'); if(c) c.focus();` : `submitLogin();`} }"
         style="width:100%;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;">
 
       ${isCreate? `
       <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin_confirm"
         placeholder="Confirm PIN" autocomplete="off"
+        onkeydown="if(event.key==='Enter') submitLogin();"
         style="width:100%;text-align:center;font-size:18px;letter-spacing:6px;padding:10px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;margin-top:10px;">
       `:''}
 
@@ -2329,6 +2406,15 @@ function renderLoginModal(){
 function submitLogin(){
   const m = memberById(ui.loginMemberId);
   if(!m) return;
+
+  const attempt = ui.loginAttempts[m.id] || {count:0, lockedUntil:null};
+  if(attempt.lockedUntil && Date.now() < attempt.lockedUntil){
+    const secondsLeft = Math.ceil((attempt.lockedUntil - Date.now())/1000);
+    ui.loginError = `Too many incorrect attempts. Try again in ${secondsLeft}s.`;
+    render();
+    return;
+  }
+
   const pin = (document.getElementById('pin_input').value||'').trim();
 
   if(!/^\d{4}$/.test(pin)){
@@ -2348,17 +2434,31 @@ function submitLogin(){
     saveData();
   } else {
     if(simpleHash(pin) !== m.pinHash){
-      ui.loginError = 'Incorrect PIN.';
+      attempt.count = (attempt.count||0) + 1;
+      if(attempt.count >= 5){
+        const lockSeconds = Math.min(30 * Math.pow(2, attempt.count-5), 300);
+        attempt.lockedUntil = Date.now() + lockSeconds*1000;
+        ui.loginError = `Too many incorrect attempts. Locked for ${lockSeconds}s.`;
+      } else {
+        ui.loginError = `Incorrect PIN. ${5-attempt.count} attempt${5-attempt.count===1?'':'s'} left before a short lockout.`;
+      }
+      ui.loginAttempts[m.id] = attempt;
       render();
       return;
     }
   }
 
+  // success — reset the attempt counter for this member
+  ui.loginAttempts[m.id] = {count:0, lockedUntil:null};
+
   ui.profileId = m.id;
   ui.authenticated = true;
   ui.loginOpen = false;
   ui.loginError = null;
-  if(m.role==='kid') ui.kidId = m.id;
+  if(m.role==='kid'){
+    ui.kidId = m.id;
+    ui.tab = 'kid'; // kids land on their own day, not the board/parent view
+  }
   render();
 }
 
@@ -2485,31 +2585,35 @@ async function submitJoinFamily(){
   ui.joinError = null;
   render(); // clear any previous error while the lookup runs
 
-  const data = await fetchFamilyById(familyId);
-  if(!data || !data.family){
-    ui.joinError = backendReachable===false
-      ? 'Can\u2019t reach the server right now — check your internet connection and try again.'
-      : 'No family found with that ID. Double-check it and try again.';
-    render();
-    return;
-  }
-  if(!data.family.passwordHash){
-    ui.joinError = 'This family doesn\u2019t have a password set yet — ask the parent who created it to set one in Settings.';
-    render();
-    return;
-  }
-  if(simpleHash(password) !== data.family.passwordHash){
-    ui.joinError = 'Incorrect family password.';
-    render();
-    return;
-  }
+  try{
+    const res = await fetch(JOIN_FAMILY_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ familyId, passwordHash: simpleHash(password) })
+    });
+    if(!res.ok){
+      const err = await res.json().catch(()=>({}));
+      ui.joinError = err.error || 'No family found with that ID. Double-check it and try again.';
+      render();
+      return;
+    }
+    const data = await res.json();
+    if(!data || !data.family){
+      ui.joinError = 'No family found with that ID. Double-check it and try again.';
+      render();
+      return;
+    }
 
-  // success — link this browser to that family and load its data
-  window.localStorage.setItem(LOCAL_FAMILY_ID_KEY, familyId);
-  state = data;
-  ui.joinFamilyMode = false;
-  ui.joinError = null;
-  render();
+    // success — link this browser to that family and load its data
+    window.localStorage.setItem(LOCAL_FAMILY_ID_KEY, familyId);
+    state = data;
+    ui.joinFamilyMode = false;
+    ui.joinError = null;
+    render();
+  } catch(e){
+    ui.joinError = 'Can\u2019t reach the server right now — check your internet connection and try again.';
+    render();
+  }
 }
 
 function continueAfterFamilyCreated(){
@@ -2541,7 +2645,7 @@ function submitOnboarding(){
   const palette = ['#4C8577','#C1555F','#CE8A2E','#5C6BA0','#7C6BA0','#4A9B8E','#B0703C'];
   const holderId = cid();
   const familyId = genFamilyId();
-  state.family = {id:familyId, name:familyName, primaryHolderName:holderName, primaryHolderEmail:holderEmail, primaryHolderPhone:holderPhone, passwordHash: simpleHash(familyPassword), allowKidsAddTasks:true, allowKidsAddShopping:true};
+  state.family = {id:familyId, name:familyName, primaryHolderName:holderName, primaryHolderEmail:holderEmail, primaryHolderPhone:holderPhone, passwordHash: simpleHash(familyPassword)};
   state.members = [{id:holderId, name:holderName, role:'parent', color:palette[0], pinHash:null, email:holderEmail, phone:holderPhone}];
   state.events = [];
   state.chores = [];
@@ -2651,7 +2755,6 @@ function render(){
     ${renderConfirmModal()}
     ${renderAlertModal()}
     ${renderToast()}
-    ${renderExportModal()}
     `;
     return;
   }
@@ -2665,11 +2768,11 @@ function render(){
       <div class="header-right">
         <nav class="tabs">
           <button class="${ui.tab==='board'?'active':''}" onclick="setTab('board')">Week Board</button>
-          <button class="${ui.tab==='parent'?'active':''}" onclick="setTab('parent')">Parent View</button>
+          ${isParentLoggedIn() ? `<button class="${ui.tab==='parent'?'active':''}" onclick="setTab('parent')">Parent View</button>` : ''}
           <button class="${ui.tab==='chores'?'active':''}" onclick="setTab('chores')">Tasks</button>
           <button class="${ui.tab==='shopping'?'active':''}" onclick="setTab('shopping')">Shopping</button>
           <button class="${ui.tab==='kid'?'active':''}" onclick="setTab('kid')">Kid View</button>
-          <button class="${ui.tab==='settings'?'active':''}" onclick="setTab('settings')">Settings</button>
+          <button class="${ui.tab==='settings'?'active':''}" onclick="setTab('settings')">Settings${(isParentLoggedIn() && totalPendingApprovals()>0) ? ` <span class="nav-badge">${totalPendingApprovals()}</span>` : ''}</button>
         </nav>
         <button class="search-btn" onclick="openSearch()" title="Search activities and tasks">🔍</button>
         ${renderProfileDropdown()}
@@ -2691,7 +2794,6 @@ function render(){
     ${renderConfirmModal()}
     ${renderAlertModal()}
     ${renderToast()}
-    ${renderExportModal()}
   `;
   document.querySelectorAll('.kid-select-btn.active').forEach(b=>{ b.style.color = '#181C2A'; });
 }
@@ -2714,10 +2816,14 @@ function openLogin(id){
   if(!m) return;
   ui.loginMemberId = id;
   ui.loginMode = m.pinHash ? 'enter' : 'create';
-  ui.loginError = null;
+  const attempt = ui.loginAttempts[id];
+  ui.loginError = (attempt && attempt.lockedUntil && Date.now() < attempt.lockedUntil)
+    ? `Too many incorrect attempts. Try again in ${Math.ceil((attempt.lockedUntil - Date.now())/1000)}s.`
+    : null;
   ui.loginOpen = true;
   ui.profileMenuOpen = false;
   render();
+  setTimeout(()=>{ const el=document.getElementById('pin_input'); if(el) el.focus(); }, 0);
 }
 function closeLogin(){
   ui.loginOpen = false;
@@ -2950,11 +3056,19 @@ function openTripModal(){
     showAlert('Adding shopping trips is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
     return;
   }
+  ui.editingTripId = null;
+  ui.tripModalOpen = true;
+  render();
+}
+function openTripEditModal(tripId){
+  if(!isParentLoggedIn()) return;
+  ui.editingTripId = tripId;
   ui.tripModalOpen = true;
   render();
 }
 function closeTripModal(){
   ui.tripModalOpen = false;
+  ui.editingTripId = null;
   ui.tripPrefillItemIds = [];
   render();
 }
@@ -3002,15 +3116,29 @@ function deleteSelectedQuickListItems(){
 }
 function saveTrip(){
   if(!isLoggedIn()) return;
-  if(!isParentLoggedIn() && !kidsCanAddShopping()){
+  const isEdit = !!ui.editingTripId;
+  if(!isEdit && !isParentLoggedIn() && !kidsCanAddShopping()){
     showAlert('Adding shopping trips is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
     return;
   }
+  if(isEdit && !isParentLoggedIn()) return; // editing is parent-only
+
   const name = document.getElementById('f_trip_name').value.trim() || 'Shopping trip';
   const date = document.getElementById('f_trip_date').value || todayISO();
   const time = document.getElementById('f_trip_time').value || null;
   const memberId = document.getElementById('f_trip_member').value;
   const choreId = document.getElementById('f_trip_chore').value || null;
+
+  if(isEdit){
+    const trip = (state.shoppingTrips||[]).find(t=>t.id===ui.editingTripId);
+    if(!trip) return;
+    Object.assign(trip, {name, date, time, memberId, choreId});
+    saveData();
+    pushTrip(trip);
+    closeTripModal();
+    render();
+    return;
+  }
 
   const items = [];
   const addedNames = new Set();
@@ -3130,6 +3258,83 @@ function deleteTrip(tripId){
   }
 }
 
+function openLibraryPicker(){
+  if(!requireAuth()) return;
+  ui.libraryPickerOpen = true;
+  render();
+}
+function closeLibraryPicker(){
+  ui.libraryPickerOpen = false;
+  render();
+}
+function quickAddFromLibrary(idx){
+  if(!requireAuth()) return;
+  if(!isParentLoggedIn() && !kidsCanAddShopping()){
+    showAlert('Adding shopping items is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
+    return;
+  }
+  const name = (state.shoppingItemLibrary||[])[idx];
+  if(!name) return;
+  const alreadyOnList = (state.shoppingList||[]).some(i=>i.name.toLowerCase()===name.toLowerCase());
+  if(alreadyOnList) return; // one tap per item, no duplicates
+  const pendingApproval = !isParentLoggedIn();
+  state.shoppingList.push({id:cid(), name, checked:false, addedBy: ui.profileId, pendingApproval});
+  saveData();
+  render();
+}
+function addShoppingItemFromPicker(){
+  if(!requireAuth()) return;
+  if(!isParentLoggedIn() && !kidsCanAddShopping()){
+    showAlert('Adding shopping items is currently turned off for kids — ask a parent to add this, or to turn it back on in Settings.');
+    return;
+  }
+  const input = document.getElementById('newLibraryPickerItem');
+  const name = (input.value||'').trim();
+  if(!name) return;
+  const alreadyOnList = (state.shoppingList||[]).some(i=>i.name.toLowerCase()===name.toLowerCase());
+  if(!alreadyOnList){
+    const pendingApproval = !isParentLoggedIn();
+    state.shoppingList.push({id:cid(), name, checked:false, addedBy: ui.profileId, pendingApproval});
+    addToShoppingItemLibrary(name);
+    saveData();
+  }
+  render();
+  const el = document.getElementById('newLibraryPickerItem');
+  if(el && el.focus) el.focus();
+}
+
+function renderLibraryPickerModal(){
+  if(!ui.libraryPickerOpen) return '';
+  const library = state.shoppingItemLibrary || [];
+  const currentNames = new Set((state.shoppingList||[]).map(i=>i.name.toLowerCase()));
+
+  const chips = library.map((name,idx)=>{
+    const already = currentNames.has(name.toLowerCase());
+    return `<button class="quick-add-chip ${already?'quick-add-chip-added':''}" ${already?'disabled':''} onclick="quickAddFromLibrary(${idx})">${already?'✓ ':''}${escapeHtml(name)}</button>`;
+  }).join('');
+
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeLibraryPicker()">
+    <div class="modal" style="max-width:460px;">
+      <h2>Add from your item list</h2>
+      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Tap any item to add it straight to your Quick List — already-added items are checked off. Don't see what you need? Type it below.</p>
+      <div class="shop-add-bar" style="position:static;background:none;border:none;padding:0;margin-bottom:16px;">
+        <input type="text" id="newLibraryPickerItem" placeholder="Type a new item..." onkeydown="if(event.key==='Enter') addShoppingItemFromPicker()">
+        <button class="btn primary" onclick="addShoppingItemFromPicker()">Add</button>
+      </div>
+      <div style="max-height:300px;overflow-y:auto;">
+        ${library.length===0
+          ? `<p style="font-size:13px;color:#8a8468;">No saved items yet — anything you add (here or on a shopping trip) gets saved for next time.</p>`
+          : chips}
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <div></div>
+        <button class="btn primary" onclick="closeLibraryPicker()">Done</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 function addShoppingItem(){
   if(!requireAuth()) return;
   if(!isParentLoggedIn() && !kidsCanAddShopping()){
@@ -3177,11 +3382,13 @@ function clearCheckedShoppingItems(){
   });
 }
 
-function kidsCanAddTasks(){
-  return !!(state.family && state.family.allowKidsAddTasks !== false);
+function kidsCanAddTasks(memberId){
+  const m = memberById(memberId || ui.profileId);
+  return !!(m && m.canAddTasks !== false);
 }
-function kidsCanAddShopping(){
-  return !!(state.family && state.family.allowKidsAddShopping !== false);
+function kidsCanAddShopping(memberId){
+  const m = memberById(memberId || ui.profileId);
+  return !!(m && m.canAddShopping !== false);
 }
 
 // ---- approval handlers (parent-only) ----
@@ -3457,7 +3664,7 @@ function addMember(){
   if(!name) return;
   const palette = ['#4C8577','#C1555F','#CE8A2E','#5C6BA0','#7C6BA0','#4A9B8E','#B0703C'];
   const color = palette[state.members.length % palette.length];
-  state.members.push({id:cid(), name, role:'kid', color, pinHash:null, email:'', phone:''});
+  state.members.push({id:cid(), name, role:'kid', color, pinHash:null, email:'', phone:'', canAddTasks:true, canAddShopping:true});
   saveData();
   render();
 }
@@ -3582,6 +3789,8 @@ function importData(evt){
         });
         parsed.members.forEach(m=>{
           if(!('pinHash' in m)) m.pinHash = null;
+          if(!('canAddTasks' in m)) m.canAddTasks = true;
+          if(!('canAddShopping' in m)) m.canAddShopping = true;
           if(!('email' in m)) m.email = '';
           if(!('phone' in m)) m.phone = '';
         });

@@ -606,10 +606,10 @@ const RANGE = DAY_END - DAY_START;
 const PX_PER_MIN = 1.15;
 
 const DEFAULT_MEMBERS = [
-  {id:'dad',  name:'Dad',   role:'parent', color:'#4C8577', pinHash:null, email:'', phone:''},
-  {id:'mom',  name:'Mom',   role:'parent', color:'#C1555F', pinHash:null, email:'', phone:''},
-  {id:'kid1', name:'Kid 1', role:'kid',    color:'#CE8A2E', pinHash:null, email:'', phone:''},
-  {id:'kid2', name:'Kid 2', role:'kid',    color:'#5C6BA0', pinHash:null, email:'', phone:''},
+  {id:'dad',  name:'Dad',  role:'parent', color:'#4C8577', pinHash:null, email:'', phone:''},
+  {id:'mom',  name:'Mom',  role:'parent', color:'#C1555F', pinHash:null, email:'', phone:''},
+  {id:'kid1', name:'Mia',  role:'kid',    color:'#CE8A2E', pinHash:null, email:'', phone:''},
+  {id:'kid2', name:'Leo',  role:'kid',    color:'#5C6BA0', pinHash:null, email:'', phone:''},
 ];
 
 function simpleHash(str){
@@ -681,30 +681,71 @@ function formatDateNice(iso){
   const d = fromISODate(iso);
   return d.toLocaleDateString(undefined, {month:'short', day:'numeric'});
 }
+// Returns the ISO date of the next occurrence of a given weekday (0=Mon..6=Sun)
+// on or after todayISO() + minDaysAhead days. Used to build example/demo data
+// that always feels current and upcoming, regardless of what day it's viewed —
+// never a stale hardcoded date, never something that's already in the past.
+function nextWeekdayFrom(weekdayIndex, minDaysAhead){
+  let d = addDays(todayISO(), minDaysAhead||0);
+  let guard = 0;
+  while(dowMonIndexed(toISODate(d)) !== weekdayIndex && guard<8){
+    d = addDays(d, 1);
+    guard++;
+  }
+  return toISODate(d);
+}
 
 const DEFAULT_EVENTS = [
-  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:0, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:1, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:2, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:3, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'dad',  title:'Work', recurrence:'weekly', day:4, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:0, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:1, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:2, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:3, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'mom',  title:'Work', recurrence:'weekly', day:4, date:null, skipDates:[], start:540, end:1050, location:'', needsDrive:false, driverId:null, travelMin:15},
-  {id:cid(), memberId:'kid1', title:'Swimming', recurrence:'weekly', day:2, date:null, skipDates:[], start:1080, end:1110, location:'Local pool', needsDrive:true, driverId:'dad', travelMin:30},
-  {id:cid(), memberId:'kid2', title:'Tuition', recurrence:'weekly', day:1, date:null, skipDates:[], start:1110, end:1200, location:'', needsDrive:false, driverId:null, travelMin:15},
+  // Both parents work 9:00am–5:00pm, Monday to Friday
+  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:0, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:1, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:2, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:3, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:4, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:0, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:1, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:2, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:3, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:4, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+
+  // Kid evening activities — different parent driving each, different evenings
+  {id:cid(), memberId:'kid1', title:'Swimming', recurrence:'weekly', day:0, date:null, skipDates:[], occurrenceOverrides:[], start:1020, end:1080, location:'Local pool', notes:'', needsDrive:true, driverId:'dad', travelMin:15, color:null},
+  {id:cid(), memberId:'kid2', title:'Basketball', recurrence:'weekly', day:1, date:null, skipDates:[], occurrenceOverrides:[], start:1020, end:1080, location:'Community stadium', notes:'', needsDrive:true, driverId:'mom', travelMin:20, color:null},
+
+  // Overlapping one-off appointments, always dated to the next upcoming
+  // occurrence so the demo never looks stale — these deliberately clash with
+  // each parent's own work hours to show off the conflict-detection styling.
+  {id:cid(), memberId:'dad', title:'Dentist appointment', recurrence:'once', day:dowMonIndexed(nextWeekdayFrom(2,2)), date:nextWeekdayFrom(2,2), skipDates:[], occurrenceOverrides:[], start:840, end:900, location:'Smile Dental', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  {id:cid(), memberId:'mom', title:'GP appointment', recurrence:'once', day:dowMonIndexed(nextWeekdayFrom(3,9)), date:nextWeekdayFrom(3,9), skipDates:[], occurrenceOverrides:[], start:630, end:675, location:'Family Medical Centre', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
 ];
 
 const DEFAULT_CHORES = [
-  {id:cid(), title:'Water the plants',    memberId:'kid1', frequency:'daily',  days:[], dayOfMonth:null, active:true},
-  {id:cid(), title:'Unload dishwasher',   memberId:'kid2', frequency:'daily',  days:[], dayOfMonth:null, active:true},
-  {id:cid(), title:'Fold clothes',        memberId:'kid1', frequency:'weekly', days:[5], dayOfMonth:null, active:true}, // Sat
-  {id:cid(), title:'English homework',    memberId:'kid2', frequency:'weekly', days:[0,1,2,3,4], dayOfMonth:null, active:true}, // weekdays
-  {id:cid(), title:'Math homework',       memberId:'kid1', frequency:'weekly', days:[0,1,2,3,4], dayOfMonth:null, active:true}, // weekdays
-  {id:cid(), title:'Deep clean bedroom',  memberId:'kid2', frequency:'monthly', days:[], dayOfMonth:1, active:true},
+  {id:cid(), title:'Make your bed', memberId:'kid1', frequency:'daily', days:[], dayOfMonth:null, startDate:null, dueDate:null, dueTime:'08:00', points:5, active:true, pendingApproval:false},
+  {id:cid(), title:'Water the plants', memberId:'kid2', frequency:'daily', days:[], dayOfMonth:null, startDate:null, dueDate:null, dueTime:'17:00', points:5, active:true, pendingApproval:false},
+  {id:cid(), title:'Take out recycling', memberId:'kid2', frequency:'weekly', days:[2], dayOfMonth:null, startDate:null, dueDate:null, dueTime:'18:00', points:10, active:true, pendingApproval:false},
+  {id:cid(), title:'Vacuum bedroom', memberId:'kid1', frequency:'weekly', days:[5], dayOfMonth:null, startDate:null, dueDate:null, dueTime:'11:00', points:10, active:true, pendingApproval:false},
+  {id:cid(), title:'Deep clean bedroom', memberId:'kid1', frequency:'monthly', days:[], dayOfMonth:1, startDate:null, dueDate:null, dueTime:null, points:20, active:true, pendingApproval:false},
+  {id:cid(), title:'Organise bookshelf', memberId:'kid2', frequency:'monthly', days:[], dayOfMonth:15, startDate:null, dueDate:null, dueTime:null, points:20, active:true, pendingApproval:false},
 ];
+
+// One shopping trip, timed for the evening after the swim→basketball
+// sequence — "next day, Dad goes to Coles" — so it shows up on the Week
+// Board calendar alongside everything else, not just in the Shopping tab.
+function buildDefaultShoppingTrips(){
+  const colesDate = nextWeekdayFrom(2, 2); // same day as the dentist appointment above
+  return [{
+    id: cid(), choreId: null, name: 'Coles run', date: colesDate, time: '19:00',
+    memberId: 'dad', status: 'open', pendingApproval: false,
+    items: [
+      {id:cid(), name:'Milk', status:'pending'},
+      {id:cid(), name:'Bread', status:'pending'},
+      {id:cid(), name:'Eggs', status:'pending'},
+      {id:cid(), name:'Bananas', status:'pending'},
+      {id:cid(), name:'Chicken', status:'pending'},
+    ],
+    createdBy: 'dad', createdAt: new Date().toISOString(),
+  }];
+}
 
 const DEFAULT_CHORE_LIBRARY = [
   // Morning — Bedroom & Personal
@@ -754,6 +795,15 @@ const DEFAULT_SHOPPING_ITEM_LIBRARY = [
   'Shampoo','Toothpaste','Nappies','Baby wipes'
 ];
 
+const DEFAULT_ACTIVITY_LIBRARY = [
+  'Work', 'School', 'Dentist appointment', 'GP appointment', 'Specialist appointment',
+  'Swimming', 'Swimming lessons', 'Basketball', 'Soccer training', 'Soccer match',
+  'Cricket', 'Netball', 'Tennis lessons', 'Gymnastics', 'Dance class', 'Music lesson',
+  'Piano lesson', 'Tuition', 'Homework club', 'Birthday party', 'Playdate',
+  'School pickup', 'School drop-off', 'Grocery shopping', 'Physio appointment',
+  'Haircut', 'Vet appointment', 'Parent-teacher meeting', 'School assembly'
+];
+
 let kidPlainText = '';
 let state = {
   family: null,   // {id, name, primaryHolderName, primaryHolderEmail, primaryHolderPhone} — null until set up
@@ -765,6 +815,7 @@ let state = {
   shoppingList: [],  // the "Quick List" — one ongoing list: {id,name,checked,addedBy}
   shoppingTrips: [],       // scheduled lists, each optionally linked to a task: {id,choreId,name,date,memberId,status,items:[{id,name,quantity,status}],createdBy,createdAt}
   shoppingItemLibrary: [], // reusable item-name catalog for autocomplete + "frequently bought" quick-add
+  activityLibrary: [],     // reusable activity-name catalog for autocomplete when adding an activity
 };
 let ui = {
   tab: 'board',
@@ -808,7 +859,9 @@ let ui = {
   rescheduleModalOpen: false,
   exportModalOpen: false,
   exportError: null,
-  loginAttempts: {}, // { memberId: { count, lockedUntil } } — client-side speed bump against rapid PIN guessing
+  loginAttempts: {},
+  taskLibraryModalOpen: false,
+  activityLibraryModalOpen: false, // { memberId: { count, lockedUntil } } — client-side speed bump against rapid PIN guessing
   libraryPickerOpen: false,
   boardViewMode: 'week', // 'week' | 'month'
   monthCursor: todayISO(),
@@ -866,6 +919,7 @@ async function loadData(){
         if(!parsed.shoppingList) parsed.shoppingList = [];
         if(!parsed.shoppingTrips) parsed.shoppingTrips = [];
         if(!parsed.shoppingItemLibrary) parsed.shoppingItemLibrary = [];
+        if(!parsed.activityLibrary) parsed.activityLibrary = [];
         parsed.events.forEach(e=>{ if(!('notes' in e)) e.notes = ''; });
         parsed.events.forEach(e=>{ if(!('occurrenceOverrides' in e)) e.occurrenceOverrides = []; });
         state = parsed;
@@ -1886,15 +1940,13 @@ function renderSettings(){
     </div>
     <div class="settings-card">
       <h3>Task list</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">These names show up as suggestions when adding a task, so nobody has to retype "Unload dishwasher" from scratch every time. New titles typed while adding a task get added here automatically too.</p>
-      <div class="chore-lib-chips">
-        ${(state.choreLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved chore names yet.</span>' :
-          state.choreLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeChoreLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
-      </div>
-      <div class="add-member" style="margin-top:12px;">
-        <input type="text" id="newChoreLibItem" placeholder="Add a task name to the list">
-        <button class="btn primary" onclick="addChoreLibraryItem()">Add</button>
-      </div>
+      <p style="font-size:13px;color:#5c5847;margin-top:0;">These names show up as suggestions when adding a task, so nobody has to retype "Unload dishwasher" from scratch every time.</p>
+      <button class="btn ghost" onclick="openTaskLibraryModal()">Manage task list (${(state.choreLibrary||[]).length})</button>
+    </div>
+    <div class="settings-card">
+      <h3>Activity list</h3>
+      <p style="font-size:13px;color:#5c5847;margin-top:0;">Same idea for activities — "Dentist," "Swimming," "GP appointment" show up as suggestions instead of typing them fresh every time.</p>
+      <button class="btn ghost" onclick="openActivityLibraryModal()">Manage activity list (${(state.activityLibrary||[]).length})</button>
     </div>
     <div class="settings-card">
       <h3>Data</h3>
@@ -1949,7 +2001,10 @@ function renderModal(){
       ${readOnly? `<div class="skip-note">View only. ${isLoggedIn()? 'A parent needs to log in to change or delete this.' : 'Log in to make changes.'}</div>`:''}
       <div class="field">
         <label>Title</label>
-        <input type="text" id="f_title" value="${escapeHtml(title)}" placeholder="e.g. Swimming, Tuition, Dentist" ${dis}>
+        <input type="text" id="f_title" list="activityLibraryOptions" value="${escapeHtml(title)}" placeholder="e.g. Swimming, Tuition, Dentist" ${dis}>
+        <datalist id="activityLibraryOptions">
+          ${(state.activityLibrary||[]).map(n=>`<option value="${escapeHtml(n)}"></option>`).join('')}
+        </datalist>
       </div>
       <div class="field">
         <label>Whose activity</label>
@@ -2651,9 +2706,10 @@ function submitOnboarding(){
   state.chores = [];
   state.choreLogs = [];
   state.choreLibrary = JSON.parse(JSON.stringify(DEFAULT_CHORE_LIBRARY));
-  state.shoppingList = [];
+  state.shoppingList = JSON.parse(JSON.stringify(DEFAULT_SHOPPING_LIST));
   state.shoppingTrips = [];
   state.shoppingItemLibrary = JSON.parse(JSON.stringify(DEFAULT_SHOPPING_ITEM_LIBRARY));
+  state.activityLibrary = JSON.parse(JSON.stringify(DEFAULT_ACTIVITY_LIBRARY));
   ui.onboardingError = null;
   ui.priorFamilySnapshot = null; // committing to the new family now — old data (already safely saved) is left behind
   saveData();
@@ -2677,8 +2733,9 @@ function doLoadExampleData(){
   state.choreLogs = [];
   state.choreLibrary = JSON.parse(JSON.stringify(DEFAULT_CHORE_LIBRARY));
   state.shoppingList = JSON.parse(JSON.stringify(DEFAULT_SHOPPING_LIST));
-  state.shoppingTrips = [];
+  state.shoppingTrips = buildDefaultShoppingTrips();
   state.shoppingItemLibrary = JSON.parse(JSON.stringify(DEFAULT_SHOPPING_ITEM_LIBRARY));
+  state.activityLibrary = JSON.parse(JSON.stringify(DEFAULT_ACTIVITY_LIBRARY));
   ui.onboardingError = null;
   ui.priorFamilySnapshot = null;
   saveData();
@@ -2690,7 +2747,7 @@ function startNewFamilySetup(){
 }
 function doStartNewFamilySetup(){
   ui.priorFamilySnapshot = JSON.parse(JSON.stringify(state));
-  state = {family:null, members:[], events:[], chores:[], choreLogs:[], choreLibrary:[], shoppingList:[], shoppingTrips:[], shoppingItemLibrary:[]};
+  state = {family:null, members:[], events:[], chores:[], choreLogs:[], choreLibrary:[], shoppingList:[], shoppingTrips:[], shoppingItemLibrary:[], activityLibrary:[]};
   ui.onboardingError = null;
   ui.profileMenuOpen = false;
   render();
@@ -2755,6 +2812,8 @@ function render(){
     ${renderConfirmModal()}
     ${renderAlertModal()}
     ${renderToast()}
+    ${renderTaskLibraryModal()}
+    ${renderActivityLibraryModal()}
     `;
     return;
   }
@@ -2794,6 +2853,8 @@ function render(){
     ${renderConfirmModal()}
     ${renderAlertModal()}
     ${renderToast()}
+    ${renderTaskLibraryModal()}
+    ${renderActivityLibraryModal()}
   `;
   document.querySelectorAll('.kid-select-btn.active').forEach(b=>{ b.style.color = '#181C2A'; });
 }
@@ -2941,6 +3002,7 @@ function saveEvent(){
   } else {
     state.events.push({id:cid(), title,memberId,recurrence,day,date,skipDates:[],start,end,location,notes,needsDrive,driverId,travelMin,color});
   }
+  addToActivityLibrary(title);
   saveData();
   closeModal();
 }
@@ -3496,6 +3558,13 @@ function addToChoreLibrary(title){
     state.choreLibrary.push(title);
   }
 }
+function addToActivityLibrary(title){
+  const exists = (state.activityLibrary||[]).some(t=>t.toLowerCase()===title.toLowerCase());
+  if(!exists){
+    state.activityLibrary = state.activityLibrary || [];
+    state.activityLibrary.push(title);
+  }
+}
 
 function saveChore(){
   if(ui.editingChoreId && !isParentLoggedIn()) return; // editing existing: parent only
@@ -3633,6 +3702,38 @@ function changeFamilyPassword(){
   render();
 }
 
+function openTaskLibraryModal(){
+  if(!isParentLoggedIn()) return;
+  ui.taskLibraryModalOpen = true;
+  render();
+}
+function closeTaskLibraryModal(){
+  ui.taskLibraryModalOpen = false;
+  render();
+}
+function renderTaskLibraryModal(){
+  if(!ui.taskLibraryModalOpen) return '';
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeTaskLibraryModal()">
+    <div class="modal" style="max-width:460px;">
+      <h2>Task list</h2>
+      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">New titles typed while adding a task get added here automatically too.</p>
+      <div class="chore-lib-chips">
+        ${(state.choreLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved task names yet.</span>' :
+          state.choreLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeChoreLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
+      </div>
+      <div class="add-member" style="margin-top:12px;">
+        <input type="text" id="newChoreLibItem" placeholder="Add a task name to the list">
+        <button class="btn primary" onclick="addChoreLibraryItem()">Add</button>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <div></div>
+        <button class="btn primary" onclick="closeTaskLibraryModal()">Done</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 function addChoreLibraryItem(){
   if(!isParentLoggedIn()) return;
   const input = document.getElementById('newChoreLibItem');
@@ -3645,6 +3746,53 @@ function addChoreLibraryItem(){
 function removeChoreLibraryItem(index){
   if(!isParentLoggedIn()) return;
   state.choreLibrary.splice(index, 1);
+  saveData();
+  render();
+}
+
+function openActivityLibraryModal(){
+  if(!isParentLoggedIn()) return;
+  ui.activityLibraryModalOpen = true;
+  render();
+}
+function closeActivityLibraryModal(){
+  ui.activityLibraryModalOpen = false;
+  render();
+}
+function renderActivityLibraryModal(){
+  if(!ui.activityLibraryModalOpen) return '';
+  return `
+  <div class="overlay" onclick="if(event.target===this) closeActivityLibraryModal()">
+    <div class="modal" style="max-width:460px;">
+      <h2>Activity list</h2>
+      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">New titles typed while adding an activity get added here automatically too.</p>
+      <div class="chore-lib-chips">
+        ${(state.activityLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved activity names yet.</span>' :
+          state.activityLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeActivityLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
+      </div>
+      <div class="add-member" style="margin-top:12px;">
+        <input type="text" id="newActivityLibItem" placeholder="Add an activity name to the list">
+        <button class="btn primary" onclick="addActivityLibraryItem()">Add</button>
+      </div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <div></div>
+        <button class="btn primary" onclick="closeActivityLibraryModal()">Done</button>
+      </div>
+    </div>
+  </div>`;
+}
+function addActivityLibraryItem(){
+  if(!isParentLoggedIn()) return;
+  const input = document.getElementById('newActivityLibItem');
+  const val = (input.value||'').trim();
+  if(!val) return;
+  addToActivityLibrary(val);
+  saveData();
+  render();
+}
+function removeActivityLibraryItem(index){
+  if(!isParentLoggedIn()) return;
+  state.activityLibrary.splice(index, 1);
   saveData();
   render();
 }
@@ -3811,6 +3959,7 @@ function importData(evt){
         if(!parsed.shoppingList) parsed.shoppingList = [];
         if(!parsed.shoppingTrips) parsed.shoppingTrips = [];
         if(!parsed.shoppingItemLibrary) parsed.shoppingItemLibrary = [];
+        if(!parsed.activityLibrary) parsed.activityLibrary = [];
         state = parsed;
         ui.profileId = null; ui.authenticated = false; // PIN set may have changed — log out to be safe
         saveData();
@@ -3834,8 +3983,9 @@ function resetDefaults(){
       choreLogs: [],
       choreLibrary: JSON.parse(JSON.stringify(DEFAULT_CHORE_LIBRARY)),
       shoppingList: JSON.parse(JSON.stringify(DEFAULT_SHOPPING_LIST)),
-      shoppingTrips: [],
-      shoppingItemLibrary: JSON.parse(JSON.stringify(DEFAULT_SHOPPING_ITEM_LIBRARY))
+      shoppingTrips: buildDefaultShoppingTrips(),
+      shoppingItemLibrary: JSON.parse(JSON.stringify(DEFAULT_SHOPPING_ITEM_LIBRARY)),
+      activityLibrary: JSON.parse(JSON.stringify(DEFAULT_ACTIVITY_LIBRARY))
     };
     ui.profileId = null; ui.authenticated = false;
     saveData();
