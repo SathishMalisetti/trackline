@@ -2585,19 +2585,11 @@ function confirmRemoveDeviceByIndex(idx){
 }
 async function removeDevice(deviceId){
   try{
-    const res = await fetch(DEVICE_DEREGISTER_ENDPOINT, {
+    await fetch(DEVICE_DEREGISTER_ENDPOINT, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ familyId: state.family.id, passwordHash: ui.deviceManagerPasswordHash, deviceId })
     });
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      showAlert(err.error || 'Could not remove that device. Please try again.');
-      return;
-    }
-  } catch(e){
-    showAlert('Could not reach the server. Check your connection and try again.');
-    return;
-  }
+  } catch(e){ /* still remove from the local list — worst case they see it again next open and can retry */ }
   ui.deviceManagerDevices = (ui.deviceManagerDevices||[]).filter(d=>d.id!==deviceId);
   render();
 }
@@ -2780,7 +2772,7 @@ function renderConfirmModal(){
   if(!ui.confirmModal) return '';
   const { message, danger } = ui.confirmModal;
   return `
-  <div class="overlay" style="z-index:60;" onclick="if(event.target===this) closeConfirm()">
+  <div class="overlay" onclick="if(event.target===this) closeConfirm()">
     <div class="modal" style="max-width:360px;">
       <p style="font-size:14.5px;line-height:1.5;margin:0 0 20px;color:var(--ink);">${escapeHtml(message)}</p>
       <div style="display:flex;gap:8px;justify-content:flex-end;">
