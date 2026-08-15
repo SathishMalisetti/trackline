@@ -1,11 +1,17 @@
-// Trackline device-usage API (read-only)
+// Trackline device-usage API (read-only) — v3, adds device sync-freshness
+// info alongside the usage totals.
 //
 // GET /api/device-usage?familyId=X&days=7
 //
-// Returns device usage rows for the given family, most recent `days` days
-// (default 7). This endpoint is deliberately GET-only — Trackline itself
-// never writes usage data; that's the job of a separate, future collector
-// inserting directly into the device_usage table via service_role.
+// Returns { usage, devices }:
+//   - usage: aggregated per (member, hostname, date) minute totals, same
+//     shape as before — no change needed anywhere already using it.
+//   - devices: every device paired to this family, with lastSyncAt, so the
+//     UI can show "no data since X" for a device that's gone quiet —
+//     rather than that device just silently vanishing from the usage list
+//     the moment it stops reporting, which would look identical to "0
+//     minutes used" and hide the gap entirely. Not sensitive data (no
+//     tokens), so this doesn't need password-gating like device-list does.
 
 const fetch = require('node-fetch');
 
@@ -13,25 +19,16 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 function jsonRes(status, obj){
-  return {
-    status: status,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(obj === undefined ? null : obj),
-  };
+  return { status, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj === undefined ? null : obj) };
 }
-
 function supabaseHeaders(extra){
-  return Object.assign({
-    'apikey': SERVICE_KEY,
-    'Authorization': `Bearer ${SERVICE_KEY}`,
-  }, extra || {});
+  return Object.assign({ 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` }, extra || {});
 }
 
 module.exports = async function (context, req) {
   context.log('device-usage invoked:', req.method, req.query);
 
   if(!SUPABASE_URL || !SERVICE_KEY){
-    context.log.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY app settings');
     context.res = jsonRes(500, { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured on the server.' });
     return;
   }
@@ -52,21 +49,55 @@ module.exports = async function (context, req) {
     const sinceISO = sinceDate.toISOString().slice(0,10);
 
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/device_usage?family_id=eq.${encodeURIComponent(familyId)}&date=gte.${sinceISO}&select=id,member_id,device_name,category,date,minutes_used,source&order=date.desc`,
+      `${SUPABASE_URL}/rest/v1/usage?family_id=eq.${encodeURIComponent(familyId)}&date=gte.${sinceISO}&select=member_id,hostname,date,active_seconds`,
       { headers: supabaseHeaders() }
     );
     if (!res.ok) {
       const bodyText = await res.text().catch(()=> '');
-      context.log.error('Supabase device_usage GET failed:', res.status, bodyText);
+      context.log.error('Supabase usage GET failed:', res.status, bodyText);
       context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
       return;
     }
     const rows = await res.json();
-    const usage = rows.map(r => ({
-      id: r.id, memberId: r.member_id, deviceName: r.device_name,
-      category: r.category, date: r.date, minutesUsed: r.minutes_used, source: r.source,
-    }));
-    context.res = jsonRes(200, { usage });
+
+    // Aggregate every app/site row down to one total-minutes figure per
+    // (member, hostname, date) — the frontend just wants "how long was
+    // this device used that day," not the per-app breakdown, for now.
+    const totals = {}; // memberId -> hostname -> date -> total seconds
+    rows.forEach(r => {
+      const memberId = r.member_id, hostname = r.hostname, date = r.date;
+      totals[memberId] = totals[memberId] || {};
+      totals[memberId][hostname] = totals[memberId][hostname] || {};
+      totals[memberId][hostname][date] = (totals[memberId][hostname][date] || 0) + Number(r.active_seconds || 0);
+    });
+    const usage = [];
+    Object.keys(totals).forEach(memberId => {
+      Object.keys(totals[memberId]).forEach(hostname => {
+        Object.keys(totals[memberId][hostname]).forEach(date => {
+          usage.push({ memberId, deviceName: hostname, date, minutesUsed: Math.round(totals[memberId][hostname][date] / 60) });
+        });
+      });
+    });
+
+    // Also fetch every device paired to this family, for sync-freshness
+    // reporting — deliberately NOT scoped to the `days` window, since a
+    // device that's been silent for a while is exactly what we want to
+    // surface, not filter out.
+    const devRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/devices?family_id=eq.${encodeURIComponent(familyId)}&select=id,member_id,hostname,label,last_sync_at`,
+      { headers: supabaseHeaders() }
+    );
+    let devices = [];
+    if (devRes.ok) {
+      const devRows = await devRes.json();
+      devices = devRows.map(d => ({
+        id: d.id, memberId: d.member_id, hostname: d.hostname, label: d.label, lastSyncAt: d.last_sync_at,
+      }));
+    } else {
+      context.log.error('devices GET failed (non-fatal for this endpoint):', devRes.status);
+    }
+
+    context.res = jsonRes(200, { usage, devices });
   } catch (err) {
     context.log.error('device-usage function threw:', err && err.stack ? err.stack : err);
     context.res = jsonRes(500, { error: 'Server error', detail: String(err && err.message || err) });
