@@ -501,6 +501,8 @@ const TRIP_ENDPOINT = API_BASE + '/api/shopping-trip';
 const DEVICE_USAGE_ENDPOINT = API_BASE + '/api/device-usage';
 const DEVICE_USAGE_DETAIL_ENDPOINT = API_BASE + '/api/device-usage-detail';
 const DEVICE_LIST_ENDPOINT = API_BASE + '/api/device-list';
+// Update this to your actual GitHub release/raw link once the agent zip is uploaded.
+const TRACKLINE_AGENT_DOWNLOAD_URL = 'https://github.com/SathishMalisetti/trackline/releases/latest/download/TracklineAgent.zip';
 const DEVICE_DEREGISTER_ENDPOINT = API_BASE + '/api/device-deregister';
 const JOIN_FAMILY_ENDPOINT = API_BASE + '/api/join-family';
 
@@ -639,8 +641,8 @@ const PX_PER_MIN = 0.85;
 const DEFAULT_MEMBERS = [
   {id:'dad',  name:'Dad',  role:'parent', color:'#4C8577', pinHash:null, email:'', phone:''},
   {id:'mom',  name:'Mom',  role:'parent', color:'#C1555F', pinHash:null, email:'', phone:''},
-  {id:'kid1', name:'Mia',  role:'kid',    color:'#CE8A2E', pinHash:null, email:'', phone:''},
-  {id:'kid2', name:'Leo',  role:'kid',    color:'#5C6BA0', pinHash:null, email:'', phone:''},
+  {id:'kid1', name:'Kid1',  role:'kid',    color:'#CE8A2E', pinHash:null, email:'', phone:''},
+  {id:'kid2', name:'Kid2',  role:'kid',    color:'#5C6BA0', pinHash:null, email:'', phone:''},
 ];
 
 function simpleHash(str){
@@ -789,36 +791,83 @@ function buildDefaultDeviceUsage(){
   const now = Date.now();
   const usage = [];
 
-  const miaMinutesByDaysAgo = {0:130, 1:175, 2:210, 3:98, 4:145};
-  Object.keys(miaMinutesByDaysAgo).forEach(daysAgoStr=>{
+  // Kid1 — laptop, healthy and active today
+  const kid1LaptopMinutes = {0:95, 1:140, 2:165, 3:80, 4:110};
+  Object.keys(kid1LaptopMinutes).forEach(daysAgoStr=>{
     const daysAgo = parseInt(daysAgoStr,10);
     const date = toISODate(addDays(todayISO(), -daysAgo));
-    usage.push({ memberId:'kid1', deviceName:'DESKTOP-MIA', date, minutesUsed: miaMinutesByDaysAgo[daysAgo] });
+    usage.push({ memberId:'kid1', deviceName:'DESKTOP-KID1', date, minutesUsed: kid1LaptopMinutes[daysAgo] });
+  });
+  // Kid1 — phone (illustrative demo data only — mobile tracking isn't
+  // built yet; shown here so the example gives a realistic sense of what
+  // it'll look like once it is).
+  const kid1PhoneMinutes = {0:35, 1:50, 2:45, 3:20, 4:30};
+  Object.keys(kid1PhoneMinutes).forEach(daysAgoStr=>{
+    const daysAgo = parseInt(daysAgoStr,10);
+    const date = toISODate(addDays(todayISO(), -daysAgo));
+    usage.push({ memberId:'kid1', deviceName:"Kid1's Phone", date, minutesUsed: kid1PhoneMinutes[daysAgo] });
   });
 
-  // Leo — had usage 4/3/2 days ago, then nothing — simulating the agent going quiet
-  const leoMinutesByDaysAgo = {2:190, 3:120, 4:160};
-  Object.keys(leoMinutesByDaysAgo).forEach(daysAgoStr=>{
+  // Kid2 — laptop went quiet 2 days ago (showcases the gap-detection feature)
+  const kid2LaptopMinutes = {2:190, 3:120, 4:160};
+  Object.keys(kid2LaptopMinutes).forEach(daysAgoStr=>{
     const daysAgo = parseInt(daysAgoStr,10);
     const date = toISODate(addDays(todayISO(), -daysAgo));
-    usage.push({ memberId:'kid2', deviceName:'DESKTOP-LEO', date, minutesUsed: leoMinutesByDaysAgo[daysAgo] });
+    usage.push({ memberId:'kid2', deviceName:'DESKTOP-KID2', date, minutesUsed: kid2LaptopMinutes[daysAgo] });
+  });
+  // Kid2 — phone stays active even though the laptop went quiet, same
+  // "illustrative only" caveat as above.
+  const kid2PhoneMinutes = {0:40, 1:55, 2:38, 3:42, 4:31};
+  Object.keys(kid2PhoneMinutes).forEach(daysAgoStr=>{
+    const daysAgo = parseInt(daysAgoStr,10);
+    const date = toISODate(addDays(todayISO(), -daysAgo));
+    usage.push({ memberId:'kid2', deviceName:"Kid2's Phone", date, minutesUsed: kid2PhoneMinutes[daysAgo] });
   });
 
   const devices = [
-    { id:'demo-dev-mia', memberId:'kid1', hostname:'DESKTOP-MIA', label:"Mia's Laptop", lastSyncAt: new Date(now - 12*60000).toISOString() },
-    { id:'demo-dev-leo', memberId:'kid2', hostname:'DESKTOP-LEO', label:"Leo's Laptop", lastSyncAt: new Date(now - (2*24*60 + 15)*60000).toISOString() },
+    { id:'demo-dev-kid1-laptop', memberId:'kid1', hostname:'DESKTOP-KID1', label:"Kid1's Laptop", lastSyncAt: new Date(now - 12*60000).toISOString() },
+    { id:'demo-dev-kid1-phone', memberId:'kid1', hostname:"Kid1's Phone", label:"Kid1's Phone (sample — mobile not yet supported)", lastSyncAt: new Date(now - 8*60000).toISOString() },
+    { id:'demo-dev-kid2-laptop', memberId:'kid2', hostname:'DESKTOP-KID2', label:"Kid2's Laptop", lastSyncAt: new Date(now - (2*24*60 + 15)*60000).toISOString() },
+    { id:'demo-dev-kid2-phone', memberId:'kid2', hostname:"Kid2's Phone", label:"Kid2's Phone (sample — mobile not yet supported)", lastSyncAt: new Date(now - 6*60000).toISOString() },
   ];
 
-  // Today's Study/Games/Uncategorized split — Mia is active today (matches
-  // her 130-minute total above), Leo isn't (his device has gone quiet, so
-  // there's deliberately no category data for him today either).
+  // Today's Study/Games/Uncategorized split — deliberately kept
+  // mathematically consistent with the device totals above (kid1:
+  // 95+35=130min total today = 78+32+20 below; kid2: laptop quiet today,
+  // only the 40min phone total = the 40min Uncategorized below).
   const categoryUsage = [
-    { memberId:'kid1', date: todayISO(), category:'Games', minutesUsed: 85 },
-    { memberId:'kid1', date: todayISO(), category:'Study', minutesUsed: 35 },
-    { memberId:'kid1', date: todayISO(), category:'Uncategorized', minutesUsed: 10 },
+    { memberId:'kid1', date: todayISO(), category:'Games', minutesUsed: 78 },
+    { memberId:'kid1', date: todayISO(), category:'Study', minutesUsed: 32 },
+    { memberId:'kid1', date: todayISO(), category:'Uncategorized', minutesUsed: 20 },
+    { memberId:'kid2', date: todayISO(), category:'Uncategorized', minutesUsed: 40 },
   ];
 
   return { usage, devices, categoryUsage };
+}
+
+// Demo drill-through data — app names modeled on real patterns confirmed
+// from production data (Fortnite, Discord, browser use, Notepad), but
+// fully sanitized: no real names, no email addresses, no personal search
+// history or Discord handles, no ActivityWatch's own local debug URLs.
+// Mobile app names (Instagram/TikTok/YouTube) are illustrative only,
+// since mobile tracking isn't built yet.
+function buildDemoDayDrillData(memberId, date){
+  if(memberId==='kid2'){
+    return { date, apps: [
+      { name:'RobloxPlayerBeta.exe', category:'Games', minutesUsed:95 },
+      { name:'Instagram', category:'Uncategorized', minutesUsed:40 },
+      { name:'chrome.exe', category:'Uncategorized', minutesUsed:35 },
+      { name:'Discord.exe', category:'Uncategorized', minutesUsed:18 },
+      { name:'TikTok', category:'Uncategorized', minutesUsed:12 },
+    ], sites: [] };
+  }
+  return { date, apps: [
+    { name:'FortniteClient-Win64-Shipping.exe', category:'Games', minutesUsed:70 },
+    { name:'chrome.exe', category:'Study', minutesUsed:35 },
+    { name:'YouTube', category:'Uncategorized', minutesUsed:25 },
+    { name:'winword.exe', category:'Study', minutesUsed:15 },
+    { name:'Discord.exe', category:'Uncategorized', minutesUsed:8 },
+  ], sites: [] };
 }
 
 const DEFAULT_CHORE_LIBRARY = [
@@ -902,6 +951,7 @@ let ui = {
   formPrefill: null,
   kidId: null,
   copiedFlash: false,
+  familyIdCopied: false,
   loaded: false,
   profileId: null,
   authenticated: false,
@@ -950,8 +1000,6 @@ let ui = {
   deviceUsageError: null,
   deviceUsageDays: 7,
   deviceManagerOpen: false,
-  deviceManagerPasswordEntered: false,
-  deviceManagerPasswordHash: null,
   deviceManagerDevices: null,
   deviceManagerError: null,
   deviceManagerLoading: false,
@@ -1917,13 +1965,14 @@ function renderScreenTime(){
 
   const noDataAtAll = (ui.deviceUsageData||[]).length===0;
   const cards = kidsToShow.map(m => renderScreenTimeCard(m)).join('');
+  const isDemo = state.family && state.family.isExample;
 
   return `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
-      <p style="font-size:13px;color:var(--text-dim);margin:0;max-width:480px;">Laptop/mobile usage, reported automatically every 30 minutes once device tracking is connected.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0;max-width:480px;">Laptop usage, reported automatically every 30 minutes once device tracking is connected.${isDemo?'':' <span style="opacity:.8;">Mobile tracking is under construction.</span>'}</p>
       <button class="btn ghost" onclick="refreshDeviceUsage()">Refresh</button>
     </div>
-    ${noDataAtAll ? `<div class="chore-empty-day">No usage data yet — this will populate automatically once device tracking is connected.</div>` : ''}
+    ${noDataAtAll ? `<div class="chore-empty-day">No usage data yet — this will populate automatically once device tracking is connected.${isParent?' <a href="#" onclick="setTab(\'settings\');return false;" style="color:var(--amber);font-weight:600;">Set up a device in Settings →</a>':''}</div>` : ''}
     <div class="person-tiles-grid">${cards}</div>
   `;
 }
@@ -2107,6 +2156,7 @@ function renderSettings(){
         <label>Family ID <span style="font-weight:400;color:#8a8468;">(for other devices to join)</span></label>
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;letter-spacing:.06em;background:#e3dcc6;border-radius:8px;padding:8px 14px;">${escapeHtml(fam.id||'')}</div>
+          <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="copyToClipboard('${fam.id||''}','familyIdCopied')">${ui.familyIdCopied?'Copied ✓':'Copy'}</button>
         </div>
       </div>
       <div class="field">
@@ -2157,6 +2207,18 @@ function renderSettings(){
       <h3>Screen time devices</h3>
       <p style="font-size:13px;color:#5c5847;margin-top:0;">Laptops paired for automatic screen-time reporting. Removing one deletes its usage history permanently.</p>
       <button class="btn ghost" onclick="openDeviceManager()">Manage registered devices</button>
+    </div>
+    <div class="settings-card">
+      <h3>Set up a new laptop</h3>
+      <p style="font-size:13px;color:#5c5847;margin-top:0;">Download, then a few quick steps on the kid's laptop.</p>
+      <div style="margin-bottom:14px;">
+        <a href="${TRACKLINE_AGENT_DOWNLOAD_URL}" target="_blank" rel="noopener" class="btn primary" style="text-decoration:none;text-align:center;display:block;">Download Trackline Agent (.zip)</a>
+      </div>
+      <ol style="font-size:13px;color:#5c5847;padding-left:20px;margin:0;line-height:1.7;">
+        <li>Create a folder: <code style="background:#e3dcc6;padding:1px 5px;border-radius:4px;">C:\\trackline</code></li>
+        <li>Extract every file from the downloaded zip into that folder.</li>
+        <li>Run <code style="background:#e3dcc6;padding:1px 5px;border-radius:4px;">TracklineSetup.exe</code> from inside it, and follow the pairing steps.</li>
+      </ol>
     </div>
     <div class="settings-card">
       <h3>Data</h3>
@@ -2593,27 +2655,6 @@ function closeDayDrill(){
   ui.dayDrillOpen = false;
   render();
 }
-function buildDemoDayDrillData(memberId, date){
-  // Illustrative demo data — doesn't need to sum exactly to the parent
-  // card's daily total, just needs to show what the drill-through looks
-  // like for someone browsing the example.
-  if(memberId==='kid2'){
-    return { date, apps: [
-      { name:'RobloxPlayerBeta.exe', category:'Games', minutesUsed:95 },
-      { name:'chrome.exe', category:'Uncategorized', minutesUsed:40 },
-      { name:'Discord.exe', category:'Uncategorized', minutesUsed:35 },
-      { name:'ROBLOX.exe', category:'Games', minutesUsed:18 },
-      { name:'notepad.exe', category:'Study', minutesUsed:2 },
-    ], sites: [] };
-  }
-  return { date, apps: [
-    { name:'RobloxPlayerBeta.exe', category:'Games', minutesUsed:70 },
-    { name:'chrome.exe', category:'Study', minutesUsed:35 },
-    { name:'winword.exe', category:'Study', minutesUsed:20 },
-    { name:'chrome.exe', category:'Uncategorized', minutesUsed:15 },
-    { name:'Discord.exe', category:'Uncategorized', minutesUsed:8 },
-  ], sites: [] };
-}
 
 function todayCategoryBreakdown(memberId){
   const today = todayISO();
@@ -2649,46 +2690,33 @@ function formatMinutesAsHM(mins){
   return `${h}h ${m}m`;
 }
 
-function openDeviceManager(){
+async function openDeviceManager(){
   if(!isParentLoggedIn()) return;
   ui.deviceManagerOpen = true;
-  ui.deviceManagerPasswordEntered = false;
   ui.deviceManagerDevices = null;
   ui.deviceManagerError = null;
-  render();
-}
-function closeDeviceManager(){
-  ui.deviceManagerOpen = false;
-  ui.deviceManagerPasswordHash = null;
-  render();
-}
-async function submitDeviceManagerPassword(){
-  const pwd = (document.getElementById('f_devicemgr_password').value||'').trim();
-  if(!pwd) return;
-  const hash = simpleHash(pwd);
   ui.deviceManagerLoading = true;
-  ui.deviceManagerError = null;
   render();
   try{
     const res = await fetch(DEVICE_LIST_ENDPOINT, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ familyId: state.family.id, passwordHash: hash })
+      body: JSON.stringify({ familyId: state.family.id, passwordHash: state.family.passwordHash })
     });
     if(!res.ok){
       const err = await res.json().catch(()=>({}));
       ui.deviceManagerError = err.error || 'Could not load devices.';
-      ui.deviceManagerLoading = false;
-      render();
-      return;
+    } else {
+      const result = await res.json();
+      ui.deviceManagerDevices = result.devices || [];
     }
-    const result = await res.json();
-    ui.deviceManagerDevices = result.devices || [];
-    ui.deviceManagerPasswordEntered = true;
-    ui.deviceManagerPasswordHash = hash;
   } catch(e){
     ui.deviceManagerError = 'Could not reach the server. Check your connection and try again.';
   }
   ui.deviceManagerLoading = false;
+  render();
+}
+function closeDeviceManager(){
+  ui.deviceManagerOpen = false;
   render();
 }
 function confirmRemoveDeviceByIndex(idx){
@@ -2701,7 +2729,7 @@ async function removeDevice(deviceId){
   try{
     const res = await fetch(DEVICE_DEREGISTER_ENDPOINT, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ familyId: state.family.id, passwordHash: ui.deviceManagerPasswordHash, deviceId })
+      body: JSON.stringify({ familyId: state.family.id, passwordHash: state.family.passwordHash, deviceId })
     });
     if(!res.ok){
       const err = await res.json().catch(()=>({}));
@@ -2730,22 +2758,42 @@ function renderDayDrillModal(){
     const showCount = ui.dayDrillShowAll ? apps.length : 5;
     const shown = apps.slice(0, showCount);
     const totalMinutes = apps.reduce((sum,a)=>sum+a.minutesUsed, 0);
+    const maxMinutes = Math.max(1, ...apps.map(a=>a.minutesUsed));
+
+    // Category summary for THIS specific day — computed client-side from
+    // the same apps array already fetched, no extra request needed. Gives
+    // quick context before the app-by-app list below.
+    const catTotals = {};
+    apps.forEach(a=>{ catTotals[a.category] = (catTotals[a.category]||0) + a.minutesUsed; });
+    const catSummary = Object.keys(catTotals).sort((a,b)=>catTotals[b]-catTotals[a]).map(cat=>{
+      const color = categoryColors[cat] || '#8a8468';
+      return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};"></span>
+        ${escapeHtml(cat)} ${formatMinutesAsHM(catTotals[cat])}
+      </span>`;
+    }).join('<span style="color:#c9c2ab;">·</span>');
 
     const rows = shown.length===0
       ? `<p style="font-size:13px;color:#8a8468;">No app usage recorded that day.</p>`
       : shown.map((a,i)=>{
           const pct = totalMinutes>0 ? Math.round((a.minutesUsed/totalMinutes)*100) : 0;
+          const barPct = Math.round((a.minutesUsed/maxMinutes)*100);
           const color = categoryColors[a.category] || '#8a8468';
-          return `<div class="approval-row">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a8468;width:16px;">${i+1}</span>
-              <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};flex:none;"></span>
-              <div>
-                <div class="trip-title">${escapeHtml(a.name)}</div>
-                <div class="trip-meta">${escapeHtml(a.category)} · ${pct}% of tracked time</div>
+          return `<div class="approval-row" style="flex-direction:column;align-items:stretch;gap:6px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a8468;width:14px;flex:none;">${i+1}</span>
+                <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};flex:none;"></span>
+                <div style="min-width:0;">
+                  <div class="trip-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.name)}</div>
+                  <div class="trip-meta">${escapeHtml(a.category)} · ${pct}%</div>
+                </div>
               </div>
+              <div style="font-family:'Archivo Narrow',sans-serif;font-weight:700;flex:none;padding-left:10px;">${formatMinutesAsHM(a.minutesUsed)}</div>
             </div>
-            <div style="font-family:'Archivo Narrow',sans-serif;font-weight:700;">${formatMinutesAsHM(a.minutesUsed)}</div>
+            <div style="height:5px;background:#e3dcc6;border-radius:3px;overflow:hidden;">
+              <div style="height:100%;width:${barPct}%;background:${color};border-radius:3px;"></div>
+            </div>
           </div>`;
         }).join('');
 
@@ -2754,7 +2802,10 @@ function renderDayDrillModal(){
       : '';
 
     body = `
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Total tracked: ${formatMinutesAsHM(totalMinutes)}</p>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <p style="font-size:13px;color:#5c5847;margin:0;">Total tracked: <strong>${formatMinutesAsHM(totalMinutes)}</strong></p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">${catSummary}</div>
+      </div>
       ${rows}
       ${moreLink}
     `;
@@ -2779,20 +2830,24 @@ function renderDayDrillModal(){
 function renderDeviceManagerModal(){
   if(!ui.deviceManagerOpen) return '';
 
-  if(!ui.deviceManagerPasswordEntered){
+  if(ui.deviceManagerLoading){
     return `
     <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
       <div class="modal" style="max-width:360px;">
         <h2>Registered devices</h2>
-        <p style="font-size:13px;color:#5c5847;margin:0 0 16px;">Enter your family password to view and manage paired devices.</p>
-        <input type="password" id="f_devicemgr_password" placeholder="Family password" onkeydown="if(event.key==='Enter') submitDeviceManagerPassword()" style="width:100%;padding:11px;border-radius:8px;border:1px solid #c9c2ab;font-size:15px;">
-        ${ui.deviceManagerError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.deviceManagerError)}</div>`:''}
+        <p style="font-size:13px;color:#8a8468;">Loading…</p>
+      </div>
+    </div>`;
+  }
+  if(ui.deviceManagerError){
+    return `
+    <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
+      <div class="modal" style="max-width:360px;">
+        <h2>Registered devices</h2>
+        <p style="color:#a5323a;font-size:13px;font-weight:600;">${escapeHtml(ui.deviceManagerError)}</p>
         <div class="modal-actions" style="margin-top:16px;">
           <div></div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn ghost" onclick="closeDeviceManager()">Cancel</button>
-            <button class="btn primary" onclick="submitDeviceManagerPassword()">${ui.deviceManagerLoading?'Loading…':'View devices'}</button>
-          </div>
+          <button class="btn primary" onclick="closeDeviceManager()">Close</button>
         </div>
       </div>
     </div>`;
@@ -2815,7 +2870,7 @@ function renderDeviceManagerModal(){
   <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
     <div class="modal" style="max-width:440px;">
       <h2>Registered devices</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Removing a device deletes all of its usage history permanently. To pair a new laptop, run the Trackline agent's setup on that device — see the setup guide for the command.</p>
+      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Removing a device deletes all of its usage history permanently.</p>
       ${devices.length===0? '<p style="font-size:13px;color:#8a8468;">No devices paired yet.</p>' : rows}
       <div class="modal-actions" style="margin-top:16px;">
         <div></div>
@@ -3148,11 +3203,11 @@ function renderOnboarding(){
 
       <div class="field">
         <label>Family name</label>
-        <input type="text" id="ob_familyName" placeholder="e.g. The Smith Family">
+        <input type="text" id="ob_familyName" placeholder="Family name">
       </div>
       <div class="field">
         <label>Your name (primary holder)</label>
-        <input type="text" id="ob_holderName" placeholder="e.g. Alex">
+        <input type="text" id="ob_holderName" placeholder="Your name">
       </div>
       <div class="row2">
         <div class="field">
@@ -4244,6 +4299,15 @@ function undoChoreDone(choreId, dateISO){
     saveData();
     deleteChoreLog(state.family.id, choreId, dateISO);
     render();
+  });
+}
+
+function copyToClipboard(text, flashKey){
+  navigator.clipboard.writeText(text).then(()=>{
+    ui[flashKey] = true; render();
+    setTimeout(()=>{ ui[flashKey]=false; render(); }, 2000);
+  }).catch(()=>{
+    showAlert(text); // fallback so it's never silently lost
   });
 }
 
