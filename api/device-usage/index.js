@@ -49,7 +49,7 @@ module.exports = async function (context, req) {
     const sinceISO = sinceDate.toISOString().slice(0,10);
 
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/usage?family_id=eq.${encodeURIComponent(familyId)}&date=gte.${sinceISO}&select=member_id,hostname,date,active_seconds`,
+      `${SUPABASE_URL}/rest/v1/usage?family_id=eq.${encodeURIComponent(familyId)}&date=gte.${sinceISO}&select=member_id,hostname,date,category,active_seconds`,
       { headers: supabaseHeaders() }
     );
     if (!res.ok) {
@@ -79,6 +79,27 @@ module.exports = async function (context, req) {
       });
     });
 
+    // A second aggregation, this time by category instead of device — this
+    // is what actually answers "study vs game time," the whole point of
+    // categorization. Rows with no category (older data from before this
+    // was built, or an app/site the family hasn't categorized) fall under
+    // "Uncategorized" rather than silently vanishing from the total.
+    const catTotals = {}; // memberId -> date -> category -> total seconds
+    rows.forEach(r => {
+      const memberId = r.member_id, date = r.date, category = r.category || 'Uncategorized';
+      catTotals[memberId] = catTotals[memberId] || {};
+      catTotals[memberId][date] = catTotals[memberId][date] || {};
+      catTotals[memberId][date][category] = (catTotals[memberId][date][category] || 0) + Number(r.active_seconds || 0);
+    });
+    const categoryUsage = [];
+    Object.keys(catTotals).forEach(memberId => {
+      Object.keys(catTotals[memberId]).forEach(date => {
+        Object.keys(catTotals[memberId][date]).forEach(category => {
+          categoryUsage.push({ memberId, date, category, minutesUsed: Math.round(catTotals[memberId][date][category] / 60) });
+        });
+      });
+    });
+
     // Also fetch every device paired to this family, for sync-freshness
     // reporting — deliberately NOT scoped to the `days` window, since a
     // device that's been silent for a while is exactly what we want to
@@ -97,7 +118,7 @@ module.exports = async function (context, req) {
       context.log.error('devices GET failed (non-fatal for this endpoint):', devRes.status);
     }
 
-    context.res = jsonRes(200, { usage, devices });
+    context.res = jsonRes(200, { usage, devices, categoryUsage });
   } catch (err) {
     context.log.error('device-usage function threw:', err && err.stack ? err.stack : err);
     context.res = jsonRes(500, { error: 'Server error', detail: String(err && err.message || err) });

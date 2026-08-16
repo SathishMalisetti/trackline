@@ -80,7 +80,12 @@ module.exports = async function (context, req) {
         rows.push({
           device_id: device.id, family_id: device.family_id, member_id: device.member_id,
           hostname: device.hostname || 'unknown', date, hour: hourNum,
-          source: 'app', name: a.app, active_seconds: a.active_seconds,
+          // title deliberately defaults to '' not null — Postgres treats
+          // every NULL as distinct from every other NULL in a unique
+          // constraint, so multiple NULL-title rows would never conflict
+          // and upserting would silently break, inserting duplicates
+          // instead of updating. '' behaves correctly.
+          source: 'app', name: a.app, title: a.title || '', category: a.category || null, active_seconds: a.active_seconds,
           updated_at: new Date().toISOString(),
         });
       });
@@ -89,14 +94,14 @@ module.exports = async function (context, req) {
         rows.push({
           device_id: device.id, family_id: device.family_id, member_id: device.member_id,
           hostname: device.hostname || 'unknown', date, hour: hourNum,
-          source: 'site', name: s.domain, active_seconds: s.active_seconds,
+          source: 'site', name: s.domain, title: '', category: s.category || null, active_seconds: s.active_seconds,
           updated_at: new Date().toISOString(),
         });
       });
     });
 
     if(rows.length > 0){
-      const upsertRes = await fetch(`${SUPABASE_URL}/rest/v1/usage?on_conflict=device_id,date,hour,source,name`, {
+      const upsertRes = await fetch(`${SUPABASE_URL}/rest/v1/usage?on_conflict=device_id,date,hour,source,name,title`, {
         method: 'POST',
         headers: supabaseHeaders({ 'Content-Type':'application/json', 'Prefer':'resolution=merge-duplicates,return=minimal' }),
         body: JSON.stringify(rows),
@@ -115,6 +120,19 @@ module.exports = async function (context, req) {
       headers: supabaseHeaders({ 'Content-Type':'application/json', 'Prefer':'return=minimal' }),
       body: JSON.stringify({ last_sync_at: new Date().toISOString() }),
     }).catch(()=>{});
+
+    // 15-day retention: delete this device's own rows older than the
+    // window, piggybacked on each sync rather than needing a separate
+    // scheduled function. Self-cleaning — every device trims its own old
+    // data roughly every 30 minutes as it syncs. Best-effort: a failure
+    // here shouldn't fail the sync itself, just gets retried next time.
+    const retentionCutoff = new Date();
+    retentionCutoff.setDate(retentionCutoff.getDate() - 15);
+    const retentionCutoffISO = retentionCutoff.toISOString().slice(0, 10);
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/usage?device_id=eq.${encodeURIComponent(deviceId)}&date=lt.${retentionCutoffISO}`,
+      { method: 'DELETE', headers: supabaseHeaders({ 'Prefer': 'return=minimal' }) }
+    ).catch(()=>{});
 
     context.res = jsonRes(200, { ok: true, rowsWritten: rows.length });
   } catch (err) {
