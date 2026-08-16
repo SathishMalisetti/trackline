@@ -499,7 +499,6 @@ const FAMILY_ENDPOINT = API_BASE + '/api/family-data';
 const CHORE_LOG_ENDPOINT = API_BASE + '/api/chore-log';
 const TRIP_ENDPOINT = API_BASE + '/api/shopping-trip';
 const DEVICE_USAGE_ENDPOINT = API_BASE + '/api/device-usage';
-const DEVICE_USAGE_DETAIL_ENDPOINT = API_BASE + '/api/device-usage-detail';
 const DEVICE_LIST_ENDPOINT = API_BASE + '/api/device-list';
 const DEVICE_DEREGISTER_ENDPOINT = API_BASE + '/api/device-deregister';
 const JOIN_FAMILY_ENDPOINT = API_BASE + '/api/join-family';
@@ -809,16 +808,7 @@ function buildDefaultDeviceUsage(){
     { id:'demo-dev-leo', memberId:'kid2', hostname:'DESKTOP-LEO', label:"Leo's Laptop", lastSyncAt: new Date(now - (2*24*60 + 15)*60000).toISOString() },
   ];
 
-  // Today's Study/Games/Uncategorized split — Mia is active today (matches
-  // her 130-minute total above), Leo isn't (his device has gone quiet, so
-  // there's deliberately no category data for him today either).
-  const categoryUsage = [
-    { memberId:'kid1', date: todayISO(), category:'Games', minutesUsed: 85 },
-    { memberId:'kid1', date: todayISO(), category:'Study', minutesUsed: 35 },
-    { memberId:'kid1', date: todayISO(), category:'Uncategorized', minutesUsed: 10 },
-  ];
-
-  return { usage, devices, categoryUsage };
+  return { usage, devices };
 }
 
 const DEFAULT_CHORE_LIBRARY = [
@@ -937,15 +927,6 @@ let ui = {
   loginAttempts: {},
   deviceUsageData: null,     // null = not fetched yet; array once loaded
   deviceInfoData: null,      // paired devices with lastSyncAt, for gap detection
-  dayDrillOpen: false,
-  dayDrillLoading: false,
-  dayDrillError: null,
-  dayDrillData: null,        // {date, apps, sites} for the drilled-into day
-  dayDrillMemberId: null,
-  dayDrillMemberName: null,
-  dayDrillMemberColor: null,
-  dayDrillShowAll: false,
-  categoryUsageData: null,   // per-member per-day Study/Games/Uncategorized totals
   deviceUsageLoading: false,
   deviceUsageError: null,
   deviceUsageDays: 7,
@@ -1934,7 +1915,6 @@ function renderScreenTimeCard(m){
   const todayTotal = Object.values(todayByDevice).reduce((sum,v)=>sum+v,0);
   const trend = dailyTotalsForMember(m.id, ui.deviceUsageDays);
   const maxDay = Math.max(1, ...trend.map(t=>t.totalMinutes));
-  const categoryBreakdown = todayCategoryBreakdown(m.id);
 
   const anyStale = myDevices.some(d=>deviceSyncStatus(d).status==='stale');
 
@@ -1951,27 +1931,11 @@ function renderScreenTimeCard(m){
         </div>`;
       }).join('');
 
-  const categoryColors = { Study:'#3d7a4f', Games:'#C1555F', Uncategorized:'#8a8468' };
-  const categoryTotal = Object.values(categoryBreakdown).reduce((sum,v)=>sum+v,0);
-  const categorySection = categoryTotal===0 ? '' : `
-      <div class="tile-section">
-        <div class="tile-section-head"><span>Today's activity</span></div>
-        ${Object.keys(categoryBreakdown).sort((a,b)=>categoryBreakdown[b]-categoryBreakdown[a]).map(cat=>{
-          const mins = categoryBreakdown[cat];
-          const pct = Math.round((mins/categoryTotal)*100);
-          return `<div class="tile-sched-row">
-            <span class="tile-sched-time">${formatMinutesAsHM(mins)}</span>
-            <span class="tile-sched-title"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${categoryColors[cat]||'#8a8468'};margin-right:6px;"></span>${escapeHtml(cat)} (${pct}%)</span>
-          </div>`;
-        }).join('')}
-      </div>`;
-
   const bars = trend.map(t=>{
     const pct = t.totalMinutes>0 ? Math.max(Math.round((t.totalMinutes / maxDay) * 100), 4) : 0;
     const d = fromISODate(t.date);
     const dayLabel = d.toLocaleDateString(undefined,{weekday:'narrow'});
-    const clickable = t.totalMinutes > 0;
-    return `<div class="screentime-bar-col" style="${clickable?'cursor:pointer;':''}" title="${formatDateNice(t.date)}: ${formatMinutesAsHM(t.totalMinutes)}${clickable?' — click for details':''}" ${clickable?`onclick="openDayDrill('${m.id}','${t.date}')"`:''}>
+    return `<div class="screentime-bar-col" title="${formatDateNice(t.date)}: ${formatMinutesAsHM(t.totalMinutes)}">
       <div class="screentime-bar-track"><div class="screentime-bar-fill" style="height:${pct}%;background:${m.color};"></div></div>
       <div class="screentime-bar-label">${dayLabel}</div>
     </div>`;
@@ -1990,7 +1954,6 @@ function renderScreenTimeCard(m){
         <div class="tile-section-head"><span>Devices</span></div>
         ${deviceRows}
       </div>
-      ${categorySection}
       <div class="tile-section">
         <div class="tile-section-head"><span>Last ${ui.deviceUsageDays} days</span></div>
         <div class="screentime-bars">${bars}</div>
@@ -2482,7 +2445,6 @@ async function fetchDeviceUsage(){
     const demo = buildDefaultDeviceUsage();
     ui.deviceUsageData = demo.usage;
     ui.deviceInfoData = demo.devices;
-    ui.categoryUsageData = demo.categoryUsage;
     ui.deviceUsageError = null;
     ui.deviceUsageLoading = false;
     render();
@@ -2491,7 +2453,6 @@ async function fetchDeviceUsage(){
   if(hasClaudeStorage){
     ui.deviceUsageData = [];
     ui.deviceInfoData = [];
-    ui.categoryUsageData = [];
     ui.deviceUsageError = 'Screen time reporting needs the deployed backend — not available while running inside Claude.';
     render();
     return;
@@ -2506,18 +2467,15 @@ async function fetchDeviceUsage(){
       ui.deviceUsageError = err.error || 'Could not load screen time data.';
       ui.deviceUsageData = [];
       ui.deviceInfoData = [];
-      ui.categoryUsageData = [];
     } else {
       const result = await res.json();
       ui.deviceUsageData = result.usage || [];
       ui.deviceInfoData = result.devices || [];
-      ui.categoryUsageData = result.categoryUsage || [];
     }
   } catch(e){
     ui.deviceUsageError = 'Could not reach the server. Check your connection and try again.';
     ui.deviceUsageData = [];
     ui.deviceInfoData = [];
-    ui.categoryUsageData = [];
   }
   ui.deviceUsageLoading = false;
   render();
@@ -2549,78 +2507,6 @@ function minutesAgoLabel(minutesAgo){
 function formatSyncTimeLabel(dateObj){
   const iso = toISODate(dateObj);
   return `${formatDateNice(iso)}, ${minToLabel(dateObj.getHours()*60 + dateObj.getMinutes())}`;
-}
-
-async function openDayDrill(memberId, date){
-  const m = memberById(memberId);
-  ui.dayDrillOpen = true;
-  ui.dayDrillMemberId = memberId;
-  ui.dayDrillMemberName = m ? m.name : '';
-  ui.dayDrillMemberColor = m ? m.color : '#8a8468';
-  ui.dayDrillData = null;
-  ui.dayDrillError = null;
-  ui.dayDrillShowAll = false;
-  ui.dayDrillLoading = true;
-  render();
-
-  if(state.family && state.family.isExample){
-    ui.dayDrillData = buildDemoDayDrillData(memberId, date);
-    ui.dayDrillLoading = false;
-    render();
-    return;
-  }
-  if(hasClaudeStorage){
-    ui.dayDrillError = 'Screen time reporting needs the deployed backend — not available while running inside Claude.';
-    ui.dayDrillLoading = false;
-    render();
-    return;
-  }
-  try{
-    const res = await fetch(`${DEVICE_USAGE_DETAIL_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&memberId=${encodeURIComponent(memberId)}&date=${date}`);
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      ui.dayDrillError = err.error || 'Could not load details for that day.';
-    } else {
-      ui.dayDrillData = await res.json();
-    }
-  } catch(e){
-    ui.dayDrillError = 'Could not reach the server. Check your connection and try again.';
-  }
-  ui.dayDrillLoading = false;
-  render();
-}
-function closeDayDrill(){
-  ui.dayDrillOpen = false;
-  render();
-}
-function buildDemoDayDrillData(memberId, date){
-  // Illustrative demo data — doesn't need to sum exactly to the parent
-  // card's daily total, just needs to show what the drill-through looks
-  // like for someone browsing the example.
-  if(memberId==='kid2'){
-    return { date, apps: [
-      { name:'RobloxPlayerBeta.exe', category:'Games', minutesUsed:95 },
-      { name:'chrome.exe', category:'Uncategorized', minutesUsed:40 },
-      { name:'Discord.exe', category:'Uncategorized', minutesUsed:35 },
-      { name:'ROBLOX.exe', category:'Games', minutesUsed:18 },
-      { name:'notepad.exe', category:'Study', minutesUsed:2 },
-    ], sites: [] };
-  }
-  return { date, apps: [
-    { name:'RobloxPlayerBeta.exe', category:'Games', minutesUsed:70 },
-    { name:'chrome.exe', category:'Study', minutesUsed:35 },
-    { name:'winword.exe', category:'Study', minutesUsed:20 },
-    { name:'chrome.exe', category:'Uncategorized', minutesUsed:15 },
-    { name:'Discord.exe', category:'Uncategorized', minutesUsed:8 },
-  ], sites: [] };
-}
-
-function todayCategoryBreakdown(memberId){
-  const today = todayISO();
-  const rows = (ui.categoryUsageData||[]).filter(c=>c.memberId===memberId && c.date===today);
-  const byCategory = {};
-  rows.forEach(c=>{ byCategory[c.category] = (byCategory[c.category]||0) + c.minutesUsed; });
-  return byCategory; // e.g. {Games: 32, Study: 10, Uncategorized: 5}
 }
 
 function todayUsageByDevice(memberId){
@@ -2715,67 +2601,6 @@ async function removeDevice(deviceId){
   ui.deviceManagerDevices = (ui.deviceManagerDevices||[]).filter(d=>d.id!==deviceId);
   render();
 }
-function renderDayDrillModal(){
-  if(!ui.dayDrillOpen) return '';
-
-  const categoryColors = { Study:'#3d7a4f', Games:'#C1555F', Uncategorized:'#8a8468' };
-
-  let body;
-  if(ui.dayDrillLoading){
-    body = `<p style="font-size:13px;color:#8a8468;">Loading...</p>`;
-  } else if(ui.dayDrillError){
-    body = `<p style="font-size:13px;color:#a5323a;">${escapeHtml(ui.dayDrillError)}</p>`;
-  } else if(ui.dayDrillData){
-    const apps = ui.dayDrillData.apps || [];
-    const showCount = ui.dayDrillShowAll ? apps.length : 5;
-    const shown = apps.slice(0, showCount);
-    const totalMinutes = apps.reduce((sum,a)=>sum+a.minutesUsed, 0);
-
-    const rows = shown.length===0
-      ? `<p style="font-size:13px;color:#8a8468;">No app usage recorded that day.</p>`
-      : shown.map((a,i)=>{
-          const pct = totalMinutes>0 ? Math.round((a.minutesUsed/totalMinutes)*100) : 0;
-          const color = categoryColors[a.category] || '#8a8468';
-          return `<div class="approval-row">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a8468;width:16px;">${i+1}</span>
-              <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};flex:none;"></span>
-              <div>
-                <div class="trip-title">${escapeHtml(a.name)}</div>
-                <div class="trip-meta">${escapeHtml(a.category)} · ${pct}% of tracked time</div>
-              </div>
-            </div>
-            <div style="font-family:'Archivo Narrow',sans-serif;font-weight:700;">${formatMinutesAsHM(a.minutesUsed)}</div>
-          </div>`;
-        }).join('');
-
-    const moreLink = (!ui.dayDrillShowAll && apps.length>5)
-      ? `<button class="btn ghost" style="width:100%;margin-top:10px;padding:9px;font-size:12.5px;" onclick="ui.dayDrillShowAll=true;render();">Show all ${apps.length} programs</button>`
-      : '';
-
-    body = `
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Total tracked: ${formatMinutesAsHM(totalMinutes)}</p>
-      ${rows}
-      ${moreLink}
-    `;
-  }
-
-  return `
-  <div class="overlay" onclick="if(event.target===this) closeDayDrill()">
-    <div class="modal" style="max-width:440px;">
-      <h2 style="display:flex;align-items:center;gap:9px;">
-        <span class="profile-avatar" style="background:${ui.dayDrillMemberColor};width:28px;height:28px;font-size:11px;">${initials(ui.dayDrillMemberName||'')}</span>
-        ${escapeHtml(ui.dayDrillMemberName||'')} — ${ui.dayDrillData ? formatDateNice(ui.dayDrillData.date) : ''}
-      </h2>
-      ${body}
-      <div class="modal-actions" style="margin-top:16px;">
-        <div></div>
-        <button class="btn primary" onclick="closeDayDrill()">Done</button>
-      </div>
-    </div>
-  </div>`;
-}
-
 function renderDeviceManagerModal(){
   if(!ui.deviceManagerOpen) return '';
 
@@ -3382,7 +3207,6 @@ function render(){
     ${renderTaskLibraryModal()}
     ${renderActivityLibraryModal()}
     ${renderDeviceManagerModal()}
-    ${renderDayDrillModal()}
     `;
     return;
   }
@@ -3428,7 +3252,6 @@ function render(){
     ${renderTaskLibraryModal()}
     ${renderActivityLibraryModal()}
     ${renderDeviceManagerModal()}
-    ${renderDayDrillModal()}
   `;
   document.querySelectorAll('.kid-select-btn.active').forEach(b=>{ b.style.color = '#181C2A'; });
 }
