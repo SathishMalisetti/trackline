@@ -405,7 +405,7 @@
   .tile-progress-fill{height:100%;border-radius:3px;}
   .tile-empty{font-size:12.5px;color:var(--text-dim);font-style:italic;}
   .tile-sched-row{display:flex;gap:8px;font-size:13px;color:var(--text-on-ink);align-items:baseline;}
-  .tile-sched-time{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);flex:none;min-width:80px;}
+  .tile-sched-time{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);flex:none;min-width:44px;}
   .tile-sched-title{flex:1;}
   .tile-task-row{
     display:flex;justify-content:space-between;align-items:center;gap:8px;
@@ -1791,7 +1791,7 @@ function renderParentView(){
       ? `<div class="tile-empty">Nothing scheduled</div>`
       : scheduleItems.map(it=>`
         <div class="tile-sched-row">
-          <span class="tile-sched-time">${minToShort(it.start)}–${minToShort(it.end)}</span>
+          <span class="tile-sched-time">${minToShort(it.start)}</span>
           <span class="tile-sched-title">${it.kind==='transit'?'🚗 ':''}${escapeHtml(it.title)}${it.location?` · ${escapeHtml(it.location)}`:''}</span>
         </div>`).join('');
 
