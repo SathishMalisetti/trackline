@@ -730,20 +730,14 @@ function nextWeekdayFrom(weekdayIndex, minDaysAhead){
 
 const DEFAULT_EVENTS = [
   // Both parents work 9:00am–5:00pm, Monday to Friday
-  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:0, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:1, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:2, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:3, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', day:4, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:0, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:1, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:2, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:3, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
-  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', day:4, date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null},
+  // Both parents work 9:00am–5:00pm, Monday to Friday — one multi-day
+  // event each, demonstrating the "set of days" recurrence directly.
+  {id:cid(), memberId:'dad', title:'Work', recurrence:'weekly', days:[0,1,2,3,4], date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null, recurrenceEndDate:null},
+  {id:cid(), memberId:'mom', title:'Work', recurrence:'weekly', days:[0,1,2,3,4], date:null, skipDates:[], occurrenceOverrides:[], start:540, end:1020, location:'', notes:'', needsDrive:false, driverId:null, travelMin:0, color:null, recurrenceEndDate:null},
 
   // Kid evening activities — different parent driving each, different evenings
-  {id:cid(), memberId:'kid1', title:'Swimming', recurrence:'weekly', day:0, date:null, skipDates:[], occurrenceOverrides:[], start:1020, end:1080, location:'Local pool', notes:'', needsDrive:true, driverId:'dad', travelMin:15, color:null},
-  {id:cid(), memberId:'kid2', title:'Basketball', recurrence:'weekly', day:1, date:null, skipDates:[], occurrenceOverrides:[], start:1020, end:1080, location:'Community stadium', notes:'', needsDrive:true, driverId:'mom', travelMin:20, color:null},
+  {id:cid(), memberId:'kid1', title:'Swimming', recurrence:'weekly', days:[0], date:null, skipDates:[], occurrenceOverrides:[], start:1020, end:1080, location:'Local pool', notes:'', needsDrive:true, driverId:'dad', travelMin:15, color:null, recurrenceEndDate:null},
+  {id:cid(), memberId:'kid2', title:'Basketball', recurrence:'weekly', days:[1], date:null, skipDates:[], occurrenceOverrides:[], start:1020, end:1080, location:'Community stadium', notes:'', needsDrive:true, driverId:'mom', travelMin:20, color:null, recurrenceEndDate:null},
 
   // Overlapping one-off appointments, always dated to the next upcoming
   // occurrence so the demo never looks stale — these deliberately clash with
@@ -1083,9 +1077,35 @@ async function saveData(){
 
 function memberById(id){ return state.members.find(m=>m.id===id); }
 
+// Normalizes an event's weekly recurrence days to an array, regardless of
+// whether it's an OLD event (single `day` field, e.g. real existing family
+// data) or a NEW one (`days` array, from the multi-day picker). Nothing
+// ever gets rewritten/migrated — every place that needs to know which
+// weekdays an event repeats on goes through this instead, so old data
+// keeps working forever without a migration pass that could risk
+// corrupting real, already-deployed family schedules.
+function eventDayList(e){
+  if(Array.isArray(e.days)) return e.days;
+  if(e.day!=null) return [e.day];
+  return [];
+}
+// True if dateISO falls within an event's optional recurrence bounds.
+// recurrenceStartDate/recurrenceEndDate are both optional — omitted means
+// unbounded in that direction, matching today's existing "runs forever"
+// default behavior exactly when neither is set.
+function withinRecurrenceBounds(e, dateISO){
+  if(e.recurrenceStartDate && dateISO < e.recurrenceStartDate) return false;
+  if(e.recurrenceEndDate && dateISO > e.recurrenceEndDate) return false;
+  return true;
+}
+
 function eventsForDate(dateISO){
   const dow = dowMonIndexed(dateISO);
-  const weekly = state.events.filter(e=> e.recurrence==='weekly' && e.day===dow && !(e.skipDates||[]).includes(dateISO));
+  const weekly = state.events.filter(e=>
+    e.recurrence==='weekly' && eventDayList(e).includes(dow) &&
+    withinRecurrenceBounds(e, dateISO) &&
+    !(e.skipDates||[]).includes(dateISO)
+  );
   const once = state.events.filter(e=> e.recurrence==='once' && e.date===dateISO);
   // occurrences that were rescheduled TO this date from elsewhere in the series
   const movedIn = [];
@@ -2243,7 +2263,8 @@ function renderModal(){
 
   const memberId = editing? editing.memberId : (pre.memberId || (state.members[0]&&state.members[0].id));
   const recurrence = editing? editing.recurrence : 'once';
-  const day = editing? editing.day : dowMonIndexed(occurrenceDate);
+  const selectedDays = editing ? eventDayList(editing) : [dowMonIndexed(occurrenceDate)];
+  const recurrenceEndDate = editing? (editing.recurrenceEndDate || '') : '';
   const onceDate = editing? (editing.date || occurrenceDate) : occurrenceDate;
   const start = editing? editing.start : (pre.start!=null? pre.start : 540);
   const end = editing? editing.end : (start+30);
@@ -2258,7 +2279,6 @@ function renderModal(){
 
   const memberOptions = state.members.map(m=>`<option value="${m.id}" ${m.id===memberId?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
   const driverOptions = state.members.map(m=>`<option value="${m.id}" ${m.id===driverId?'selected':''}>${escapeHtml(m.name)}</option>`).join('');
-  const dayOptions = DAYS.map((d,i)=>`<option value="${i}" ${i===day?'selected':''}>${d}</option>`).join('');
 
   const isWeekly = recurrence==='weekly';
   const canSkip = editing && editing.recurrence==='weekly';
@@ -2302,8 +2322,22 @@ function renderModal(){
       </div>
       <div id="weeklyFields" style="${isWeekly?'':'display:none'}">
         <div class="field">
-          <label>Day of week</label>
-          <select id="f_day" ${dis}>${dayOptions}</select>
+          <label>Days of week</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:11.5px;" onclick="setActivityDayPreset([0,1,2,3,4])" ${dis}>Every weekday (Mon–Fri)</button>
+            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:11.5px;" onclick="setActivityDayPreset([0,1,2,3,4,5,6])" ${dis}>Every day</button>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            ${DAYS.map((d,i)=>`
+            <label style="display:flex;align-items:center;gap:5px;font-size:13.5px;">
+              <input type="checkbox" class="f_activity_day" value="${i}" ${selectedDays.includes(i)?'checked':''} ${dis}>
+              ${d}
+            </label>`).join('')}
+          </div>
+        </div>
+        <div class="field">
+          <label>Repeats until <span style="font-weight:400;color:#8a8468;">(optional — leave blank to repeat indefinitely)</span></label>
+          <input type="date" id="f_recurrenceEndDate" value="${recurrenceEndDate}" ${dis}>
         </div>
       </div>
 
@@ -2942,7 +2976,7 @@ function renderSearchModal(){
       <span class="dot" style="background:${e.color||(owner?owner.color:'#888')}"></span>
       <div>
         <div class="title">${escapeHtml(e.title)}</div>
-        <div class="meta">Activity · ${owner?escapeHtml(owner.name):''} · ${e.recurrence==='weekly'?DAYS[e.day]:e.recurrence==='once'?formatDateNice(e.date||todayISO()):e.recurrence}</div>
+        <div class="meta">Activity · ${owner?escapeHtml(owner.name):''} · ${e.recurrence==='weekly'?eventDayList(e).slice().sort().map(d=>DAYS[d]).join('/'):e.recurrence==='once'?formatDateNice(e.date||todayISO()):e.recurrence}</div>
       </div>
     </div>`;
   }).join('');
@@ -3596,6 +3630,11 @@ function toggleRecurFields(checked){
   document.getElementById('weeklyFields').style.display = checked? '' : 'none';
   document.getElementById('onceFields').style.display = checked? 'none' : '';
 }
+function setActivityDayPreset(dayIndexes){
+  document.querySelectorAll('.f_activity_day').forEach(cb=>{
+    cb.checked = dayIndexes.includes(parseInt(cb.value,10));
+  });
+}
 
 function currentRecurMode(){
   return document.getElementById('f_recurWeekly').checked ? 'weekly' : 'once';
@@ -3618,21 +3657,27 @@ function saveEvent(){
 
   if(end<=start){ end = start+30; }
 
-  let day, date;
+  let days, date, recurrenceEndDate;
   if(recurrence==='weekly'){
-    day = parseInt(document.getElementById('f_day').value,10);
+    days = [];
+    document.querySelectorAll('.f_activity_day').forEach(cb=>{ if(cb.checked) days.push(parseInt(cb.value,10)); });
+    if(days.length===0) days = [dowMonIndexed(selectedDateISO())]; // safety net — never save a weekly activity with no days selected
     date = null;
+    const endVal = document.getElementById('f_recurrenceEndDate').value;
+    recurrenceEndDate = endVal || null;
   } else {
     date = document.getElementById('f_date').value;
-    day = dowMonIndexed(date);
+    days = [dowMonIndexed(date)];
+    recurrenceEndDate = null;
   }
 
   if(ui.editingId){
     const ev = state.events.find(e=>e.id===ui.editingId);
-    Object.assign(ev, {title,memberId,recurrence,day,date,start,end,location,notes,needsDrive,driverId,travelMin,color});
+    Object.assign(ev, {title,memberId,recurrence,days,date,start,end,location,notes,needsDrive,driverId,travelMin,color,recurrenceEndDate});
+    delete ev.day; // clear the legacy single-day field so eventDayList() reads the new `days` array, not a stale single value
     if(recurrence==='once'){ ev.skipDates = []; }
   } else {
-    state.events.push({id:cid(), title,memberId,recurrence,day,date,skipDates:[],start,end,location,notes,needsDrive,driverId,travelMin,color});
+    state.events.push({id:cid(), title,memberId,recurrence,days,date,skipDates:[],start,end,location,notes,needsDrive,driverId,travelMin,color,recurrenceEndDate});
   }
   addToActivityLibrary(title);
   saveData();
