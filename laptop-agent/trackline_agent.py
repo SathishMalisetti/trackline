@@ -659,36 +659,14 @@ def reregister(backend_url):
             print(f"Warning: could not reach backend to clean up the old pairing ({e}). Continuing anyway.")
     pair(backend_url)
 
-def register_uninstaller(agent_exe_path):
-    """Registers Trackline in Windows' Add/Remove Programs (Apps &
-    Features) list. Uses HKEY_CURRENT_USER, not HKEY_LOCAL_MACHINE, so no
-    admin elevation is needed for a per-user install. UninstallString
-    points at the compiled agent with --full-uninstall — deliberately
-    non-interactive, since Windows' own "Are you sure?" dialog already
-    confirms with the user before ever calling this."""
-    if platform.system() != "Windows":
-        return False, "Add/Remove Programs registration is Windows-only."
-    try:
-        import winreg
-    except ImportError:
-        return False, "winreg not available on this system."
-    try:
-        key_path = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\TracklineAgent"
-        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-            winreg.SetValueEx(key, "DisplayName", 0, winreg.REG_SZ, "Trackline Screen Time Agent")
-            winreg.SetValueEx(key, "UninstallString", 0, winreg.REG_SZ, f'"{agent_exe_path}" --full-uninstall')
-            winreg.SetValueEx(key, "DisplayVersion", 0, winreg.REG_SZ, "1.0")
-            winreg.SetValueEx(key, "Publisher", 0, winreg.REG_SZ, "Trackline")
-            winreg.SetValueEx(key, "InstallLocation", 0, winreg.REG_SZ, str(Path(agent_exe_path).parent))
-            winreg.SetValueEx(key, "NoModify", 0, winreg.REG_DWORD, 1)
-            winreg.SetValueEx(key, "NoRepair", 0, winreg.REG_DWORD, 1)
-        return True, "Registered in Add/Remove Programs."
-    except Exception as e:
-        return False, f"Could not register in Add/Remove Programs: {e}"
-
 def unregister_uninstaller():
-    """Best-effort — removes the Add/Remove Programs entry. Fine if the
-    key doesn't exist (e.g. this device was never registered)."""
+    """Best-effort — removes the Add/Remove Programs entry, if one exists.
+    No longer created by this codebase (the Inno Setup installer now
+    handles Add/Remove Programs registration properly at install time,
+    replacing what this used to do at pairing time — that redundant path
+    created a confusing duplicate entry and was removed). Kept here purely
+    as defensive cleanup, in case a device was paired with an older build
+    that still created one."""
     if platform.system() != "Windows":
         return
     try:

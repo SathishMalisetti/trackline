@@ -80,3 +80,23 @@ Name: "{commondesktop}\Trackline Config Manager"; Filename: "{app}\TracklineConf
 ; Since nothing is paired yet at this point, Config Manager will correctly
 ; open straight to its "Pair this device" screen.
 Filename: "{app}\TracklineConfigManager\{#MyConfigManagerExe}"; Description: "Open Trackline Config Manager"; Flags: postinstall nowait skipifsilent
+
+[UninstallRun]
+; THE FIX for a real reported bug: Inno Setup's generated uninstaller
+; (Add/Remove Programs) only removes files it installed under {app} — it
+; has no idea that %LocalAppData%\TracklineAgent (config.json, the
+; scheduled task, the pairing itself) exists at all, since that's a
+; separate runtime-created data location, not something the installer
+; ever wrote. Without this step, a standard uninstall silently leaves the
+; old pairing fully intact, and a later reinstall would find that stale
+; config and show as "paired" locally even though the device was already
+; deregistered (or never actually valid) server-side — exactly the
+; "connected here but not connected on the web" confusion that was
+; reported. Runs the same --full-uninstall a manual Disconnect already
+; uses: deregisters the device, removes the scheduled task, and deletes
+; local config — RunOnceId ensures it only runs once even if Inno retries.
+; Inno Setup doesn't check a Run/UninstallRun entry's exit code by default
+; (only if you wire up a custom Check: function), so a non-zero exit from
+; an already-unpaired device won't block the rest of the uninstall either
+; way — no extra flag needed for that.
+Filename: "{app}\TracklineAgent\TracklineAgent.exe"; Parameters: "--full-uninstall"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "TracklineFullUninstall"

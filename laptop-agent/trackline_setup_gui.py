@@ -209,35 +209,6 @@ def find_agent_exe():
 
     return None  # caller falls back to a file picker
 
-def register_uninstaller(agent_exe_path):
-    """Registers Trackline in Windows' Add/Remove Programs (Apps &
-    Features) list. Same implementation as trackline_agent.py's version,
-    deliberately duplicated — TracklineSetup and TracklineAgent are
-    separate compiled programs and can't reliably share Python modules
-    once frozen with PyInstaller. Uses HKEY_CURRENT_USER so no admin
-    elevation is needed. UninstallString points at the compiled agent
-    with --full-uninstall, which is non-interactive since Windows' own
-    confirmation dialog already asks the user before calling it."""
-    if platform.system() != "Windows":
-        return False, "Add/Remove Programs registration is Windows-only."
-    try:
-        import winreg
-    except ImportError:
-        return False, "winreg not available on this system."
-    try:
-        key_path = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\TracklineAgent"
-        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-            winreg.SetValueEx(key, "DisplayName", 0, winreg.REG_SZ, "Trackline Screen Time Agent")
-            winreg.SetValueEx(key, "UninstallString", 0, winreg.REG_SZ, f'"{agent_exe_path}" --full-uninstall')
-            winreg.SetValueEx(key, "DisplayVersion", 0, winreg.REG_SZ, "1.0")
-            winreg.SetValueEx(key, "Publisher", 0, winreg.REG_SZ, "Trackline")
-            winreg.SetValueEx(key, "InstallLocation", 0, winreg.REG_SZ, str(Path(agent_exe_path).parent))
-            winreg.SetValueEx(key, "NoModify", 0, winreg.REG_DWORD, 1)
-            winreg.SetValueEx(key, "NoRepair", 0, winreg.REG_DWORD, 1)
-        return True, "Registered in Add/Remove Programs."
-    except Exception as e:
-        return False, f"Could not register in Add/Remove Programs: {e}"
-
 def install_scheduled_task(agent_exe_path=None):
     """Actually creates the scheduled task, from the XML definition above.
     Windows-only — a no-op elsewhere, with a clear message rather than a
@@ -379,14 +350,9 @@ def run_gui():
                     resolved_agent_path = picked
                     task_ok, task_msg = install_scheduled_task(picked)
 
-        uninstall_msg = ""
-        if resolved_agent_path:
-            reg_ok, reg_msg = register_uninstaller(resolved_agent_path)
-            uninstall_msg = f"\n{reg_msg}"
-
         messagebox.showinfo(
             "Paired successfully",
-            f"This device is now sending screen time for {chosen_label.split(' (')[0]}.\n\n{task_msg}{uninstall_msg}"
+            f"This device is now sending screen time for {chosen_label.split(' (')[0]}.\n\n{task_msg}"
         )
         root.destroy()
 

@@ -84,6 +84,47 @@ def find_setup_exe():
 
     return None
 
+AGENT_EXE_NAME = "TracklineAgent.exe"
+
+def find_agent_exe():
+    """Locates TracklineAgent.exe — same discovery approach as
+    find_setup_exe() above and trackline_setup_gui.py's own version.
+    Checks the same folder first, then the sibling-onedir-folder pattern."""
+    if not getattr(sys, "frozen", False):
+        return None
+    own_folder = Path(sys.executable).parent
+
+    same_folder_candidate = own_folder / AGENT_EXE_NAME
+    if same_folder_candidate.exists():
+        return same_folder_candidate
+
+    sibling_candidate = own_folder.parent / "TracklineAgent" / AGENT_EXE_NAME
+    if sibling_candidate.exists():
+        return sibling_candidate
+
+    return None
+
+def resolve_agent_exe_path(cfg):
+    """The self-healing piece: config.json's agent_exe_path is only ever
+    written once, at pairing time — if the install location changes since
+    (e.g. moving to a new installer, or the folder being moved/rebuilt),
+    that stored path silently goes stale and every action that depends on
+    it starts failing with "could not find the agent", even though the
+    agent is sitting right there in a sibling folder. Rather than just
+    failing, this re-runs the same discovery pairing already uses, and if
+    found, repairs config.json with the corrected path so this only ever
+    needs to self-heal once, not on every single action. Returns the
+    resolved path (str) or None if genuinely not found anywhere."""
+    stored_path = cfg.get("agent_exe_path")
+    if stored_path and Path(stored_path).exists():
+        return stored_path
+    rediscovered = find_agent_exe()
+    if rediscovered:
+        cfg["agent_exe_path"] = str(rediscovered)
+        write_config(cfg)
+        return str(rediscovered)
+    return None
+
 def launch_setup(setup_exe_path):
     """Launches the setup wizard as a separate, non-blocking process —
     the Config Manager doesn't wait for it to finish, since it's a GUI
@@ -200,15 +241,14 @@ def set_sync_interval(minutes):
         return False, f"Interval saved, but could not update the scheduled task: {e}"
 
 def sync_now():
-    """Triggers an immediate sync using the agent path saved at pairing
-    time. Returns (ok, message). Runs synchronously with a generous
-    timeout — a real sync (querying ActivityWatch, pushing to the
-    backend) should finish well within it."""
+    """Triggers an immediate sync. Returns (ok, message). Runs
+    synchronously with a generous timeout — a real sync (querying
+    ActivityWatch, pushing to the backend) should finish well within it."""
     cfg = read_config()
     if not cfg:
         return False, "This device isn't paired."
-    agent_path = cfg.get("agent_exe_path")
-    if not agent_path or not Path(agent_path).exists():
+    agent_path = resolve_agent_exe_path(cfg)
+    if not agent_path:
         return False, "Could not find the Trackline agent to run it — re-pairing (via TracklineSetup) will fix this."
     try:
         result = subprocess.run([agent_path, "--sync-once"], capture_output=True, text=True, timeout=60)
@@ -250,8 +290,8 @@ def sync_missing_date(date_str):
         datetime.strptime(date_str, "%Y-%m-%d")
     except ValueError:
         return False, "Enter a date in YYYY-MM-DD format."
-    agent_path = cfg.get("agent_exe_path")
-    if not agent_path or not Path(agent_path).exists():
+    agent_path = resolve_agent_exe_path(cfg)
+    if not agent_path:
         return False, "Could not find the Trackline agent to run it — re-pairing (via TracklineSetup) will fix this."
     try:
         result = subprocess.run([agent_path, "--sync-date", date_str], capture_output=True, text=True, timeout=60)
@@ -272,8 +312,8 @@ def disconnect_device():
     cfg = read_config()
     if not cfg:
         return False, "This device isn't paired."
-    agent_path = cfg.get("agent_exe_path")
-    if not agent_path or not Path(agent_path).exists():
+    agent_path = resolve_agent_exe_path(cfg)
+    if not agent_path:
         return False, "Could not find the Trackline agent to run the disconnect — you can still remove this device from the family's Settings page in the web app."
     try:
         result = subprocess.run([agent_path, "--full-uninstall"], capture_output=True, text=True, timeout=30)
