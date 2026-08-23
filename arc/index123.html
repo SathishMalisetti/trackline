@@ -455,8 +455,7 @@
   .hint{font-size:12.5px;color:var(--text-dim);margin-top:10px;line-height:1.5;}
 
   /* SETTINGS */
-  .settings-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:18px;align-items:start;}
-  .settings-card{background:var(--paper);color:var(--ink);border-radius:14px;padding:20px;}
+  .settings-card{background:var(--paper);color:var(--ink);border-radius:14px;padding:20px;max-width:560px;margin-bottom:18px;}
   .settings-card h3{font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;margin:0 0 12px;}
   .member-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
   .member-contact-row{display:flex;gap:8px;margin:0 0 14px 44px;}
@@ -539,161 +538,6 @@ const hasClaudeStorage = (typeof window !== 'undefined') && window.storage && ty
 const STORAGE_MODE_LABEL = () => hasClaudeStorage ? 'claude' : (backendReachable ? 'cloud' : (backendReachable===false ? 'local' : 'checking'));
 
 const LOCAL_FAMILY_ID_KEY = 'trackline-family-id'; // small pointer kept locally even in cloud mode, so this browser knows which family record to fetch
-const LOCAL_KIOSK_KEY = 'trackline-kiosk-family-id'; // set only when a parent explicitly enables kiosk mode ON THIS DEVICE — bound to one family id, never portable via URL/link
-
-// ---------------------------------------------------------------------
-// Foreground browser notifications — reminders before upcoming tasks and
-// activities. Only fires while this tab is open (even backgrounded), not
-// if the browser is fully closed — that would need a service worker and
-// server-triggered push, a much bigger piece deliberately out of scope
-// for now. Preferences are per-device (localStorage), not synced to the
-// family, since different devices may reasonably want different timing.
-// ---------------------------------------------------------------------
-
-const LOCAL_NOTIFY_PREFS_KEY = 'trackline-notify-prefs';
-const LOCAL_NOTIFIED_KEY = 'trackline-notified-reminders';
-
-function getNotifyPrefs(){
-  try {
-    const raw = window.localStorage.getItem(LOCAL_NOTIFY_PREFS_KEY);
-    if(raw) return Object.assign({enabled:false, firstReminder:30, secondReminder:15}, JSON.parse(raw));
-  } catch(e){}
-  return { enabled:false, firstReminder:30, secondReminder:15 };
-}
-function saveNotifyPrefs(prefs){
-  try { window.localStorage.setItem(LOCAL_NOTIFY_PREFS_KEY, JSON.stringify(prefs)); } catch(e){}
-}
-function enableNotifications(){
-  if(typeof Notification==='undefined'){
-    showAlert('This browser does not support notifications.');
-    return Promise.resolve();
-  }
-  return Notification.requestPermission().then(function(perm){
-    const prefs = getNotifyPrefs();
-    if(perm==='granted'){
-      prefs.enabled = true;
-      saveNotifyPrefs(prefs);
-      showAlert("Notifications enabled on this device — you'll get a reminder before upcoming tasks and activities while this tab is open.");
-    } else {
-      prefs.enabled = false;
-      saveNotifyPrefs(prefs);
-      showAlert('Notifications were not allowed. You can change this in your browser\'s site settings.');
-    }
-    render();
-  });
-}
-function disableNotifications(){
-  const prefs = getNotifyPrefs();
-  prefs.enabled = false;
-  saveNotifyPrefs(prefs);
-  render();
-}
-function setNotifyReminderMinutes(which, minutes){
-  const prefs = getNotifyPrefs();
-  const val = parseInt(minutes,10);
-  if(isNaN(val) || val<0) return;
-  prefs[which] = val;
-  saveNotifyPrefs(prefs);
-}
-
-function getAlreadyNotifiedSet(){
-  try {
-    const raw = window.localStorage.getItem(LOCAL_NOTIFIED_KEY);
-    if(raw) return new Set(JSON.parse(raw));
-  } catch(e){}
-  return new Set();
-}
-function markNotified(key){
-  const s = getAlreadyNotifiedSet();
-  s.add(key);
-  const today = todayISO();
-  const pruned = Array.from(s).filter(function(k){ return k.indexOf(today)!==-1; });
-  try { window.localStorage.setItem(LOCAL_NOTIFIED_KEY, JSON.stringify(pruned)); } catch(e){}
-}
-
-function upcomingReminderItems(){
-  // Scoped by who's viewing: a parent (or a kiosk device, which always
-  // shows Parent View) sees everyone's upcoming items; a kid sees only
-  // their own — matching the same scoping the rest of the app already
-  // uses for Kid View vs Parent View.
-  const dateISO = todayISO();
-  let memberIds;
-  if(isKioskDevice() && !isLoggedIn()){
-    memberIds = state.members.map(function(m){ return m.id; });
-  } else if(isParentLoggedIn()){
-    memberIds = state.members.map(function(m){ return m.id; });
-  } else if(isLoggedIn()){
-    const m = currentMember();
-    memberIds = m ? [m.id] : [];
-  } else {
-    return [];
-  }
-
-  const items = [];
-  memberIds.forEach(function(mid){
-    eventsForDateMember(dateISO, mid).forEach(function(e){
-      items.push({ type:'activity', id:e.id, title:e.title, memberId:mid, startMin:e.start, date:dateISO });
-    });
-    choresForDateMember(dateISO, mid).forEach(function(c){
-      if(!c.dueTime) return; // no specific time to count down to
-      items.push({ type:'task', id:c.id, title:c.title, memberId:mid, startMin:timeInputToMin(c.dueTime), date:dateISO });
-    });
-  });
-  return items;
-}
-
-function checkAndFireNotificationReminders(){
-  const prefs = getNotifyPrefs();
-  if(!prefs.enabled) return;
-  if(typeof Notification==='undefined' || Notification.permission!=='granted') return;
-
-  const now = new Date();
-  const nowMin = now.getHours()*60 + now.getMinutes();
-  const offsets = [prefs.firstReminder, prefs.secondReminder].filter(function(o){ return o>0; });
-  if(offsets.length===0) return;
-  const already = getAlreadyNotifiedSet();
-
-  upcomingReminderItems().forEach(function(item){
-    offsets.forEach(function(offset){
-      const triggerMin = item.startMin - offset;
-      if(nowMin===triggerMin){
-        const key = item.type+'-'+item.id+'-'+offset+'-'+item.date;
-        if(!already.has(key)){
-          const member = memberById(item.memberId);
-          const label = item.type==='task' ? 'Task' : 'Activity';
-          try {
-            new Notification(label+' in '+offset+' min', {
-              body: item.title + (member ? ' — '+member.name : ''),
-            });
-          } catch(e){}
-          markNotified(key);
-        }
-      }
-    });
-  });
-}
-
-function isKioskDevice(){
-  if(typeof window==='undefined' || !window.localStorage) return false;
-  const bound = window.localStorage.getItem(LOCAL_KIOSK_KEY);
-  return !!bound && !!state.family && bound===state.family.id;
-}
-function enableKioskMode(){
-  if(!isParentLoggedIn()) return; // only a logged-in parent can turn this on for a device
-  showConfirm(
-    `Make this device always show ${state.family.name || 'this family'}'s Parent View, without needing to log in? Anyone using this device can view it — a small Login button stays available for making changes.`,
-    ()=>{
-      try{ window.localStorage.setItem(LOCAL_KIOSK_KEY, state.family.id); }catch(e){}
-      showAlert('This device is now set up as a display. Reload the page to see it in kiosk mode.');
-      render();
-    }
-  );
-}
-function disableKioskMode(){
-  if(!isParentLoggedIn()) return;
-  try{ window.localStorage.removeItem(LOCAL_KIOSK_KEY); }catch(e){}
-  render();
-}
 
 async function storageGet(key){
   if(hasClaudeStorage){
@@ -805,180 +649,6 @@ async function deleteTripRemote(tripId){
 }
 
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-// ---------------------------------------------------------------------
-// CSV import — tasks and activities. Parser handles quoted fields with
-// embedded commas (e.g. "Mon,Wed,Fri" as one column value), matching
-// the sample files' format. Validators are pure functions returning
-// {valid, errors, data} per row, so the whole pipeline (parse, validate,
-// preview, confirm, create) can run without touching the DOM until the
-// final "Import" click.
-// ---------------------------------------------------------------------
-
-function parseCSV(text){
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for(let i=0;i<text.length;i++){
-    const c = text[i];
-    if(inQuotes){
-      if(c==='"'){
-        if(text[i+1]==='"'){ field+='"'; i++; }
-        else inQuotes = false;
-      } else field += c;
-    } else {
-      if(c==='"') inQuotes = true;
-      else if(c===','){ row.push(field); field=''; }
-      else if(c==='\n' || c==='\r'){
-        if(c==='\r' && text[i+1]==='\n') i++;
-        row.push(field); field='';
-        if(!(row.length===1 && row[0]==='')) rows.push(row);
-        row=[];
-      } else field += c;
-    }
-  }
-  if(field!=='' || row.length>0){ row.push(field); rows.push(row); }
-  return rows;
-}
-
-function csvRowsToObjects(rows){
-  if(rows.length===0) return [];
-  const header = rows[0].map(h=>h.trim());
-  return rows.slice(1).map(row=>{
-    const obj = {};
-    header.forEach((h,i)=>{ obj[h] = (row[i]!==undefined ? row[i] : '').trim(); });
-    return obj;
-  });
-}
-
-function validateTaskImportRow(row, members){
-  const errors = [];
-  const member = members.find(m=>m.name===row.member_name);
-  if(!row.member_name) errors.push('member_name is required');
-  else if(!member) errors.push('member_name "'+row.member_name+'" doesn\'t match any family member');
-
-  const title = row.title;
-  if(!title) errors.push('title is required');
-
-  const frequency = row.frequency;
-  if(['once','daily','weekly','fortnightly','monthly'].indexOf(frequency)===-1){
-    errors.push('frequency must be once/daily/weekly/fortnightly/monthly, got "'+frequency+'"');
-  }
-
-  let days = [];
-  if(frequency==='weekly' || frequency==='fortnightly'){
-    if(!row.days) errors.push('days is required for '+frequency);
-    else {
-      days = row.days.split(',').map(d=>d.trim()).map(d=>DAYS.indexOf(d));
-      if(days.some(d=>d===-1)) errors.push('days contains a value that is not a valid day name (Mon/Tue/Wed/Thu/Fri/Sat/Sun)');
-    }
-  }
-
-  let dayOfMonth = null;
-  if(frequency==='monthly'){
-    dayOfMonth = parseInt(row.day_of_month,10);
-    if(!row.day_of_month || isNaN(dayOfMonth) || dayOfMonth<1 || dayOfMonth>31) errors.push('day_of_month must be 1-31 for monthly');
-  }
-
-  let dueDate = null;
-  if(frequency==='once'){
-    dueDate = row.due_date;
-    if(!dueDate || !/^\d{4}-\d{2}-\d{2}$/.test(dueDate)) errors.push('due_date (YYYY-MM-DD) is required for once');
-  }
-
-  const startDate = row.start_date || null;
-  if(startDate && !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) errors.push('start_date must be YYYY-MM-DD');
-
-  const dueTime = row.due_time || null;
-  if(dueTime && !/^\d{2}:\d{2}$/.test(dueTime)) errors.push('due_time must be HH:MM');
-
-  const pointsStr = row.points;
-  const points = pointsStr ? parseInt(pointsStr,10) : 0;
-  if(pointsStr && isNaN(points)) errors.push('points must be a number');
-
-  // Match saveChore()'s exact behavior: a recurring task's start defaults
-  // to today if left blank, and never allowed to sit in the past either
-  // way — same rule as the manual form applies, so CSV-imported tasks
-  // behave identically to one added by hand.
-  const today = todayISO();
-  let resolvedStartDate = startDate;
-  if(['daily','weekly','fortnightly','monthly'].indexOf(frequency)!==-1){
-    resolvedStartDate = startDate || today;
-    if(resolvedStartDate < today) resolvedStartDate = today;
-  }
-  let resolvedDueDate = dueDate;
-  if(frequency==='once' && dueDate && dueDate < today) resolvedDueDate = today;
-
-  return {
-    valid: errors.length===0,
-    errors: errors,
-    data: errors.length===0 ? {
-      memberId: member.id, title: title, frequency: frequency, days: days, dayOfMonth: dayOfMonth,
-      startDate: resolvedStartDate, dueDate: resolvedDueDate, dueTime: dueTime,
-      points: isNaN(points)?0:points, icon: row.icon || null,
-    } : null,
-  };
-}
-
-function validateActivityImportRow(row, members){
-  const errors = [];
-  const member = members.find(m=>m.name===row.member_name);
-  if(!row.member_name) errors.push('member_name is required');
-  else if(!member) errors.push('member_name "'+row.member_name+'" doesn\'t match any family member');
-
-  const title = row.title;
-  if(!title) errors.push('title is required');
-
-  const recurrence = row.recurrence;
-  if(['once','weekly'].indexOf(recurrence)===-1) errors.push('recurrence must be once or weekly, got "'+recurrence+'"');
-
-  let days = [];
-  if(recurrence==='weekly'){
-    if(!row.days) errors.push('days is required for weekly');
-    else {
-      days = row.days.split(',').map(d=>d.trim()).map(d=>DAYS.indexOf(d));
-      if(days.some(d=>d===-1)) errors.push('days contains a value that is not a valid day name (Mon/Tue/Wed/Thu/Fri/Sat/Sun)');
-    }
-  }
-
-  let date = null;
-  if(recurrence==='once'){
-    date = row.date;
-    if(!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) errors.push('date (YYYY-MM-DD) is required for once');
-  }
-
-  const timePattern = /^\d{2}:\d{2}$/;
-  if(!row.start_time || !timePattern.test(row.start_time)) errors.push('start_time (HH:MM) is required');
-  if(!row.end_time || !timePattern.test(row.end_time)) errors.push('end_time (HH:MM) is required');
-  const start = row.start_time ? timeInputToMin(row.start_time) : null;
-  const end = row.end_time ? timeInputToMin(row.end_time) : null;
-  if(start!=null && end!=null && end<=start) errors.push('end_time must be after start_time');
-
-  const needsDrive = (row.needs_drive||'').toLowerCase()==='yes';
-  let driverId = null, travelMin = 0;
-  if(needsDrive){
-    const driver = members.find(m=>m.name===row.driver_name);
-    if(!row.driver_name) errors.push('driver_name is required when needs_drive is yes');
-    else if(!driver) errors.push('driver_name "'+row.driver_name+'" doesn\'t match any family member');
-    else driverId = driver.id;
-    const travelStr = row.travel_minutes;
-    travelMin = travelStr ? parseInt(travelStr,10) : NaN;
-    if(!travelStr || isNaN(travelMin)) errors.push('travel_minutes is required (a number) when needs_drive is yes');
-  }
-
-  const recurrenceEndDate = row.repeats_until || null;
-  if(recurrenceEndDate && !/^\d{4}-\d{2}-\d{2}$/.test(recurrenceEndDate)) errors.push('repeats_until must be YYYY-MM-DD');
-
-  return {
-    valid: errors.length===0,
-    errors: errors,
-    data: errors.length===0 ? {
-      memberId: member.id, title: title, recurrence: recurrence, days: days, date: date, start: start, end: end,
-      location: row.location||'', notes: row.notes||'',
-      needsDrive: needsDrive, driverId: driverId, travelMin: isNaN(travelMin)?0:travelMin,
-      recurrenceEndDate: recurrenceEndDate,
-    } : null,
-  };
-}
-
 const DAY_START = 6*60;      // 6:00am
 const DAY_END = 21*60+30;    // 9:30pm
 const RANGE = DAY_END - DAY_START;
@@ -1291,9 +961,6 @@ let ui = {
   formPrefill: null,
   kidId: null,
   copiedFlash: false,
-  csvImportOpen: false,
-  csvImportType: null,
-  csvImportResults: null,
   familyIdCopied: false,
   loaded: false,
   profileId: null,
@@ -2473,7 +2140,7 @@ function renderPendingApprovals(){
   }).join('');
 
   return `
-    <div class="settings-card" style="max-width:560px;">
+    <div class="settings-card">
       <h3>Pending approval (${total})</h3>
       <p style="font-size:12.5px;color:#5c5847;margin-top:0;">Things kids have added, waiting for a parent to approve before they go live.</p>
       ${choreRows}${itemRows}${tripRows}
@@ -2483,7 +2150,7 @@ function renderPendingApprovals(){
 function renderSettings(){
   if(!isParentLoggedIn()){
     return `
-      <div class="settings-card" style="text-align:center;max-width:560px;">
+      <div class="settings-card" style="text-align:center;">
         <h3>🔒 Parent login required</h3>
         <p style="font-size:13.5px;color:#5c5847;">Log in as a parent (top right) to manage family members, colors, and data.</p>
       </div>`;
@@ -2519,7 +2186,6 @@ function renderSettings(){
     </div>` : ''}`).join('');
 
   return `
-    <div class="settings-grid">
     <div class="settings-card">
       <h3>Family</h3>
       <div class="field">
@@ -2566,42 +2232,12 @@ function renderSettings(){
     <div class="settings-card">
       <h3>Task list</h3>
       <p style="font-size:13px;color:#5c5847;margin-top:0;">These names show up as suggestions when adding a task, so nobody has to retype "Unload dishwasher" from scratch every time.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn ghost" onclick="openTaskLibraryModal()">Manage task list (${(state.choreLibrary||[]).length})</button>
-        <button class="btn ghost" onclick="triggerCSVImport('task')">Import tasks from CSV</button>
-      </div>
+      <button class="btn ghost" onclick="openTaskLibraryModal()">Manage task list (${(state.choreLibrary||[]).length})</button>
     </div>
     <div class="settings-card">
       <h3>Activity list</h3>
       <p style="font-size:13px;color:#5c5847;margin-top:0;">Same idea for activities — "Dentist," "Swimming," "GP appointment" show up as suggestions instead of typing them fresh every time.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn ghost" onclick="openActivityLibraryModal()">Manage activity list (${(state.activityLibrary||[]).length})</button>
-        <button class="btn ghost" onclick="triggerCSVImport('activity')">Import activities from CSV</button>
-      </div>
-    </div>
-    <div class="settings-card">
-      <h3>This device</h3>
-      ${isKioskDevice() ? `
-        <p style="font-size:13px;color:#5c5847;margin-top:0;">This device is set up as a display for ${escapeHtml(state.family.name||'this family')} — it shows Parent View without needing to log in each time.</p>
-        <button class="btn ghost" onclick="disableKioskMode()">Turn off display mode</button>
-      ` : `
-        <p style="font-size:13px;color:#5c5847;margin-top:0;">For a tablet or screen mounted somewhere the family sees often — always shows Parent View, no login needed to just look. Making changes still requires logging in.</p>
-        <button class="btn ghost" onclick="enableKioskMode()">Make this device a display</button>
-      `}
-    </div>
-    <div class="settings-card">
-      <h3>Notifications</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">A browser notification before upcoming tasks and activities. Only fires while this tab is open (even in the background) — not if the browser itself is fully closed. Applies to this device, not synced with the family.</p>
-      ${(() => { const np = getNotifyPrefs(); return np.enabled ? `
-        <p style="font-size:12.5px;color:#3d7a4f;font-weight:600;margin-bottom:10px;">✓ Enabled on this device</p>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">First reminder <input type="number" min="0" value="${np.firstReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid #c9c2ab;" onchange="setNotifyReminderMinutes('firstReminder', this.value)"> min before</label>
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">Second reminder <input type="number" min="0" value="${np.secondReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid #c9c2ab;" onchange="setNotifyReminderMinutes('secondReminder', this.value)"> min before</label>
-        </div>
-        <button class="btn ghost" onclick="disableNotifications()">Turn off notifications</button>
-      ` : `
-        <button class="btn ghost" onclick="enableNotifications()">Enable notifications</button>
-      `; })()}
+      <button class="btn ghost" onclick="openActivityLibraryModal()">Manage activity list (${(state.activityLibrary||[]).length})</button>
     </div>
     <div class="settings-card">
       <h3>Screen time devices</h3>
@@ -2631,7 +2267,6 @@ function renderSettings(){
         <button class="btn danger" onclick="resetDefaults()">Reset to example data</button>
       </div>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-    </div>
     </div>
   `;
 }
@@ -3821,21 +3456,6 @@ function renderDashboard(){
 }
 
 function render(){
-  // Every render() call fully replaces root.innerHTML — including <main>,
-  // the app's one scroll container — so a brand-new <main> always starts
-  // at scrollTop 0. Without this, any action that re-renders (which is
-  // nearly everything — clicking Apply in Settings, adding a member,
-  // anything) silently snaps the page back to the top. Capturing and
-  // restoring scroll position around the render, rather than inside it,
-  // means every current AND future early-return branch in _renderInner
-  // is covered automatically, with zero changes needed to any of them.
-  const prevMain = document.querySelector('main');
-  const prevScrollTop = prevMain ? prevMain.scrollTop : 0;
-  _renderInner();
-  const newMain = document.querySelector('main');
-  if(newMain) newMain.scrollTop = prevScrollTop;
-}
-function _renderInner(){
   const root = document.getElementById('root');
   if(!ui.loaded){
     root.innerHTML = `<div style="padding:60px;text-align:center;color:#9AA0C0;font-family:'IBM Plex Mono',monospace;">Loading schedule…</div>`;
@@ -3844,29 +3464,6 @@ function _renderInner(){
 
   if(!state.family || ui.justCreatedFamilyId || ui.joinFamilyMode){
     root.innerHTML = renderOnboarding();
-    return;
-  }
-
-  if(!isLoggedIn() && isKioskDevice()){
-    root.innerHTML = `
-      <header class="board">
-        <div class="brand">
-          <div class="flap">Track<span>line</span></div>
-          <div class="sub">Family Tracker · Display</div>
-        </div>
-        <div class="header-right">
-          <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${ui.dayMode?'🌙':'☀️'}</button>
-          ${renderProfileDropdown()}
-        </div>
-      </header>
-      <main>
-        ${renderParentView()}
-      </main>
-      ${renderLoginModal()}
-      ${renderConfirmModal()}
-      ${renderAlertModal()}
-      ${renderDayDrillModal()}
-    `;
     return;
   }
 
@@ -3938,7 +3535,6 @@ function _renderInner(){
     ${renderTaskLibraryModal()}
     ${renderActivityLibraryModal()}
     ${renderDeviceManagerModal()}
-    ${renderCSVImportModal()}
     ${renderDayDrillModal()}
   `;
   document.querySelectorAll('.kid-select-btn.active').forEach(b=>{ b.style.color = '#181C2A'; });
@@ -4960,87 +4556,6 @@ function closeExportModal(){
   ui.exportError = null;
   render();
 }
-function triggerCSVImport(type){
-  if(!isParentLoggedIn()) return;
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.csv';
-  input.onchange = function(e){
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = function(ev){ processCSVImport(type, ev.target.result); };
-    reader.readAsText(file);
-  };
-  input.click();
-}
-function processCSVImport(type, text){
-  const rows = csvRowsToObjects(parseCSV(text));
-  const validator = type==='task' ? validateTaskImportRow : validateActivityImportRow;
-  const results = rows.map(function(row){
-    const r = validator(row, state.members);
-    r.row = row;
-    return r;
-  });
-  ui.csvImportType = type;
-  ui.csvImportResults = results;
-  ui.csvImportOpen = true;
-  render();
-}
-function closeCSVImport(){
-  ui.csvImportOpen = false;
-  ui.csvImportResults = null;
-  ui.csvImportType = null;
-  render();
-}
-function confirmCSVImport(){
-  if(!isParentLoggedIn()) return;
-  const type = ui.csvImportType;
-  const validResults = (ui.csvImportResults||[]).filter(function(r){ return r.valid; });
-  validResults.forEach(function(r){
-    if(type==='task'){
-      state.chores.push(Object.assign({id:cid(), active:true, pendingApproval:false}, r.data));
-      addToChoreLibrary(r.data.title);
-    } else {
-      state.events.push(Object.assign({id:cid(), skipDates:[]}, r.data));
-      addToActivityLibrary(r.data.title);
-    }
-  });
-  saveData();
-  const count = validResults.length;
-  const label = type==='task' ? (count===1?'task':'tasks') : (count===1?'activity':'activities');
-  closeCSVImport();
-  showAlert('Imported '+count+' '+label+'.');
-}
-function renderCSVImportModal(){
-  if(!ui.csvImportOpen) return '';
-  const results = ui.csvImportResults || [];
-  const valid = results.filter(function(r){ return r.valid; });
-  const invalid = results.filter(function(r){ return !r.valid; });
-  const typeLabel = ui.csvImportType==='task' ? 'tasks' : 'activities';
-
-  const errorRows = invalid.map(function(r,i){
-    return '<div class="approval-row" style="flex-direction:column;align-items:stretch;">'
-      + '<div class="trip-title">Row '+(i+1)+': '+escapeHtml(r.row.title||r.row.member_name||'(unnamed)')+'</div>'
-      + '<div class="trip-meta" style="color:#a5323a;">'+r.errors.map(escapeHtml).join(' · ')+'</div>'
-      + '</div>';
-  }).join('');
-
-  return '<div class="overlay" onclick="if(event.target===this) closeCSVImport()">'
-    + '<div class="modal" style="max-width:460px;">'
-    + '<h2>Import preview</h2>'
-    + '<p style="font-size:13px;color:#5c5847;margin:0 0 14px;">'
-    + '<strong style="color:#3d7a4f;">'+valid.length+' '+typeLabel+' ready to import</strong>'
-    + (invalid.length ? ' · <strong style="color:#a5323a;">'+invalid.length+' with errors (will be skipped)</strong>' : '')
-    + '</p>'
-    + (invalid.length ? '<div style="max-height:220px;overflow-y:auto;margin-bottom:14px;">'+errorRows+'</div>' : '')
-    + '<div class="modal-actions" style="margin-top:6px;">'
-    + '<button class="btn ghost" onclick="closeCSVImport()">Cancel</button>'
-    + (valid.length ? '<button class="btn primary" onclick="confirmCSVImport()">Import '+valid.length+' '+typeLabel+'</button>' : '')
-    + '</div>'
-    + '</div>'
-    + '</div>';
-}
 function renderExportModal(){
   if(!ui.exportModalOpen) return '';
   return `
@@ -5184,8 +4699,7 @@ function resetDefaults(){
 
 applyDayModeClass();
 loadData();
-setInterval(()=>{ if(ui.tab==='board' && !ui.modalOpen) render(); }, 60000); // refresh now-line each minute — skipped while a modal is open, since a full render would silently wipe whatever's being typed into an open form
-setInterval(checkAndFireNotificationReminders, 60000); // independent of tab/modal state — a reminder should fire even if you're not currently looking at the board
+setInterval(()=>{ if(ui.tab==='board') render(); }, 60000); // refresh now-line each minute
 </script>
 </body>
 </html>
