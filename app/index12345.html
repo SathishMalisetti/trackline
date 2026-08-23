@@ -456,17 +456,16 @@
 
   /* SETTINGS */
   .settings-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:18px;align-items:start;}
-  @media(min-width:700px){ .settings-card-wide{grid-column:span 2;} }
   .settings-card{background:var(--paper);color:var(--ink);border-radius:14px;padding:20px;}
   .settings-card h3{font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;margin:0 0 12px;}
-  .member-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px;}
-  .member-contact-row{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px 44px;}
+  .member-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .member-contact-row{display:flex;gap:8px;margin:0 0 14px 44px;}
   .member-contact-row input{flex:1;padding:7px 9px;border-radius:6px;border:1px solid #c9c2ab;font-size:12.5px;color:#5c5847;}
   .member-notify-row{display:flex;gap:16px;margin:0 0 16px 44px;flex-wrap:wrap;}
   .notify-check{display:flex;align-items:center;gap:6px;font-size:12px;color:#5c5847;cursor:pointer;}
   .notify-check input{width:14px;height:14px;}
   .member-row input[type=color]{width:34px;height:34px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;}
-  .member-row input[type=text]{flex:1;min-width:120px;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;font-size:14px;}
+  .member-row input[type=text]{flex:1;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;font-size:14px;}
   .member-row select{padding:9px 8px;border-radius:7px;border:1px solid #c9c2ab;font-size:13px;}
   .chore-lib-chips{display:flex;flex-wrap:wrap;gap:8px;}
   .chore-lib-chip{display:inline-flex;align-items:center;gap:6px;background:#e3dcc6;border-radius:16px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:600;color:#4a4636;}
@@ -2521,7 +2520,7 @@ function renderSettings(){
 
   return `
     <div class="settings-grid">
-    <div class="settings-card settings-card-wide">
+    <div class="settings-card">
       <h3>Family</h3>
       <div class="field">
         <label>Family ID <span style="font-weight:400;color:#8a8468;">(for other devices to join)</span></label>
