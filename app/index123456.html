@@ -523,14 +523,6 @@ const DEVICE_LIST_ENDPOINT = API_BASE + '/api/device-list';
 const TRACKLINE_AGENT_DOWNLOAD_URL = 'https://raw.githubusercontent.com/SathishMalisetti/trackline/main/releases/latest/download/TracklineAgent.zip';
 const DEVICE_DEREGISTER_ENDPOINT = API_BASE + '/api/device-deregister';
 const JOIN_FAMILY_ENDPOINT = API_BASE + '/api/join-family';
-// Study module — curriculum content (subjects/topics/questions) is global,
-// shared across every family, so it's fetched like device usage rather than
-// stored in the per-family blob. Progress/exam results ARE per-family and
-// stay in state.topicProgress, saved through the normal storageSet blob.
-const STUDY_TOPICS_ENDPOINT = API_BASE + '/api/study-topics';       // GET ?yearLevel=4
-const STUDY_EXAM_START_ENDPOINT = API_BASE + '/api/study-exam-start'; // POST {topicId} -> sampled questions, no answers included
-const STUDY_EXAM_SUBMIT_ENDPOINT = API_BASE + '/api/study-exam-submit'; // POST {familyId, kidId, topicId, attemptId, answers} -> scored server-side
-const STUDY_ASSIGNMENTS_ENDPOINT = API_BASE + '/api/study-assignments'; // GET ?familyId&kidId&weekOffset -> this week's term-assigned work
 
 // ---- portable storage layer -------------------------------------------------
 // Two modes, auto-detected:
@@ -1276,148 +1268,6 @@ const DEFAULT_ACTIVITY_LIBRARY = [
   'Haircut', 'Vet appointment', 'Parent-teacher meeting', 'School assembly'
 ];
 
-// Study module demo data — used when hasClaudeStorage (testing inside Claude,
-// no real backend deployed yet) or for the example family. Real deployments
-// fetch this same shape from STUDY_TOPICS_ENDPOINT instead (see fetchStudyTopics).
-// Trimmed to the 6 VCAA-verified pilot topics from the curriculum research pass;
-// swap for the full 43-topic set once that's approved and seeded server-side.
-const DEMO_STUDY_SUBJECTS = [
-  { id:'sub-eng', name:'English', yearLevel:'4' },
-  { id:'sub-math', name:'Mathematics', yearLevel:'4' },
-  { id:'sub-sci', name:'Science', yearLevel:'4' }
-];
-const DEMO_STUDY_TOPICS = [
-  { id:"t-math-01", subjectId:"sub-math", name:"Place value to tens of thousands", vcaaCode:"VCMNA152",
-    studyContent:"Our number system is built on place value: each digit's position tells you its value. In 46,382 the 4 means 4 ten-thousands (40,000), the 6 means 6 thousands (6,000), and so on. You can compare numbers by looking at the biggest place value first - whichever number has more ten-thousands is bigger, and only if those match do you look at the next column.",
-    questions:[{id:'q1',q:"In 58,204, what does the 5 represent?",options:["5 ten-thousands", "5 thousands", "5 hundreds", "5 ones"],answer:"5 ten-thousands"},{id:'q2',q:"Which number is largest?",options:["47,650", "46,999", "47,099", "46,850"],answer:"47,650"},{id:'q3',q:"What is 30,000 + 5,000 + 200 + 7 written as a number?",options:["35,207", "3,527", "35,270", "352,07"],answer:"35,207"},{id:'q4',q:"How many thousands are in 62,000?",options:["62", "6.2", "620", "6200"],answer:"62"},{id:'q5',q:"Order from smallest to largest: 12,450 / 12,045 / 12,504",options:["12,045, 12,450, 12,504", "12,450, 12,045, 12,504", "12,504, 12,450, 12,045", "12,045, 12,504, 12,450"],answer:"12,045, 12,450, 12,504"},{id:'q6',q:"What is the value of the 0 in 40,516?",options:["0 thousands", "0 hundreds", "0 tens", "0 ones"],answer:"0 thousands"}] },
-  { id:"t-math-02", subjectId:"sub-math", name:"Decimal fractions: tenths and hundredths", vcaaCode:"VCMNA159",
-    studyContent:"Numbers don't stop at the ones column! Just like 10 ones make a ten, we can split 1 whole into 10 equal pieces. Each piece is called a TENTH, and we write it as 0.1. If we split 1 whole into 100 equal pieces, each piece is a HUNDREDTH, written as 0.01. The dot is called a decimal point - it separates whole numbers from parts of a number. So 0.7 means 7 tenths (like 7 slices out of a pizza cut into 10 pieces), and the fraction 7/10 is exactly the same amount as the decimal 0.7. You can line decimals up in a place value grid: Ones . Tenths Hundredths - so 3.45 means 3 ones, 4 tenths, and 5 hundredths.",
-    questions:[{id:'q1',q:"What is 3/10 written as a decimal?",options:["0.3", "0.03", "3.0", "30"],answer:"0.3"},{id:'q2',q:"In the number 5.62, what does the digit 6 represent?",options:["6 tenths", "6 hundredths", "6 ones", "6 tens"],answer:"6 tenths"},{id:'q3',q:"Which decimal is the same as 1/4?",options:["0.4", "0.25", "0.14", "0.40"],answer:"0.25"},{id:'q4',q:"Write 45 hundredths as a decimal.",options:["0.45", "4.5", "0.045", "45.0"],answer:"0.45"},{id:'q5',q:"Order from smallest to largest: 0.6, 0.06, 0.66",options:["0.06, 0.6, 0.66", "0.6, 0.06, 0.66", "0.66, 0.6, 0.06", "0.06, 0.66, 0.6"],answer:"0.06, 0.6, 0.66"},{id:'q6',q:"A ribbon is 0.8 metres long. What fraction of a metre is that?",options:["8/10", "8/100", "1/8", "8/1"],answer:"8/10"},{id:'q7',q:"What is 2 wholes and 3 tenths written as a decimal?",options:["2.3", "23.0", "0.23", "2.03"],answer:"2.3"},{id:'q8',q:"Which is larger: 0.5 or 0.45?",options:["0.5", "0.45", "They are equal", "Cannot tell"],answer:"0.5"},{id:'q9',q:"How many hundredths make one tenth?",options:["10", "100", "1", "5"],answer:"10"},{id:'q10',q:"Write 6/10 as a decimal.",options:["0.6", "0.06", "6.0", "0.16"],answer:"0.6"},{id:'q11',q:"A recipe uses 0.75 of a cup of flour. Write this as a fraction.",options:["75/100", "7/5", "3/4 is also correct - is it the same value?", "None of these"],answer:"75/100"},{id:'q12',q:"What is the value of the 4 in 12.45?",options:["4 tenths", "4 hundredths", "4 tens", "4 ones"],answer:"4 tenths"},{id:'q13',q:"Which fraction equals 0.2?",options:["1/5", "1/2", "2/100", "1/20"],answer:"1/5"}] },
-  { id:"t-math-03", subjectId:"sub-math", name:"Simple equivalent fractions", vcaaCode:"VCMNA157",
-    studyContent:"Equivalent fractions look different but represent the same amount - like 1/2 and 2/4, both mean 'half'. You can find an equivalent fraction by multiplying the top and bottom number by the same amount. Picture a pizza cut into 2 slices vs one cut into 4 slices - eating 1 of 2 slices is the same amount as eating 2 of 4 slices.",
-    questions:[{id:'q1',q:"Which fraction is equivalent to 1/2?",options:["2/4", "1/4", "3/4", "1/3"],answer:"2/4"},{id:'q2',q:"Which fraction is equivalent to 2/3?",options:["4/6", "2/6", "3/6", "4/3"],answer:"4/6"},{id:'q3',q:"1/4 is equivalent to how many eighths?",options:["2/8", "1/8", "3/8", "4/8"],answer:"2/8"},{id:'q4',q:"Which pair is NOT equivalent?",options:["1/3 and 2/5", "1/3 and 2/6", "1/2 and 3/6", "2/3 and 4/6"],answer:"1/3 and 2/5"},{id:'q5',q:"If you cut a cake into 8 pieces and eat 4, what simpler fraction did you eat?",options:["1/2", "1/4", "3/8", "1/8"],answer:"1/2"},{id:'q6',q:"3/4 is equivalent to how many eighths?",options:["6/8", "5/8", "4/8", "3/8"],answer:"6/8"}] },
-  { id:"t-math-04", subjectId:"sub-math", name:"Counting by halves, thirds, quarters", vcaaCode:"VCMNA158",
-    studyContent:"You can count using fractions just like whole numbers. Counting by halves: 1/2, 1, 1 1/2, 2, 2 1/2... Counting by quarters: 1/4, 1/2, 3/4, 1, 1 1/4... These fit on a number line the same way whole numbers do - between 0 and 1 there's room for 1/4, 1/2, and 3/4, all in order.",
-    questions:[{id:'q1',q:"What comes next: 1/4, 1/2, 3/4, ___?",options:["1", "1 1/4", "5/4", "2/4"],answer:"1"},{id:'q2',q:"What comes next counting by halves: 1/2, 1, 1 1/2, ___?",options:["2", "2 1/2", "1 3/4", "3"],answer:"2"},{id:'q3',q:"Which is bigger: 2/3 or 1/3?",options:["2/3", "1/3", "They are equal", "Cannot tell"],answer:"2/3"},{id:'q4',q:"On a number line between 0 and 1, where does 3/4 sit?",options:["Closer to 1 than to 0", "Exactly in the middle", "Closer to 0 than to 1", "At 0"],answer:"Closer to 1 than to 0"},{id:'q5',q:"Counting by thirds from 0: 1/3, 2/3, ___?",options:["1", "3/3", "4/3", "2"],answer:"1"},{id:'q6',q:"Which fraction sits exactly halfway between 0 and 1?",options:["1/2", "1/4", "3/4", "1/3"],answer:"1/2"}] },
-  { id:"t-math-05", subjectId:"sub-math", name:"Odd/even numbers and multiple patterns (3,4,6,7,8,9)", vcaaCode:"VCMNA151,VCMNA154",
-    studyContent:"Even numbers can be split into two equal groups with nothing left over (2, 4, 6, 8...); odd numbers always have one left over (1, 3, 5, 7...). A quick check: even numbers always end in 0, 2, 4, 6, or 8. Multiples follow patterns too - multiples of 3 are 3, 6, 9, 12...; multiples of 4 are 4, 8, 12, 16... Spotting these patterns helps with multiplication.",
-    questions:[{id:'q1',q:"Which of these is an even number?",options:["48", "47", "53", "61"],answer:"48"},{id:'q2',q:"Which of these is odd?",options:["37", "36", "40", "22"],answer:"37"},{id:'q3',q:"What is the next multiple of 3 after 12?",options:["15", "14", "16", "13"],answer:"15"},{id:'q4',q:"Which number is a multiple of both 3 and 4?",options:["12", "9", "8", "10"],answer:"12"},{id:'q5',q:"What do all even numbers have in common?",options:["They can be split into two equal groups", "They always end in 5", "They are always bigger than 10", "They are always odd"],answer:"They can be split into two equal groups"},{id:'q6',q:"Which of these numbers is NOT a multiple of 6?",options:["16", "18", "24", "30"],answer:"16"}] },
-  { id:"t-math-06", subjectId:"sub-math", name:"Multiplication facts to 10x10", vcaaCode:"VCMNA155",
-    studyContent:"Multiplication is a fast way of adding the same number lots of times. 4 x 7 means '4 groups of 7' or '7 groups of 4' - either way, the answer is 28. Once you know a multiplication fact, you already know a division fact too! If 4 x 7 = 28, then 28 divided by 7 = 4, and 28 divided by 4 = 7. This is called a 'fact family'. Some tricks: multiplying by 10 just adds a zero (7 x 10 = 70). Multiplying by 9 - try the '10s trick': 9 x 6 is the same as (10 x 6) - 6 = 60 - 6 = 54. Doubling helps too: if you know 5 x 6 = 30, then 10 x 6 is just double that = 60.",
-    questions:[{id:'q1',q:"What is 6 x 7?",options:["42", "36", "48", "40"],answer:"42"},{id:'q2',q:"What is 9 x 8?",options:["72", "81", "64", "63"],answer:"72"},{id:'q3',q:"If 5 x 6 = 30, what is 30 ÷ 6?",options:["5", "6", "24", "36"],answer:"5"},{id:'q4',q:"What is 8 x 8?",options:["64", "72", "56", "81"],answer:"64"},{id:'q5',q:"A box holds 7 apples. How many apples in 9 boxes?",options:["63", "56", "72", "16"],answer:"63"},{id:'q6',q:"What is 10 x 4?",options:["40", "14", "400", "4"],answer:"40"},{id:'q7',q:"What is 45 ÷ 9?",options:["5", "9", "4", "6"],answer:"5"},{id:'q8',q:"What is 7 x 7?",options:["49", "42", "56", "48"],answer:"49"},{id:'q9',q:"3 teams have 9 players each. How many players in total?",options:["27", "18", "12", "36"],answer:"27"},{id:'q10',q:"What is 9 x 9?",options:["81", "72", "90", "99"],answer:"81"},{id:'q11',q:"What is 6 x 6?",options:["36", "12", "42", "30"],answer:"36"},{id:'q12',q:"72 lollies are shared equally among 8 friends. How many each?",options:["9", "8", "7", "10"],answer:"9"}] },
-  { id:"t-math-07", subjectId:"sub-math", name:"Related division facts", vcaaCode:"VCMNA155",
-    studyContent:"Every multiplication fact has two matching division facts - together they're called a 'fact family'. If 6 x 4 = 24, then 24 ÷ 4 = 6 and 24 ÷ 6 = 4. Knowing your times tables well makes division much faster, because you're really just asking 'what do I multiply to get this number?'",
-    questions:[{id:'q1',q:"If 7 x 8 = 56, what is 56 ÷ 8?",options:["7", "8", "48", "64"],answer:"7"},{id:'q2',q:"What is 45 ÷ 9?",options:["5", "6", "9", "4"],answer:"5"},{id:'q3',q:"What is 64 ÷ 8?",options:["8", "7", "9", "6"],answer:"8"},{id:'q4',q:"36 lollies shared equally among 6 friends - how many each?",options:["6", "5", "7", "36"],answer:"6"},{id:'q5',q:"If 9 x 6 = 54, which of these is also true?",options:["54 ÷ 6 = 9", "54 ÷ 6 = 8", "54 ÷ 9 = 5", "54 ÷ 6 = 10"],answer:"54 ÷ 6 = 9"},{id:'q6',q:"What is 81 ÷ 9?",options:["9", "8", "7", "11"],answer:"9"}] },
-  { id:"t-math-08", subjectId:"sub-math", name:"Purchases and change (money)", vcaaCode:"VCMNA160",
-    studyContent:"When you buy something, you often pay with more money than the price and get change back. To work out change, subtract the price from the amount you paid. For example, if something costs $3.65 and you pay with a $5 note, your change is $5.00 - $3.65 = $1.35. Adding up several prices before paying works the same way as regular addition, just with dollars and cents.",
-    questions:[{id:'q1',q:"An item costs $2.50. You pay with $5. What is your change?",options:["$2.50", "$2.00", "$3.00", "$1.50"],answer:"$2.50"},{id:'q2',q:"Two items cost $1.20 and $2.35. What is the total?",options:["$3.55", "$3.45", "$3.65", "$3.05"],answer:"$3.55"},{id:'q3',q:"An item costs $6.80. You pay with $10. What is your change?",options:["$3.20", "$3.80", "$4.20", "$2.20"],answer:"$3.20"},{id:'q4',q:"You have $8.00 and buy something for $5.45. How much is left?",options:["$2.55", "$2.45", "$3.55", "$2.65"],answer:"$2.55"},{id:'q5',q:"Which combination makes exactly $1.00?",options:["50c + 20c + 20c + 10c", "50c + 20c + 10c", "20c + 20c + 20c", "$1 coin only is the only way"],answer:"50c + 20c + 20c + 10c"},{id:'q6',q:"An item costs $4.15. Which coins/notes could you use to pay exactly?",options:["A $5 note and get $0.85 change is one way, or exact coins totalling $4.15", "Only a $5 note works", "Only exact $4 notes work", "It cannot be paid exactly"],answer:"A $5 note and get $0.85 change is one way, or exact coins totalling $4.15"}] },
-  { id:"t-math-09", subjectId:"sub-math", name:"Number patterns and simple algorithms", vcaaCode:"VCMNA161,VCMNA164",
-    studyContent:"A number pattern follows a rule that tells you how to get from one number to the next. In 5, 10, 15, 20... the rule is 'add 5'. In 100, 90, 80... the rule is 'subtract 10'. Once you spot the rule, you can predict what comes next, or work backwards to find missing numbers earlier in the pattern.",
-    questions:[{id:'q1',q:"What is the rule for 3, 6, 9, 12?",options:["Add 3", "Add 4", "Multiply by 2", "Subtract 3"],answer:"Add 3"},{id:'q2',q:"What comes next: 40, 35, 30, 25, ___?",options:["20", "15", "22", "24"],answer:"20"},{id:'q3',q:"What is the missing number: 7, 14, __, 28?",options:["21", "20", "22", "24"],answer:"21"},{id:'q4',q:"What is the rule for 2, 4, 8, 16?",options:["Multiply by 2", "Add 2", "Add 4", "Multiply by 4"],answer:"Multiply by 2"},{id:'q5',q:"What comes next: 100, 90, 80, ___?",options:["70", "75", "65", "60"],answer:"70"},{id:'q6',q:"What is the 6th number in the pattern starting 5, 10, 15...?",options:["30", "25", "35", "20"],answer:"30"}] },
-  { id:"t-math-10", subjectId:"sub-math", name:"Measuring length, mass, capacity with scaled instruments", vcaaCode:"",
-    studyContent:"We measure length with rulers or tape measures (in mm, cm, m), mass with scales (in g, kg), and capacity - how much liquid something holds - with measuring jugs (in mL, L). Reading a scaled instrument means finding where the pointer or line lands and reading the nearest marked value, just like reading a number line.",
-    questions:[{id:'q1',q:"Which unit would you use to measure the mass of an apple?",options:["Grams", "Metres", "Litres", "Kilometres"],answer:"Grams"},{id:'q2',q:"Which unit would you use to measure how much water is in a bottle?",options:["Millilitres", "Grams", "Centimetres", "Kilograms"],answer:"Millilitres"},{id:'q3',q:"How many centimetres are in 1 metre?",options:["100", "10", "1000", "50"],answer:"100"},{id:'q4',q:"How many grams are in 1 kilogram?",options:["1000", "100", "10", "10000"],answer:"1000"},{id:'q5',q:"Which is the better tool to measure the length of your classroom?",options:["A tape measure", "A measuring jug", "Kitchen scales", "A thermometer"],answer:"A tape measure"},{id:'q6',q:"A jug shows 750mL. How many more mL to reach 1 litre?",options:["250mL", "150mL", "350mL", "500mL"],answer:"250mL"}] },
-  { id:"t-math-11", subjectId:"sub-math", name:"Time: reading and converting units", vcaaCode:"",
-    studyContent:"Time is measured in seconds, minutes, hours, days, weeks, months and years. There are 60 seconds in a minute, 60 minutes in an hour, and 24 hours in a day. Reading a clock means understanding both the hour hand (short) and minute hand (long), and being able to tell time to the nearest 5 minutes or minute.",
-    questions:[{id:'q1',q:"How many minutes are in 1 hour?",options:["60", "100", "30", "24"],answer:"60"},{id:'q2',q:"How many hours are in 1 day?",options:["24", "12", "60", "365"],answer:"24"},{id:'q3',q:"How many minutes are in 2 hours?",options:["120", "100", "90", "60"],answer:"120"},{id:'q4',q:"A movie starts at 3:45pm and runs for 90 minutes. What time does it finish?",options:["5:15pm", "5:00pm", "4:45pm", "5:30pm"],answer:"5:15pm"},{id:'q5',q:"How many days are in a fortnight?",options:["14", "7", "10", "21"],answer:"14"},{id:'q6',q:"How many seconds are in 1 minute?",options:["60", "100", "30", "120"],answer:"60"}] },
-  { id:"t-math-12", subjectId:"sub-math", name:"Area of rectangles", vcaaCode:"",
-    studyContent:"Area is the amount of flat space a shape covers, measured in square units like cm² or m². For a rectangle, area = length x width. If a rectangle is 5cm long and 3cm wide, its area is 5 x 3 = 15 square centimetres. You can also find area by counting how many equal squares fit inside the shape.",
-    questions:[{id:'q1',q:"A rectangle is 4cm long and 3cm wide. What is its area?",options:["12 cm²", "7 cm²", "14 cm²", "10 cm²"],answer:"12 cm²"},{id:'q2',q:"What is the formula for the area of a rectangle?",options:["length x width", "length + width", "2 x (length + width)", "length - width"],answer:"length x width"},{id:'q3',q:"A square has sides of 6cm. What is its area?",options:["36 cm²", "24 cm²", "12 cm²", "30 cm²"],answer:"36 cm²"},{id:'q4',q:"A rectangle has an area of 20cm² and a length of 5cm. What is its width?",options:["4cm", "5cm", "10cm", "15cm"],answer:"4cm"},{id:'q5',q:"What units is area measured in?",options:["Square units, like cm²", "Just centimetres", "Kilograms", "Litres"],answer:"Square units, like cm²"},{id:'q6',q:"A rectangle is 8m long and 2m wide. What is its area?",options:["16 m²", "10 m²", "20 m²", "14 m²"],answer:"16 m²"}] },
-  { id:"t-math-13", subjectId:"sub-math", name:"2D shape properties", vcaaCode:"",
-    studyContent:"2D shapes are described by their properties: number of sides, number of corners (vertices), and whether the sides are equal length or the angles are equal. A square has 4 equal sides and 4 right angles; a rectangle has 4 sides with opposite sides equal; a triangle has 3 sides. Naming a shape correctly means checking these properties, not just its general look.",
-    questions:[{id:'q1',q:"How many sides does a hexagon have?",options:["6", "5", "7", "8"],answer:"6"},{id:'q2',q:"What makes a square different from a rectangle?",options:["A square has 4 equal sides", "A square has more sides", "A square has no right angles", "A square has 3 sides"],answer:"A square has 4 equal sides"},{id:'q3',q:"How many vertices (corners) does a triangle have?",options:["3", "4", "2", "5"],answer:"3"},{id:'q4',q:"Which shape has 5 sides?",options:["Pentagon", "Hexagon", "Square", "Triangle"],answer:"Pentagon"},{id:'q5',q:"What is true about all the angles in a square?",options:["They are all right angles (90°)", "They are all different", "They are all obtuse", "They add up to 180°"],answer:"They are all right angles (90°)"},{id:'q6',q:"A shape has 4 sides but they are not all equal, and opposite sides are equal length. What shape is it likely to be?",options:["Rectangle", "Triangle", "Pentagon", "Circle"],answer:"Rectangle"}] },
-  { id:"t-math-14", subjectId:"sub-math", name:"Symmetry", vcaaCode:"",
-    studyContent:"A shape has symmetry (is symmetrical) if you can fold it in half and both sides match exactly - that fold line is called the line of symmetry. Some shapes have more than one line of symmetry (a square has 4), and some shapes have none at all (like most irregular shapes).",
-    questions:[{id:'q1',q:"What is a line of symmetry?",options:["A line where a shape can be folded so both halves match", "Any line drawn through a shape", "The longest side of a shape", "A line that touches a shape's corner"],answer:"A line where a shape can be folded so both halves match"},{id:'q2',q:"How many lines of symmetry does a square have?",options:["4", "1", "2", "0"],answer:"4"},{id:'q3',q:"How many lines of symmetry does a circle have?",options:["Infinite (every line through the centre)", "0", "1", "4"],answer:"Infinite (every line through the centre)"},{id:'q4',q:"Which letter of the alphabet has a vertical line of symmetry?",options:["A", "F", "R", "P"],answer:"A"},{id:'q5',q:"How many lines of symmetry does a regular (equal-sided) triangle have?",options:["3", "1", "0", "2"],answer:"3"},{id:'q6',q:"Does a scalene triangle (all sides different lengths) usually have a line of symmetry?",options:["No", "Yes, always one", "Yes, always three", "Yes, always two"],answer:"No"}] },
-  { id:"t-math-15", subjectId:"sub-math", name:"Angle types", vcaaCode:"",
-    studyContent:"An angle measures how much something has turned, measured in degrees. A right angle is exactly 90° (like the corner of a square). An angle smaller than 90° is called acute; an angle bigger than 90° but smaller than 180° is called obtuse; a straight line is 180°.",
-    questions:[{id:'q1',q:"How many degrees is a right angle?",options:["90°", "45°", "180°", "60°"],answer:"90°"},{id:'q2',q:"What is an angle smaller than 90° called?",options:["Acute", "Obtuse", "Straight", "Reflex"],answer:"Acute"},{id:'q3',q:"What is an angle bigger than 90° but less than 180° called?",options:["Obtuse", "Acute", "Right", "Straight"],answer:"Obtuse"},{id:'q4',q:"How many degrees is a straight line?",options:["180°", "90°", "360°", "270°"],answer:"180°"},{id:'q5',q:"Which everyday object shows a right angle?",options:["The corner of a book", "A slice of pizza", "A rainbow", "A ball"],answer:"The corner of a book"},{id:'q6',q:"An angle measures 120°. What type of angle is it?",options:["Obtuse", "Acute", "Right", "Reflex"],answer:"Obtuse"}] },
-  { id:"t-math-16", subjectId:"sub-math", name:"Collecting and interpreting data (graphs)", vcaaCode:"",
-    studyContent:"Collecting data means gathering information, like counting how many classmates like each fruit. Once collected, data can be shown in a table, a column graph (bars), or a picture graph. Reading a graph means checking the axis labels and the scale, then comparing the heights or lengths of the bars to answer questions about the data.",
-    questions:[{id:'q1',q:"What is the purpose of a column graph?",options:["To visually compare amounts of data", "To measure temperature", "To tell the time", "To show a map"],answer:"To visually compare amounts of data"},{id:'q2',q:"On a graph, what do you check first to understand it?",options:["The axis labels and scale", "The colours used", "The title font", "The paper size"],answer:"The axis labels and scale"},{id:'q3',q:"If a bar for 'Apples' is taller than the bar for 'Bananas', what does that mean?",options:["More people chose apples", "Apples are bigger fruit", "Bananas are more popular", "Nothing can be concluded"],answer:"More people chose apples"},{id:'q4',q:"What is the first step in creating a graph from data you collected?",options:["Organise the data into a table first", "Draw the bars randomly", "Skip straight to colouring", "Guess the totals"],answer:"Organise the data into a table first"},{id:'q5',q:"A picture graph uses pictures where each picture represents a set number of items. What is this called?",options:["A key or legend", "A title", "An axis", "A scale-free graph"],answer:"A key or legend"},{id:'q6',q:"Why might you choose a graph instead of a table to show data?",options:["It makes comparisons easier to see at a glance", "Tables are never useful", "Graphs use less data", "Graphs are always more accurate"],answer:"It makes comparisons easier to see at a glance"}] },
-  { id:"t-math-17", subjectId:"sub-math", name:"Chance experiments and likelihood language", vcaaCode:"",
-    studyContent:"Chance describes how likely something is to happen. We use words like 'impossible', 'unlikely', 'even chance', 'likely', and 'certain' to describe this. A chance experiment - like flipping a coin or rolling a dice - lets us test predictions and record outcomes to see how often each result actually happens.",
-    questions:[{id:'q1',q:"What word describes an event that will definitely happen?",options:["Certain", "Impossible", "Unlikely", "Even chance"],answer:"Certain"},{id:'q2',q:"What word describes an event that can never happen?",options:["Impossible", "Certain", "Likely", "Even chance"],answer:"Impossible"},{id:'q3',q:"When flipping a fair coin, what is the chance of landing on heads?",options:["Even chance", "Certain", "Impossible", "Unlikely"],answer:"Even chance"},{id:'q4',q:"Rolling a standard dice, what is the chance of rolling a 7?",options:["Impossible", "Certain", "Unlikely", "Even chance"],answer:"Impossible"},{id:'q5',q:"If a bag has 9 red balls and 1 blue ball, picking blue without looking is:",options:["Unlikely", "Likely", "Certain", "Even chance"],answer:"Unlikely"},{id:'q6',q:"What is a 'chance experiment'?",options:["An activity to test and record how likely outcomes are", "A test with only one possible result", "A science experiment about weather", "An experiment with no clear result"],answer:"An activity to test and record how likely outcomes are"}] },
-  { id:"t-eng-01", subjectId:"sub-eng", name:"Standard Australian English and language variation", vcaaCode:"VCELA303",
-    studyContent:"Standard Australian English is the form of English used in most school writing, news, and formal situations - but it's just one of many ways people speak English. Families, friend groups, and different regions often use their own dialects and slang, which are equally valid ways of communicating, just suited to different situations. Knowing when to use Standard Australian English (like in a school report) versus casual language (like texting a friend) is an important skill.",
-    questions:[{id:'q1',q:"What is Standard Australian English mainly used for?",options:["Formal writing and school work", "Only texting friends", "Only spoken conversation", "Nothing in particular"],answer:"Formal writing and school work"},{id:'q2',q:"Is slang or a regional dialect 'wrong' English?",options:["No, it's a valid way of speaking suited to certain situations", "Yes, it is always incorrect", "Yes, only adults can use it correctly", "No dialects exist in English"],answer:"No, it's a valid way of speaking suited to certain situations"},{id:'q3',q:"Which situation calls for Standard Australian English?",options:["Writing a school report", "Texting a close friend", "Chatting casually with family", "Playing a game with friends"],answer:"Writing a school report"},{id:'q4',q:"What does it mean to 'code-switch' between dialects?",options:["Changing how you speak depending on the situation", "Speaking a foreign language", "Making up new words", "Never changing how you talk"],answer:"Changing how you speak depending on the situation"},{id:'q5',q:"Why might a letter to a principal use more formal language than a note to a friend?",options:["Formal situations usually call for Standard English", "Formal letters must be shorter", "Friends prefer formal language too", "There is no difference needed"],answer:"Formal situations usually call for Standard English"}] },
-  { id:"t-eng-02", subjectId:"sub-eng", name:"Language of opinion vs factual reporting", vcaaCode:"VCELA305",
-    studyContent:"Factual language reports things that can be checked and proven true, like 'The library opens at 9am.' Opinion language expresses feelings or beliefs, like 'The library is the best place in town.' Words such as 'I think', 'best', 'worst', 'amazing', or 'boring' are clues that you're reading an opinion rather than a fact.",
-    questions:[{id:'q1',q:"Which sentence is a fact?",options:["The library opens at 9am.", "The library is the best place ever.", "Libraries are boring.", "Everyone should love libraries."],answer:"The library opens at 9am."},{id:'q2',q:"Which sentence is an opinion?",options:["This is the most exciting book I've read.", "The book has 200 pages.", "The book was published in 2020.", "The book is in the library."],answer:"This is the most exciting book I've read."},{id:'q3',q:"Which word is a clue that a sentence is an opinion?",options:["Amazing", "Measured", "Published", "Located"],answer:"Amazing"},{id:'q4',q:"Can a fact be checked to see if it's true?",options:["Yes", "No", "Only sometimes", "Facts don't need checking"],answer:"Yes"},{id:'q5',q:"'I think dogs make the best pets' is an example of:",options:["Opinion", "Fact", "A measurement", "A definition"],answer:"Opinion"},{id:'q6',q:"Why is it useful to tell fact from opinion when reading?",options:["To understand what is proven versus what is someone's view", "Facts are always more interesting", "Opinions are always false", "There is no real difference"],answer:"To understand what is proven versus what is someone's view"}] },
-  { id:"t-eng-03", subjectId:"sub-eng", name:"Sentence structure and complex sentences", vcaaCode:"VCELA292",
-    studyContent:"A simple sentence has one main idea: 'The dog barked.' A compound sentence joins two ideas with a word like 'and', 'but', or 'so': 'The dog barked and the cat ran.' A complex sentence adds extra information with words like 'because', 'although', or 'when': 'The dog barked because a stranger walked past.' Using a mix of sentence types makes writing more interesting to read.",
-    questions:[{id:'q1',q:"Which is a simple sentence?",options:["The dog barked.", "The dog barked and the cat ran.", "The dog barked because it heard a noise.", "Although tired, the dog barked."],answer:"The dog barked."},{id:'q2',q:"Which word could join two ideas into a compound sentence?",options:["And", "Because", "Although", "When"],answer:"And"},{id:'q3',q:"Which word often starts a complex sentence, adding a reason?",options:["Because", "And", "But", "Or"],answer:"Because"},{id:'q4',q:"'Although it was raining, we went outside.' - what type of sentence is this?",options:["Complex", "Simple", "Just a list", "Not a sentence"],answer:"Complex"},{id:'q5',q:"Why do writers use a mix of simple and complex sentences?",options:["To make writing more interesting to read", "Because simple sentences are wrong", "Because complex sentences must always be used", "To make writing shorter"],answer:"To make writing more interesting to read"},{id:'q6',q:"'The sun was setting and the birds flew home.' - what type of sentence is this?",options:["Compound", "Simple", "Complex only", "Not a sentence"],answer:"Compound"}] },
-  { id:"t-eng-04", subjectId:"sub-eng", name:"Punctuation conventions", vcaaCode:"VCELA291",
-    studyContent:"Punctuation helps a reader understand your writing. A full stop ends a sentence. A comma creates a short pause or separates items in a list. Question marks end questions, exclamation marks show strong feeling, and quotation marks (\" \") show exactly what someone said.",
-    questions:[{id:'q1',q:"Which punctuation mark ends a question?",options:["Question mark (?)", "Full stop (.)", "Comma (,)", "Exclamation mark (!)"],answer:"Question mark (?)"},{id:'q2',q:"Which punctuation shows exactly what someone said?",options:["Quotation marks", "Commas", "Full stops", "Question marks"],answer:"Quotation marks"},{id:'q3',q:"What is the purpose of a comma in a list?",options:["To separate items", "To end the sentence", "To show strong feeling", "To ask a question"],answer:"To separate items"},{id:'q4',q:"'Watch out!' uses which punctuation to show strong feeling?",options:["Exclamation mark", "Question mark", "Comma", "Full stop"],answer:"Exclamation mark"},{id:'q5',q:"Which sentence uses commas correctly in a list?",options:["I like apples, bananas and grapes.", "I like apples bananas, and, grapes.", "I, like apples bananas and grapes.", "I like, apples, bananas, and, grapes."],answer:"I like apples, bananas and grapes."},{id:'q6',q:"What does a full stop signal to the reader?",options:["The end of a sentence", "A pause mid-sentence", "A question is being asked", "Strong emotion"],answer:"The end of a sentence"}] },
-  { id:"t-eng-05", subjectId:"sub-eng", name:"Identifying text purpose (inform, persuade, entertain)", vcaaCode:"VCELA277",
-    studyContent:"Every text is written for a purpose. Informative texts share facts and information, like a science report. Persuasive texts try to convince you of something, like an advertisement or opinion piece. Entertaining texts aim to amuse or engage you emotionally, like a story or joke. Spotting clues in the language helps you identify which purpose a text has.",
-    questions:[{id:'q1',q:"What is the purpose of a weather report?",options:["To inform", "To persuade", "To entertain", "To confuse"],answer:"To inform"},{id:'q2',q:"What is the purpose of an advertisement?",options:["To persuade", "To inform only", "To entertain only", "To describe weather"],answer:"To persuade"},{id:'q3',q:"What is the main purpose of a funny short story?",options:["To entertain", "To persuade", "To give instructions", "To report facts"],answer:"To entertain"},{id:'q4',q:"Which clue suggests a text is persuasive?",options:["Strong opinions and words like 'should' or 'must'", "Lots of dates and facts", "A funny made-up character", "Step-by-step instructions"],answer:"Strong opinions and words like 'should' or 'must'"},{id:'q5',q:"A recipe with numbered steps is mainly which purpose?",options:["To inform (instruct)", "To persuade", "To entertain", "To express opinion only"],answer:"To inform (instruct)"},{id:'q6',q:"Why is it useful to identify a text's purpose before reading it closely?",options:["It helps you know what to expect and how to read it", "It changes the actual words in the text", "It is not useful at all", "It only matters for essays"],answer:"It helps you know what to expect and how to read it"}] },
-  { id:"t-eng-06", subjectId:"sub-eng", name:"Sharing responses to literary texts", vcaaCode:"VCELT306",
-    studyContent:"After reading a story or poem, sharing your response means explaining what you thought and felt about it, and why. A good response goes beyond 'I liked it' - it explains which part stood out, how a character made you feel, or what the story reminded you of. Listening to others' different responses to the same text can show you new ways of understanding it.",
-    questions:[{id:'q1',q:"What makes a strong response to a story, beyond just 'I liked it'?",options:["Explaining which part stood out and why", "Just naming the title again", "Copying a sentence from the book", "Saying nothing more is needed"],answer:"Explaining which part stood out and why"},{id:'q2',q:"Why might two people have different responses to the same story?",options:["People bring different experiences and feelings to reading", "Only one response can ever be correct", "Stories only have one meaning", "Responses must always match"],answer:"People bring different experiences and feelings to reading"},{id:'q3',q:"When sharing a response, what is helpful to include?",options:["A reason or example supporting your view", "Only a one-word answer", "A summary with no opinion", "Someone else's opinion only"],answer:"A reason or example supporting your view"},{id:'q4',q:"What can you learn from hearing someone else's response to a story you've read?",options:["A new way of understanding the story", "Nothing new, since you already read it", "That your own response was wrong", "That stories have only one meaning"],answer:"A new way of understanding the story"},{id:'q5',q:"Which is an example of sharing a personal response?",options:["\"The ending made me feel hopeful because the character never gave up.\"", "\"The book has 120 pages.\"", "\"The author was born in 1990.\"", "\"The book is on the top shelf.\""],answer:"\"The ending made me feel hopeful because the character never gave up.\""}] },
-  { id:"t-eng-07", subjectId:"sub-eng", name:"Reading comprehension: literal and inferred meaning", vcaaCode:"VCELY288",
-    studyContent:"Literal meaning is exactly what the text states - information you can point to directly. Inferred meaning is what you work out using clues, even though it isn't stated outright. If a story says 'Sam grabbed an umbrella and ran outside,' you can infer it's probably raining, even though the text never says so directly.",
-    questions:[{id:'q1',q:"What is 'literal meaning'?",options:["Exactly what the text states", "A guess based on clues", "The opposite of what is written", "A made-up meaning"],answer:"Exactly what the text states"},{id:'q2',q:"What does it mean to 'infer' something while reading?",options:["Work out something using clues, not stated directly", "Copy the exact words from the text", "Ignore the text completely", "Ask the author directly"],answer:"Work out something using clues, not stated directly"},{id:'q3',q:"'Sam grabbed an umbrella and ran outside.' What can you infer?",options:["It's probably raining", "Sam is going to school", "Sam lost the umbrella", "Sam doesn't like rain"],answer:"It's probably raining"},{id:'q4',q:"If a text says 'The character's hands were shaking as she opened the letter,' what might you infer?",options:["She feels nervous or anxious", "She is very calm", "She is angry", "She is asleep"],answer:"She feels nervous or anxious"},{id:'q5',q:"Why is inferring an important reading skill?",options:["Not everything in a story is stated directly", "It replaces the need to read carefully", "It is only used in non-fiction", "Texts never need inference"],answer:"Not everything in a story is stated directly"},{id:'q6',q:"A question asking 'What colour was the character's coat?' (stated in the text) is testing:",options:["Literal meaning", "Inferred meaning", "Opinion", "Persuasive technique"],answer:"Literal meaning"}] },
-  { id:"t-eng-08", subjectId:"sub-eng", name:"Writing narratives", vcaaCode:"VCELT297,VCELT298",
-    studyContent:"A narrative is a story with a beginning, middle, and end. Every good narrative needs: a SETTING (where and when it happens), CHARACTERS (who it happens to), a PROBLEM or event that starts the action, and a RESOLUTION (how it gets sorted out). Start by picturing your setting clearly - is it a spooky forest, a busy school, outer space? Give your main character a want or a problem. Then build up what happens step by step, using time words like 'first', 'suddenly', 'after that', 'finally' to guide your reader through events in order.",
-    questions:[{id:'q1',q:"Which part of a narrative introduces where and when the story happens?",options:["Setting", "Resolution", "Dialogue", "Title"],answer:"Setting"},{id:'q2',q:"Which word would best start a sentence showing something unexpected happened?",options:["Suddenly", "Also", "Then", "And"],answer:"Suddenly"},{id:'q3',q:"What is the 'resolution' of a story?",options:["How the problem gets sorted out at the end", "The first sentence", "A character's name", "The title"],answer:"How the problem gets sorted out at the end"},{id:'q4',q:"'The rusty gate creaked open in the moonlight' mainly describes the story's:",options:["Setting", "Resolution", "Character's name", "Moral"],answer:"Setting"},{id:'q5',q:"Which sentence best shows a character's problem?",options:["Jack couldn't find his way home before dark.", "It was a sunny day.", "The park had swings.", "Trees were green."],answer:"Jack couldn't find his way home before dark."},{id:'q6',q:"Time connectives (like 'first', 'after that') mainly help the reader understand:",options:["The order events happen in", "The character's name", "The title", "The setting only"],answer:"The order events happen in"},{id:'q7',q:"A narrative always needs a beginning, middle and:",options:["End", "Question", "Diagram", "Index"],answer:"End"},{id:'q8',q:"Which is an example of a character's 'want'?",options:["Mia wanted to find the hidden treasure.", "The sky was blue.", "It was Tuesday.", "The room was cold."],answer:"Mia wanted to find the hidden treasure."},{id:'q9',q:"Why do writers build up events 'step by step' in a narrative?",options:["So the reader can follow what happens in order", "To make the story shorter", "To avoid using characters", "To skip the setting"],answer:"So the reader can follow what happens in order"}] },
-  { id:"t-eng-09", subjectId:"sub-eng", name:"Writing persuasive texts", vcaaCode:"VCELY299",
-    studyContent:"A persuasive text tries to convince the reader to agree with a point of view. It usually states the opinion clearly, gives reasons to support it, and often uses persuasive words like 'should', 'clearly', or 'importantly'. Strong persuasive writing backs up each reason with an example or explanation, not just a bare claim.",
-    questions:[{id:'q1',q:"What is the main goal of a persuasive text?",options:["To convince the reader of a point of view", "To simply describe an event", "To entertain with a made-up story", "To give step-by-step instructions"],answer:"To convince the reader of a point of view"},{id:'q2',q:"Which word signals persuasive writing?",options:["Should", "Yesterday", "Meanwhile", "Once upon a time"],answer:"Should"},{id:'q3',q:"What should follow a reason in a persuasive text to make it stronger?",options:["An example or explanation", "Nothing else is needed", "A random fact unrelated to it", "Just another opinion word"],answer:"An example or explanation"},{id:'q4',q:"Which sentence is persuasive?",options:["Schools should have longer lunch breaks because students need more time to relax.", "The lunch break is 30 minutes long.", "Lunch is eaten in the cafeteria.", "The bell rings at 12:30pm."],answer:"Schools should have longer lunch breaks because students need more time to relax."},{id:'q5',q:"Where does a persuasive text usually state its main opinion?",options:["Near the beginning, clearly", "Only at the very end, hidden", "Never stated directly", "Only in the title"],answer:"Near the beginning, clearly"}] },
-  { id:"t-eng-10", subjectId:"sub-eng", name:"Writing informative reports", vcaaCode:"VCELY299",
-    studyContent:"An informative report presents facts about a topic in an organised way, usually grouped under headings. Unlike a persuasive text, a report doesn't try to convince you of an opinion - it just presents accurate information clearly, often starting with a general statement about the topic before giving specific details.",
-    questions:[{id:'q1',q:"What is the main purpose of an informative report?",options:["To present facts clearly", "To convince the reader of an opinion", "To tell an entertaining story", "To ask questions"],answer:"To present facts clearly"},{id:'q2',q:"How are informative reports often organised?",options:["Under headings, grouping related facts", "Randomly, with no structure", "Only as one long paragraph", "As a list of opinions"],answer:"Under headings, grouping related facts"},{id:'q3',q:"Which sentence fits a report about koalas?",options:["Koalas mainly eat eucalyptus leaves.", "Koalas are the cutest animal ever!", "Everyone should love koalas.", "I think koalas are amazing."],answer:"Koalas mainly eat eucalyptus leaves."},{id:'q4',q:"What usually comes first in an informative report?",options:["A general statement introducing the topic", "A strong opinion", "A joke", "A question to the reader"],answer:"A general statement introducing the topic"},{id:'q5',q:"How is a report different from a persuasive text?",options:["A report presents facts rather than trying to convince", "A report always uses 'should'", "A report has no headings", "A report and persuasive text are the same"],answer:"A report presents facts rather than trying to convince"}] },
-  { id:"t-eng-11", subjectId:"sub-eng", name:"Editing and revising own writing", vcaaCode:"VCELY300",
-    studyContent:"Good writers don't just write once and stop - they REREAD their work and make it better. Editing means checking your writing and asking: Does this sentence make sense? Is there a word I could add to make it clearer? Is there a word I don't need? Should I move this sentence somewhere else? Three simple editing moves: ADD a describing word or detail that's missing. DELETE a word or sentence that repeats itself or doesn't help. MOVE a sentence or word group to a better spot, like putting the most important idea first.",
-    questions:[{id:'q1',q:"What does 'editing' mean when you write a story?",options:["Rereading and improving your writing", "Writing the story for the first time", "Drawing a picture", "Choosing a title only"],answer:"Rereading and improving your writing"},{id:'q2',q:"'The the cat sat down.' - what editing move fixes this sentence?",options:["Delete the repeated word 'the'", "Add a new character", "Move the sentence to the end", "Change the setting"],answer:"Delete the repeated word 'the'"},{id:'q3',q:"Which is an example of ADDING detail to improve a sentence?",options:["'The fast, brown dog ran.' instead of 'The dog ran.'", "Deleting the word 'dog'", "Making the sentence shorter", "Removing all describing words"],answer:"'The fast, brown dog ran.' instead of 'The dog ran.'"},{id:'q4',q:"Why might a writer MOVE a sentence during editing?",options:["To put ideas in a clearer or more logical order", "To make the story longer", "To remove the setting", "To avoid using punctuation"],answer:"To put ideas in a clearer or more logical order"},{id:'q5',q:"Which question should you ask yourself while editing?",options:["Does this sentence make sense?", "What is my favourite colour?", "How many pages did I write?", "What time is it?"],answer:"Does this sentence make sense?"},{id:'q6',q:"'I like dogs. Dogs are good pets. I like dogs a lot.' What editing move improves this most?",options:["Delete the repeated idea about liking dogs", "Add more repeated sentences", "Move the first sentence to last", "Nothing needs to change"],answer:"Delete the repeated idea about liking dogs"},{id:'q7',q:"Editing mainly helps improve a piece of writing's:",options:["Content and structure", "Handwriting only", "Page colour", "Font size"],answer:"Content and structure"}] },
-  { id:"t-eng-12", subjectId:"sub-eng", name:"Handwriting fluency (joined letters)", vcaaCode:"VCELY301",
-    studyContent:"Joined (cursive) handwriting connects letters within a word using small linking strokes, which can make writing faster once you're comfortable with it. Fluency means writing smoothly and consistently without having to think hard about each letter shape - it comes with regular practice, focusing on consistent letter size and spacing.",
-    questions:[{id:'q1',q:"What does 'joined handwriting' mean?",options:["Letters within a word are connected by linking strokes", "Every letter is written separately", "Only capital letters are used", "Writing without any spaces between words"],answer:"Letters within a word are connected by linking strokes"},{id:'q2',q:"What is one benefit of fluent joined handwriting?",options:["It can make writing faster", "It makes reading harder", "It removes the need for spelling", "It only works for short words"],answer:"It can make writing faster"},{id:'q3',q:"What helps develop handwriting fluency?",options:["Regular practice with consistent letter size", "Writing only once a year", "Avoiding handwriting altogether", "Changing letter shapes every time"],answer:"Regular practice with consistent letter size"},{id:'q4',q:"What is important for handwriting to look neat and consistent?",options:["Consistent letter size and spacing", "Random letter sizes", "No spacing between words", "Using a different style each time"],answer:"Consistent letter size and spacing"}] },
-  { id:"t-eng-13", subjectId:"sub-eng", name:"Using software to construct and publish text", vcaaCode:"VCELY302",
-    studyContent:"Word processing software (like a document editor) lets you type, edit, and format written text - changing font size, adding headings, fixing spelling, and moving paragraphs around easily. Publishing means preparing a finished piece to share with others, checking that it's well organised and free of errors before sharing it.",
-    questions:[{id:'q1',q:"What is word processing software used for?",options:["Typing, editing and formatting written text", "Only drawing pictures", "Only playing games", "Measuring distances"],answer:"Typing, editing and formatting written text"},{id:'q2',q:"What does 'publishing' a piece of writing mean?",options:["Preparing a finished piece to share with others", "Deleting the writing completely", "Writing the very first rough draft", "Reading someone else's work only"],answer:"Preparing a finished piece to share with others"},{id:'q3',q:"Which of these is an editing task in word processing software?",options:["Fixing spelling and moving paragraphs", "Only choosing a font colour", "Printing the document only", "Closing the document"],answer:"Fixing spelling and moving paragraphs"},{id:'q4',q:"Why check writing carefully before publishing it?",options:["To make sure it's well organised and free of errors", "Checking isn't necessary before publishing", "Only the title needs checking", "Errors don't matter once published"],answer:"To make sure it's well organised and free of errors"}] },
-  { id:"t-eng-14", subjectId:"sub-eng", name:"Oral presentations", vcaaCode:"VCELY308",
-    studyContent:"An oral presentation means speaking to an audience to inform, persuade, or entertain them. Good presentations are planned in advance (knowing what you'll say and in what order), rehearsed so you're comfortable with the content, and delivered clearly - speaking at a good pace, making eye contact, and using a confident voice.",
-    questions:[{id:'q1',q:"What are the three main steps in preparing an oral presentation?",options:["Plan, rehearse, deliver", "Just deliver, with no planning", "Only rehearse, nothing else", "Write it and never say it aloud"],answer:"Plan, rehearse, deliver"},{id:'q2',q:"Why is rehearsing a presentation helpful?",options:["It builds comfort and confidence with the content", "It makes the presentation shorter automatically", "It removes the need for planning", "It is not helpful at all"],answer:"It builds comfort and confidence with the content"},{id:'q3',q:"What helps a presentation sound clear and confident?",options:["Speaking at a good pace and making eye contact", "Speaking as fast as possible", "Reading with your head down the whole time", "Whispering quietly"],answer:"Speaking at a good pace and making eye contact"},{id:'q4',q:"An oral presentation can be given for which purposes?",options:["To inform, persuade, or entertain", "Only to entertain", "Only to persuade", "It has no real purpose"],answer:"To inform, persuade, or entertain"}] },
-  { id:"t-sci-01", subjectId:"sub-sci", name:"Living, once-living and non-living classification", vcaaCode:"VCSSU057",
-    studyContent:"Living things grow, reproduce, need food/energy, and respond to their environment (like plants, animals, and people). Once-living things were alive but no longer are, like a dead leaf or a piece of wood. Non-living things were never alive, like a rock or a plastic toy. Classifying helps scientists group and compare things based on shared characteristics.",
-    questions:[{id:'q1',q:"Which of these is a living thing?",options:["A tree", "A rock", "A plastic chair", "A dead branch"],answer:"A tree"},{id:'q2',q:"Which of these is 'once-living'?",options:["A dead leaf", "A river stone", "A metal spoon", "A cloud"],answer:"A dead leaf"},{id:'q3',q:"Which of these is non-living and was never alive?",options:["A plastic toy", "A dog", "A flower", "A dried leaf"],answer:"A plastic toy"},{id:'q4',q:"What is one characteristic all living things share?",options:["They need food or energy to survive", "They are all the same colour", "They never move", "They are all plants"],answer:"They need food or energy to survive"},{id:'q5',q:"Why is wood classified as 'once-living' rather than 'living'?",options:["It came from a tree but is no longer growing", "Wood was never part of a living thing", "Wood is a non-living material only", "Wood can still grow"],answer:"It came from a tree but is no longer growing"}] },
-  { id:"t-sci-02", subjectId:"sub-sci", name:"Life cycles of plants and animals", vcaaCode:"VCSSU058",
-    studyContent:"Every living thing goes through a life cycle - a series of changes from the start of its life to when it can have offspring of its own. Animals like butterflies go through big changes: egg, caterpillar (larva), chrysalis (pupa), then adult butterfly - this is called metamorphosis. Other animals, like dogs, look similar to their parents from birth and just grow bigger. Plants also have a life cycle: seed, then a young seedling sprouts, it grows into a mature plant, the plant flowers, and produces new seeds - and the cycle starts again. Living things depend on their environment (like sunlight, water, and other living things) at every stage of their life cycle to survive and grow.",
-    questions:[{id:'q1',q:"What is a life cycle?",options:["The stages a living thing goes through from start of life to producing offspring", "A type of plant", "A kind of rock", "A weather pattern"],answer:"The stages a living thing goes through from start of life to producing offspring"},{id:'q2',q:"What is the correct order of a butterfly's life cycle?",options:["Egg, caterpillar, chrysalis, butterfly", "Butterfly, egg, chrysalis, caterpillar", "Caterpillar, butterfly, egg, chrysalis", "Chrysalis, egg, caterpillar, butterfly"],answer:"Egg, caterpillar, chrysalis, butterfly"},{id:'q3',q:"What is the term for a caterpillar's big change into a butterfly?",options:["Metamorphosis", "Germination", "Photosynthesis", "Pollination"],answer:"Metamorphosis"},{id:'q4',q:"What is the first stage in a plant's life cycle?",options:["Seed", "Flower", "Mature plant", "Seedling"],answer:"Seed"},{id:'q5',q:"How is a puppy's growth different from a caterpillar's?",options:["A puppy looks similar to its parents from birth; a caterpillar looks very different from the adult", "A puppy has a chrysalis stage", "A puppy is not a living thing", "There is no difference"],answer:"A puppy looks similar to its parents from birth; a caterpillar looks very different from the adult"},{id:'q6',q:"What does a young frog (tadpole) eventually grow into?",options:["An adult frog", "A fish", "A butterfly", "A bird"],answer:"An adult frog"},{id:'q7',q:"What do living things need from their environment at every life cycle stage?",options:["Things like sunlight, water and other living things", "Nothing - they don't depend on the environment", "Only sunlight", "Only water"],answer:"Things like sunlight, water and other living things"},{id:'q8',q:"After a plant flowers, what does it typically produce to continue its life cycle?",options:["New seeds", "A chrysalis", "A tadpole", "Fur"],answer:"New seeds"}] },
-  { id:"t-sci-03", subjectId:"sub-sci", name:"Parent-offspring similarities and differences", vcaaCode:"VCSSU058",
-    studyContent:"Offspring (baby animals or plants) often look similar to their parents but aren't identical - a puppy might have different colouring than its mother. As living things grow through different stages, they can change quite a lot, like a caterpillar becoming a butterfly, while still being part of the same life cycle.",
-    questions:[{id:'q1',q:"Do offspring always look exactly like their parents?",options:["No, they can differ while still being similar", "Yes, they are always identical", "No, they never look similar at all", "Only plants look like their parents"],answer:"No, they can differ while still being similar"},{id:'q2',q:"A puppy has a different coat colour than its mother. What does this show?",options:["Offspring can differ from parents while still being related", "The puppy is not really related to its mother", "Dogs never inherit any traits", "Offspring are always identical to parents"],answer:"Offspring can differ from parents while still being related"},{id:'q3',q:"How much can a living thing change between growth stages?",options:["Sometimes a great deal, like a caterpillar becoming a butterfly", "Never at all", "Only in colour, nothing else", "Only humans change with growth"],answer:"Sometimes a great deal, like a caterpillar becoming a butterfly"},{id:'q4',q:"Which is an example of a similarity between parent and offspring?",options:["A kitten having whiskers like its mother", "A kitten being purple", "A kitten being a fish", "A kitten having no fur ever"],answer:"A kitten having whiskers like its mother"}] },
-  { id:"t-sci-04", subjectId:"sub-sci", name:"Survival relationships (adaptation basics)", vcaaCode:"VCSSU058",
-    studyContent:"Living things depend on relationships with their environment and other living things to survive - plants need sunlight and water, animals need food and shelter, and many species rely on each other (like bees pollinating flowers). These relationships help explain why living things are suited to the particular places they live.",
-    questions:[{id:'q1',q:"What do plants need from their environment to survive?",options:["Sunlight and water", "Only soil", "Only air", "Nothing at all"],answer:"Sunlight and water"},{id:'q2',q:"Bees visiting flowers for nectar also help the flowers by:",options:["Helping pollinate them", "Eating all the petals", "Damaging the roots", "Blocking sunlight"],answer:"Helping pollinate them"},{id:'q3',q:"Why do many living things depend on relationships with other living things?",options:["These relationships help them survive and get what they need", "Living things never depend on each other", "Only plants have relationships with others", "It has no effect on survival"],answer:"These relationships help them survive and get what they need"},{id:'q4',q:"What might happen if an animal's food source disappeared from its environment?",options:["The animal's survival would be at risk", "Nothing would change for the animal", "The animal would not need to eat", "The animal would automatically move somewhere better"],answer:"The animal's survival would be at risk"}] },
-  { id:"t-sci-05", subjectId:"sub-sci", name:"Temperature vs heat", vcaaCode:"VCSSU063",
-    studyContent:"Temperature measures how hot or cold something is, using a thermometer. Heat is energy that flows from a warmer object to a cooler one - like heat moving from a hot cup of tea into the cooler air around it. Heat can be produced in different ways, such as friction (rubbing your hands together) or burning fuel.",
-    questions:[{id:'q1',q:"What instrument measures temperature?",options:["A thermometer", "A ruler", "A clock", "A scale"],answer:"A thermometer"},{id:'q2',q:"What is heat?",options:["Energy that flows from a warmer object to a cooler one", "The same thing as temperature", "A type of light", "A solid material"],answer:"Energy that flows from a warmer object to a cooler one"},{id:'q3',q:"Which of these can produce heat?",options:["Rubbing your hands together (friction)", "Standing still in a cold room", "Looking at a picture", "Sitting quietly"],answer:"Rubbing your hands together (friction)"},{id:'q4',q:"A hot cup of tea is left on a table. Which way does heat flow?",options:["From the tea into the cooler air around it", "From the air into the tea", "Heat does not flow at all", "Only when someone touches it"],answer:"From the tea into the cooler air around it"},{id:'q5',q:"Are temperature and heat exactly the same thing?",options:["No, temperature measures hot/cold while heat is energy flow", "Yes, they are identical", "No, temperature is a type of light", "Yes, but only in water"],answer:"No, temperature measures hot/cold while heat is energy flow"}] },
-  { id:"t-sci-06", subjectId:"sub-sci", name:"Heat and changes of state (solid/liquid)", vcaaCode:"VCSSU059",
-    studyContent:"Adding heat to a solid can make it melt into a liquid (like ice melting into water). Removing heat from a liquid can make it freeze into a solid (like water freezing into ice). These changes of state happen at specific temperatures and involve heat energy moving in or out of the material.",
-    questions:[{id:'q1',q:"What happens when you add heat to ice?",options:["It melts into liquid water", "It becomes colder", "It turns into a gas immediately", "Nothing happens"],answer:"It melts into liquid water"},{id:'q2',q:"What happens when liquid water loses enough heat?",options:["It freezes into ice (solid)", "It becomes hotter", "It disappears", "It turns into rock"],answer:"It freezes into ice (solid)"},{id:'q3',q:"What causes a change of state from solid to liquid?",options:["Adding heat energy", "Removing all light", "Adding more solid material", "Nothing causes it"],answer:"Adding heat energy"},{id:'q4',q:"An ice cube left on a table on a warm day will:",options:["Melt as it absorbs heat from the air", "Stay exactly the same", "Get colder", "Turn into a solid rock"],answer:"Melt as it absorbs heat from the air"},{id:'q5',q:"What is required to freeze liquid water into ice?",options:["Removing heat energy from the water", "Adding more heat", "Adding sunlight", "Nothing is required"],answer:"Removing heat energy from the water"}] },
-  { id:"t-sci-07", subjectId:"sub-sci", name:"Contact and non-contact forces", vcaaCode:"VCSSU064",
-    studyContent:"A force is a push or a pull. Some forces need objects to actually touch each other - these are called CONTACT forces. Kicking a ball, pushing a door, or pulling a wagon are all contact forces because your foot, hand, or the rope is touching the object. Other forces can act on an object without touching it at all - these are NON-CONTACT forces. Gravity pulls things toward the Earth even though nothing is physically holding them. Magnets can pull or push other magnets or metal objects without touching them. Static electricity can make a balloon stick to a wall from a small distance. Both types of forces can make things start moving, stop moving, speed up, slow down, or change direction.",
-    questions:[{id:'q1',q:"What is a force?",options:["A push or a pull", "A type of animal", "A colour", "A shape"],answer:"A push or a pull"},{id:'q2',q:"Which of these is a contact force?",options:["Kicking a football", "Gravity pulling a leaf down", "A magnet attracting a paperclip from a distance", "Static electricity"],answer:"Kicking a football"},{id:'q3',q:"Which of these is a non-contact force?",options:["Gravity", "Pushing a swing with your hand", "Pulling a wagon with a rope", "Kicking a ball"],answer:"Gravity"},{id:'q4',q:"Why is a magnet attracting a paperclip a non-contact force?",options:["It can act without the magnet touching the paperclip", "Magnets are not real forces", "It only works when touching", "Paperclips are not affected by magnets"],answer:"It can act without the magnet touching the paperclip"},{id:'q5',q:"What force pulls objects down toward the Earth?",options:["Gravity", "Magnetism", "Friction", "Static electricity"],answer:"Gravity"},{id:'q6',q:"A balloon rubbed on hair sticks to a wall without touching it. This is an example of:",options:["Static electricity (a non-contact force)", "A contact force", "Gravity only", "No force at all"],answer:"Static electricity (a non-contact force)"},{id:'q7',q:"What can forces do to an object?",options:["Start, stop, speed up, slow down, or change its direction", "Only make it disappear", "Only change its colour", "Nothing at all"],answer:"Start, stop, speed up, slow down, or change its direction"},{id:'q8',q:"Pushing open a door with your hand is an example of:",options:["A contact force", "A non-contact force", "Gravity", "Magnetism"],answer:"A contact force"}] },
-  { id:"t-sci-08", subjectId:"sub-sci", name:"Physical properties of materials and their uses", vcaaCode:"VCSSU060",
-    studyContent:"Materials have physical properties - like being hard, soft, flexible, waterproof, or transparent - that make them suited to particular uses. Glass is used for windows because it's transparent (lets light through); rubber is used for tyres because it's flexible and grips well. Choosing the right material for a job depends on matching its properties to what's needed.",
-    questions:[{id:'q1',q:"Why is glass often used for windows?",options:["It is transparent, letting light through", "It is very soft", "It is edible", "It is magnetic"],answer:"It is transparent, letting light through"},{id:'q2',q:"Why is rubber used for tyres?",options:["It is flexible and grips well", "It is transparent", "It is very hard and brittle", "It dissolves in water"],answer:"It is flexible and grips well"},{id:'q3',q:"Which property would matter most when choosing a material for a raincoat?",options:["Being waterproof", "Being transparent", "Being edible", "Being magnetic"],answer:"Being waterproof"},{id:'q4',q:"What does 'physical property' mean when describing a material?",options:["A quality like hardness, flexibility, or transparency", "Only its price", "Only its colour", "Its country of origin"],answer:"A quality like hardness, flexibility, or transparency"},{id:'q5',q:"Why might metal be chosen to build a bridge instead of paper?",options:["Metal is much stronger and more durable", "Paper is more waterproof", "Metal is lighter than paper", "There is no real difference"],answer:"Metal is much stronger and more durable"}] },
-  { id:"t-sci-09", subjectId:"sub-sci", name:"Earth's rotation (day and night)", vcaaCode:"VCSSU061",
-    studyContent:"Earth spins (rotates) on its axis once approximately every 24 hours. The side facing the Sun experiences day, while the side facing away experiences night. This rotation is why we see the Sun appear to 'rise' in the east and 'set' in the west, even though it's actually Earth that's turning, not the Sun moving around us.",
-    questions:[{id:'q1',q:"What causes day and night on Earth?",options:["Earth's rotation on its axis", "The Sun moving around Earth", "The Moon blocking the Sun", "Clouds covering the sky"],answer:"Earth's rotation on its axis"},{id:'q2',q:"Roughly how long does it take Earth to complete one full rotation?",options:["24 hours", "1 hour", "1 week", "1 year"],answer:"24 hours"},{id:'q3',q:"Why does the Sun appear to rise in the east?",options:["Earth rotates in that direction relative to the Sun", "The Sun physically moves from west to east", "It only appears in the east in summer", "There is no real pattern"],answer:"Earth rotates in that direction relative to the Sun"},{id:'q4',q:"Which side of Earth experiences night at a given moment?",options:["The side facing away from the Sun", "The side facing the Sun", "Both sides equally", "Neither side"],answer:"The side facing away from the Sun"},{id:'q5',q:"Is it actually the Sun moving around Earth that causes day and night?",options:["No, it is Earth rotating on its axis", "Yes, the Sun moves around Earth", "Yes, but only in winter", "No, it is caused by clouds"],answer:"No, it is Earth rotating on its axis"}] },
-  { id:"t-sci-10", subjectId:"sub-sci", name:"Natural and human processes changing Earth's surface", vcaaCode:"VCSSU062",
-    studyContent:"Earth's surface changes over time through natural processes like erosion (wind and water wearing away rock), volcanic eruptions, and earthquakes. Human activities also change the surface, like building cities, farming, or mining. Some changes happen slowly over many years, while others (like an earthquake) happen suddenly.",
-    questions:[{id:'q1',q:"Which of these is a natural process that changes Earth's surface?",options:["Erosion by wind and water", "Building a shopping centre", "Planting a garden", "Painting a fence"],answer:"Erosion by wind and water"},{id:'q2',q:"Which of these is a human process that changes Earth's surface?",options:["Mining", "A volcanic eruption", "An earthquake", "Erosion"],answer:"Mining"},{id:'q3',q:"Do all changes to Earth's surface happen at the same speed?",options:["No, some are slow (erosion) and some are sudden (earthquakes)", "Yes, they all happen instantly", "Yes, they all take thousands of years", "No changes ever happen suddenly"],answer:"No, some are slow (erosion) and some are sudden (earthquakes)"},{id:'q4',q:"What is erosion?",options:["Wind and water gradually wearing away rock and soil", "A sudden shaking of the ground", "A type of building material", "A human-made structure"],answer:"Wind and water gradually wearing away rock and soil"},{id:'q5',q:"How can farming change Earth's surface?",options:["By clearing land and changing how it's used", "Farming never changes the surface", "Only by adding water to oceans", "Only by affecting the Moon"],answer:"By clearing land and changing how it's used"}] },
-  { id:"t-sci-11", subjectId:"sub-sci", name:"Science and everyday problem solving", vcaaCode:"VCSSU056",
-    studyContent:"Scientific knowledge has helped solve many everyday problems and meet human needs - like developing medicines to treat illness, creating clean water systems, or designing better ways to grow food. Understanding how science connects to real-world problems shows why scientific discovery matters beyond the classroom.",
-    questions:[{id:'q1',q:"Which is an example of science solving an everyday problem?",options:["Developing medicine to treat illness", "Painting a picture", "Writing a story", "Playing a sport"],answer:"Developing medicine to treat illness"},{id:'q2',q:"How has science helped with access to clean water?",options:["By developing water filtration and treatment systems", "Science has not been involved in water access", "Only by making rain fall more often", "By removing the need for water entirely"],answer:"By developing water filtration and treatment systems"},{id:'q3',q:"Why does understanding how science solves real problems matter?",options:["It shows why scientific discovery is valuable beyond the classroom", "It has no real-world importance", "It only matters for scientists, not anyone else", "It only applies to space exploration"],answer:"It shows why scientific discovery is valuable beyond the classroom"},{id:'q4',q:"Which need might scientific knowledge about farming help meet?",options:["Growing enough food for people", "Building entertainment parks", "Designing clothing colours", "Writing books"],answer:"Growing enough food for people"}] },
-  { id:"t-sci-12", subjectId:"sub-sci", name:"The role of data in scientific inquiry", vcaaCode:"VCSIS065,VCSIS072",
-    studyContent:"Data is the information scientists collect during an investigation, like measurements, observations, or counts. Recording data carefully (in tables or graphs) helps scientists spot patterns and draw fair conclusions. Without accurate data, it's hard to know whether an idea or prediction was actually correct.",
-    questions:[{id:'q1',q:"What is 'data' in a science investigation?",options:["Information collected, like measurements or observations", "Only the final answer", "A type of scientific tool", "The scientist's opinion"],answer:"Information collected, like measurements or observations"},{id:'q2',q:"Why is it important to record data carefully?",options:["It helps spot patterns and draw fair conclusions", "Recording data is not really necessary", "It only matters for very long experiments", "It replaces the need for an experiment"],answer:"It helps spot patterns and draw fair conclusions"},{id:'q3',q:"What might scientists use to organise data they've collected?",options:["Tables or graphs", "Only their memory", "A drawing of the sky", "Nothing, data doesn't need organising"],answer:"Tables or graphs"},{id:'q4',q:"What could happen if data is recorded inaccurately?",options:["Conclusions drawn from it could be wrong", "Nothing would be affected", "The experiment would automatically succeed", "Data accuracy never matters"],answer:"Conclusions drawn from it could be wrong"}] }
-];
-
 let kidPlainText = '';
 let state = {
   family: null,   // {id, name, primaryHolderName, primaryHolderEmail, primaryHolderPhone} — null until set up
@@ -1430,10 +1280,6 @@ let state = {
   shoppingTrips: [],       // scheduled lists, each optionally linked to a task: {id,choreId,name,date,memberId,status,items:[{id,name,quantity,status}],createdBy,createdAt}
   shoppingItemLibrary: [], // reusable item-name catalog for autocomplete + "frequently bought" quick-add
   activityLibrary: [],     // reusable activity-name catalog for autocomplete when adding an activity
-  topicProgress: [],       // per-kid study progress: {id,kidId,topicId,status,examScore,attemptCount,studyCompletedAt,examCompletedAt,updatedAt}
-                            // status: 'not_started'|'studying'|'exam_ready'|'completed'|'reassigned'
-                            // small + family-owned, so it lives in the main blob like chores/events —
-                            // unlike the topic/question CONTENT itself, which is global (see fetchStudyTopics)
 };
 let ui = {
   tab: 'board',
@@ -1510,24 +1356,6 @@ let ui = {
   joinError: null,
   justCreatedFamilyId: null,
   justCreatedHolderId: null,
-  // Study tab
-  studySubjects: null,      // null = not fetched yet; array once loaded (mirrors deviceUsageData convention)
-  studyLoading: false,
-  studyError: null,
-  studySelectedSubjectId: null,
-  studySelectedTopicId: null,
-  studyView: 'topics',      // 'topics' | 'study' | 'exam'
-  studyExamAttempt: null,   // {attemptId, topicId, questions:[{id,question,options}], answers:{}}
-  studyExamResult: null,    // {score, correctCount, total} shown after submit
-  studyExamSubmitting: false,
-  studyAssignments: null,       // deprecated in favor of studyWeekCache below, kept only if referenced elsewhere
-  studyAssignmentsLoading: false,
-  studyAssignmentsError: null,
-  studyWeekOffset: 0,           // 0 = this week, 1 = next week... (Study tab's own navigable offset)
-  studyWeekCache: {},           // key `${kidId}|${weekOffset}` -> days array; shared by Study tab, Kid View, Parent View
-  studyWeekLoading: {},         // same key -> bool
-  studyWeekError: {},           // same key -> error string
-  studyOverdueByKid: {},        // kidId -> array of {date,subjectName,topicId,topicName,status} not-yet-completed items from PAST weeks
 };
 
 function selectedDateISO(){
@@ -1556,9 +1384,7 @@ async function loadData(){
           if(!('canAddShopping' in m)) m.canAddShopping = true;
           if(!('email' in m)) m.email = '';
           if(!('phone' in m)) m.phone = '';
-          if(!('yearLevel' in m)) m.yearLevel = null; // 'Prep','1'..'8' — set for kids via Settings, drives the Study tab
         });
-        if(!parsed.topicProgress) parsed.topicProgress = [];
         // anyone with data saved before family setup existed gets a default family wrapper
         // so they aren't unexpectedly dropped back into onboarding
         if(!parsed.family){
@@ -2326,42 +2152,6 @@ function renderParentView(){
         ${dueTasks.length ? taskRows : `<div class="tile-empty">No tasks today</div>`}
       </div>` : '';
 
-    // Study assignments for this kid, today - same source as Kid View, plus overdue banner
-    let studySection = '';
-    if(m.role==='kid' && m.yearLevel){
-      const studyToday = studyItemsForDate(m.id, dateISO);
-      const overdue = ensureStudyOverdue(m.id);
-      const overdueHtml = (overdue && overdue.length) ? `
-        <div style="background:rgba(214,72,78,.12);border:1px solid #D6484E;border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:12px;color:#D6484E;cursor:pointer;" onclick="jumpToStudyTopic('${m.id}','${overdue[0].topicId}')">
-          ⚠ ${overdue.length} pending from earlier
-        </div>` : '';
-      if(studyToday===null){
-        studySection = `<div class="tile-section"><div class="tile-section-head"><span>Study</span></div>${overdueHtml}<div class="tile-empty">Loading…</div></div>`;
-      } else {
-        const doneStudyCount = studyToday.filter(it=>topicStatus(m.id,it.topicId)==='completed').length;
-        const studyPct = studyToday.length ? Math.round((doneStudyCount/studyToday.length)*100) : 0;
-        const studyRows = studyToday.map(it=>{
-          const status = topicStatus(m.id, it.topicId);
-          const done = status==='completed';
-          if(done) return `<div class="tile-task-row tile-task-done">✓ ${escapeHtml(it.subjectName)}: ${escapeHtml(it.topicName)}</div>`;
-          return `<div class="tile-task-row ${status==='reassigned'?'tile-task-overdue':''}" onclick="jumpToStudyTopic('${m.id}','${it.topicId}')">
-            <span>${status==='reassigned'?'⚠ ':''}${escapeHtml(it.subjectName)}: ${escapeHtml(it.topicName)}</span>
-            <span class="tile-task-mark">Start</span>
-          </div>`;
-        }).join('');
-        studySection = `
-          <div class="tile-section">
-            <div class="tile-section-head">
-              <span>Study</span>
-              ${studyToday.length ? `<span class="tile-progress-label">${doneStudyCount}/${studyToday.length}</span>` : ''}
-            </div>
-            ${overdueHtml}
-            ${studyToday.length ? `<div class="tile-progress-bar"><div class="tile-progress-fill" style="width:${studyPct}%;background:${m.color};"></div></div>` : ''}
-            ${studyToday.length ? studyRows : `<div class="tile-empty">Nothing assigned today</div>`}
-          </div>`;
-      }
-    }
-
     // shopping trips assigned to this person today
     const myTrips = (state.shoppingTrips||[]).filter(t=>t.memberId===m.id && t.date===dateISO && !t.pendingApproval);
     const tripsSection = myTrips.length ? `
@@ -2393,7 +2183,6 @@ function renderParentView(){
           ${scheduleHtml}
         </div>
         ${tasksSection}
-        ${studySection}
         ${tripsSection}
       </div>`;
   }).join('');
@@ -2427,7 +2216,6 @@ function renderKidView(){
   let items = '';
   let plain = '';
   let taskItems = '';
-  let studyItems = '';
   if(kid){
     const evs = eventsForDateMember(dateISO, kid.id).slice().sort((a,b)=>a.start-b.start);
     if(evs.length===0){
@@ -2481,45 +2269,7 @@ function renderKidView(){
       }).join('\n');
       plain += '\n\nTasks:\n' + taskPlain;
     }
-
-    // Study assignments for this date, plus anything overdue from earlier
-    const studyDayItems = kid.yearLevel ? studyItemsForDate(kid.id, dateISO) : [];
-    const overdueForBanner = kid.yearLevel ? renderOverdueBanner(kid) : '';
-    if(kid.yearLevel && studyDayItems===null){
-      studyItems = `<div class="kid-big" style="margin-top:18px;">
-        <h2 style="font-size:19px;">${escapeHtml(kid.name)}'s study</h2>
-        ${overdueForBanner}
-        <div class="chore-empty-day">Loading…</div>
-      </div>`;
-    } else if(kid.yearLevel && studyDayItems && studyDayItems.length>0){
-      const canAct = ui.profileId===kid.id || isParentLoggedIn();
-      const rows = studyDayItems.map(it=>{
-        const status = topicStatus(kid.id, it.topicId);
-        const done = status==='completed';
-        const label = {not_started:'Not started', studying:'Study in progress', exam_ready:'Ready for exam', completed:'✓ Completed', reassigned:'Needs practice'}[status];
-        return `<div class="chore-row">
-          <div class="chore-info" onclick="jumpToStudyTopic('${kid.id}','${it.topicId}')">
-            <div class="chore-title">${escapeHtml(it.subjectName)}: ${escapeHtml(it.topicName)}</div>
-            <div class="chore-freq">${label}</div>
-          </div>
-          ${done
-            ? `<div class="chore-done-badge" style="cursor:default;">✓ Done</div>`
-            : (canAct ? `<button class="chore-pending-btn" onclick="jumpToStudyTopic('${kid.id}','${it.topicId}')">Start</button>` : `<span class="chore-locked-btn">${isLoggedIn()? 'Not yours':'Log in'}</span>`)}
-        </div>`;
-      }).join('');
-      studyItems = `<div class="kid-big" style="margin-top:18px;">
-        <h2 style="font-size:19px;">${escapeHtml(kid.name)}'s study</h2>
-        <div class="kd">${formatDateNice(dateISO)}</div>
-        ${overdueForBanner}
-        ${rows}
-      </div>`;
-    } else if(kid.yearLevel){
-      studyItems = overdueForBanner ? `<div class="kid-big" style="margin-top:18px;">
-        <h2 style="font-size:19px;">${escapeHtml(kid.name)}'s study</h2>
-        ${overdueForBanner}
-      </div>` : '';
-    }
-  } // closes if(kid){
+  }
   kidPlainText = plain;
 
   // shopping trips assigned specifically to this kid, for the selected date
@@ -2561,166 +2311,7 @@ function renderKidView(){
       <div class="hint">This app can't send email directly — tap "copy" and paste the text into an email, text, or chat to the laptop. Or just bookmark this Kid View tab on the laptop and check it each morning.</div>
     </div>
     ${taskItems}
-    ${studyItems}
     ${tripItems}
-  `;
-}
-
-function renderStudyTab(){
-  const kids = state.members.filter(m=>m.role==='kid');
-  if(!kids.length){
-    return `<div class="chore-empty-day">Add a kid profile in Settings to start tracking study progress.</div>`;
-  }
-  const kid = memberById(ui.kidId) || kids[0];
-  if(ui.studyLoading && ui.studySubjects===null){
-    return `<div class="chore-empty-day">Loading study content…</div>`;
-  }
-  const kidSwitcher = kids.length>1 ? `
-    <div class="filter-chips">
-      ${kids.map(k=>`<div class="filter-chip ${ui.kidId===k.id?'':'filter-chip-off'}" onclick="setStudyKid('${k.id}')">
-        <span class="dot" style="background:${k.color||'#8C8676'}"></span>${escapeHtml(k.name)}
-      </div>`).join('')}
-    </div>` : '';
-  if(!kid.yearLevel){
-    return `${kidSwitcher}<div class="chore-empty-day">Set ${escapeHtml(kid.name)}'s year level in Settings to load their curriculum (Prep–8 supported).</div>`;
-  }
-  if(ui.studyError && (!ui.studySubjects || !ui.studySubjects.length)){
-    return `${kidSwitcher}<div class="chore-empty-day">${escapeHtml(ui.studyError)}</div>
-      <button class="btn ghost" style="margin-top:10px;" onclick="fetchStudyTopics()">Try again</button>`;
-  }
-  if(ui.studyView==='exam') return kidSwitcher + renderStudyExamView();
-  if(ui.studyView==='study' && ui.studySelectedTopicId) return kidSwitcher + renderStudyTopicDetail(kid);
-  return kidSwitcher + renderStudyAssignmentsPanel(kid) + `<div style="margin:26px 0 14px;font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);">Browse all topics</div>` + renderStudySubjectsAndTopics(kid);
-}
-
-function renderOverdueBanner(kid){
-  const overdue = ensureStudyOverdue(kid.id);
-  if(!overdue || !overdue.length) return '';
-  return `<div style="background:rgba(214,72,78,.12);border:1px solid #D6484E;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
-    <div style="font-weight:700;font-size:13px;color:#D6484E;margin-bottom:6px;">⚠ ${overdue.length} study ${overdue.length===1?'task':'tasks'} from earlier still pending</div>
-    ${overdue.map(o=>`<div style="font-size:13px;padding:4px 0;cursor:pointer;" onclick="jumpToStudyTopic('${kid.id}','${o.topicId}')">
-      ${escapeHtml(o.subjectName)}: ${escapeHtml(o.topicName)} ${o.date?`<span style="color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;">(assigned ${escapeHtml(o.date)})</span>`:''}
-    </div>`).join('')}
-  </div>`;
-}
-
-function renderStudyAssignmentsPanel(kid){
-  const key = weekCacheKey(kid.id, ui.studyWeekOffset);
-  const days = getStudyWeekDays(kid.id, ui.studyWeekOffset);
-  if(days===null && ui.studyWeekLoading[key]){
-    return `<div class="chore-empty-day">Loading this week's assignments…</div>`;
-  }
-  const weekLabel = ui.studyWeekOffset===0 ? 'This week' : ui.studyWeekOffset===1 ? 'Next week' : `Week +${ui.studyWeekOffset}`;
-  const rows = days || [];
-  const totalPending = rows.reduce((sum,d)=>sum + d.items.filter(it=>topicStatus(kid.id,it.topicId)!=='completed').length, 0);
-  const weekError = ui.studyWeekError[key];
-  return `
-    ${renderOverdueBanner(kid)}
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.03em;">
-        ${weekLabel}${totalPending>0 ? ` <span class="nav-badge">${totalPending} pending</span>` : ''}
-      </div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:6px 12px;font-size:12px;" onclick="changeStudyWeek(-1)" ${ui.studyWeekOffset===0?'disabled':''}>← Prev</button>
-        <button class="btn ghost" style="padding:6px 12px;font-size:12px;" onclick="changeStudyWeek(1)">Next →</button>
-      </div>
-    </div>
-    ${weekError ? `<div style="font-size:12.5px;color:var(--text-dim);margin-bottom:10px;">${escapeHtml(weekError)}</div>` : ''}
-    ${!rows.length ? `<div class="chore-empty-day">No assignments scheduled for this week yet.</div>` :
-      rows.map(day=>{
-        const todayISOval = todayISO();
-        const isToday = day.date === todayISOval;
-        return `<div style="margin-bottom:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;${isToday?'border-color:var(--amber);':''}">
-          <div style="background:var(--ink-2);padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${isToday?'var(--amber)':'var(--text-dim)'};text-transform:uppercase;letter-spacing:.04em;">
-            ${day.dayLabel} · ${escapeHtml(day.date)}${isToday?' · Today':''}
-          </div>
-          ${day.items.map(it=>{
-            const status = topicStatus(kid.id, it.topicId);
-            const done = status==='completed';
-            const label = {not_started:'Not started', studying:'Study in progress', exam_ready:'Ready for exam', completed:'✓ Completed', reassigned:'Needs practice - reassigned'}[status];
-            return `<div class="search-result" style="border-bottom:1px dashed var(--line);${done?'opacity:.55;':''}" onclick="openStudyTopic('${it.topicId}')">
-              <span class="dot" style="background:${done?'#5B9E6E':status==='reassigned'?'#D6484E':'var(--amber)'}"></span>
-              <div style="flex:1;">
-                <div class="title">${escapeHtml(it.subjectName)}: ${escapeHtml(it.topicName)}</div>
-                <div class="meta">${label}</div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>`;
-      }).join('')
-    }
-  `;
-}
-function setStudyKid(kidId){ ui.kidId = kidId; ui.studyView='topics'; ui.studySelectedTopicId=null; ui.studyWeekOffset=0; render(); if(getStudyWeekDays(kidId,0)===null){ fetchStudyAssignments(kidId,0); } }
-
-function renderStudySubjectsAndTopics(kid){
-  const subjects = (ui.studySubjects||[]).filter(s=>String(s.yearLevel)===String(kid.yearLevel));
-  if(!subjects.length){
-    return `<div class="chore-empty-day">No subjects loaded yet for Year ${escapeHtml(kid.yearLevel)}.</div>
-      ${ui.studyError ? `<div style="margin-top:8px;font-size:12.5px;color:var(--text-dim);">${escapeHtml(ui.studyError)}</div>` : ''}`;
-  }
-  return subjects.map(subj=>{
-    const topics = (ui.studyTopics||[]).filter(t=>t.subjectId===subj.id);
-    const completedCount = topics.filter(t=>topicStatus(kid.id,t.id)==='completed').length;
-    return `<div style="margin-bottom:22px;">
-      <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
-        ${escapeHtml(subj.name)}
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--text-dim);text-transform:none;letter-spacing:0;">${completedCount}/${topics.length} complete</span>
-      </div>
-      <div>
-        ${topics.map(t=>{
-          const status = topicStatus(kid.id, t.id);
-          const badgeColor = status==='completed' ? '#5B9E6E' : status==='reassigned' ? '#D6484E' : status==='studying' ? 'var(--amber)' : 'var(--text-dim)';
-          const badgeLabel = {not_started:'Not started', studying:'Studying', exam_ready:'Ready for exam', completed:'Completed', reassigned:'Needs practice'}[status];
-          return `<div class="search-result" onclick="openStudyTopic('${t.id}')">
-            <span class="dot" style="background:${badgeColor}"></span>
-            <div style="flex:1;">
-              <div class="title">${escapeHtml(t.name)}</div>
-              <div class="meta">${badgeLabel}${t.vcaaCode?` · ${escapeHtml(t.vcaaCode)}`:''}</div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderStudyTopicDetail(kid){
-  const t = (ui.studyTopics||[]).find(x=>x.id===ui.studySelectedTopicId);
-  if(!t) return `<div class="chore-empty-day">Topic not found.</div>`;
-  const status = topicStatus(kid.id, t.id);
-  const prog = topicProgressFor(kid.id, t.id);
-  return `
-    <button class="btn ghost" style="margin-bottom:14px;" onclick="ui.studyView='topics';ui.studySelectedTopicId=null;render();">← Back to topics</button>
-    <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:20px;margin-bottom:4px;">${escapeHtml(t.name)}</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:16px;">${escapeHtml(t.vcaaCode||'')}</div>
-    ${prog && prog.examScore!=null ? `<div style="margin-bottom:14px;font-size:13px;color:var(--text-dim);">Last exam score: <strong style="color:var(--text-on-ink);">${prog.examScore}%</strong> (attempt ${prog.attemptCount})</div>` : ''}
-    <div style="background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:18px;line-height:1.6;font-size:14.5px;">
-      ${escapeHtml(t.studyContent||'Study content not available.')}
-    </div>
-    <button class="btn primary" onclick="startStudyExam('${t.id}')">${status==='reassigned' ? 'Retry exam' : 'Start exam'}</button>
-  `;
-}
-
-function renderStudyExamView(){
-  const attempt = ui.studyExamAttempt;
-  if(!attempt) return `<div class="chore-empty-day">No exam in progress.</div>`;
-  const answeredCount = Object.keys(attempt.answers).length;
-  return `
-    <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:18px;margin-bottom:4px;">Exam</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:18px;">${answeredCount}/${attempt.questions.length} answered</div>
-    ${attempt.questions.map((q,i)=>`
-      <div style="margin-bottom:18px;">
-        <div style="font-weight:600;font-size:14px;margin-bottom:8px;">${i+1}. ${escapeHtml(q.question)}</div>
-        <div>
-          ${q.options.map(opt=>`
-            <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;margin-bottom:6px;cursor:pointer;background:${attempt.answers[q.id]===opt?'var(--amber)':'transparent'};color:${attempt.answers[q.id]===opt?'var(--ink)':'var(--text-on-ink)'};">
-              <input type="radio" name="q_${q.id}" ${attempt.answers[q.id]===opt?'checked':''} onchange="setExamAnswer('${q.id}','${escapeHtml(opt).replace(/'/g,"\\'")}')" style="accent-color:var(--amber);">
-              ${escapeHtml(opt)}
-            </label>`).join('')}
-        </div>
-      </div>`).join('')}
-    <button class="btn primary" ${ui.studyExamSubmitting?'disabled':''} onclick="submitStudyExam()">${ui.studyExamSubmitting?'Submitting…':'Submit exam'}</button>
   `;
 }
 
@@ -2925,15 +2516,6 @@ function renderSettings(){
       <label class="notify-check">
         <input type="checkbox" ${m.canAddShopping!==false?'checked':''} onchange="updateMember('${m.id}','canAddShopping',this.checked)">
         Can add shopping items &amp; trips
-      </label>
-    </div>
-    <div class="member-notify-row">
-      <label class="notify-check" style="width:100%;">
-        Year level (for the Study tab)
-        <select onchange="updateMember('${m.id}','yearLevel',this.value||null)" style="margin-left:8px;">
-          <option value="" ${!m.yearLevel?'selected':''}>Not set</option>
-          ${['Prep','1','2','3','4','5','6','7','8'].map(y=>`<option value="${y}" ${m.yearLevel===y?'selected':''}>${y==='Prep'?'Prep':'Year '+y}</option>`).join('')}
-        </select>
       </label>
     </div>` : ''}`).join('');
 
@@ -3421,262 +3003,6 @@ async function fetchDeviceUsage(){
 function refreshDeviceUsage(){
   ui.deviceUsageData = null;
   fetchDeviceUsage();
-}
-
-// ---- Study module ------------------------------------------------------------
-// Curriculum content (subjects/topics/questions) is global — mirrors fetchDeviceUsage's
-// shape exactly, including the same three fallback branches, since it's the same
-// "shared/external data, not owned by one family" situation.
-async function fetchStudyTopics(){
-  if(hasClaudeStorage || (state.family && state.family.isExample)){
-    ui.studySubjects = DEMO_STUDY_SUBJECTS;
-    ui.studyTopics = DEMO_STUDY_TOPICS;
-    ui.studyError = hasClaudeStorage ? 'Showing 6 pilot topics — full curriculum needs the deployed backend.' : null;
-    ui.studyLoading = false;
-    render();
-    return;
-  }
-  ui.studyLoading = true;
-  ui.studyError = null;
-  render();
-  try{
-    const kid = memberById(ui.kidId);
-    const yearLevel = kid ? kid.yearLevel : null;
-    const res = await fetch(`${STUDY_TOPICS_ENDPOINT}?yearLevel=${encodeURIComponent(yearLevel||'')}`);
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      ui.studyError = err.error || 'Could not load study content.';
-      ui.studySubjects = []; ui.studyTopics = [];
-    } else {
-      const result = await res.json();
-      ui.studySubjects = result.subjects || [];
-      ui.studyTopics = result.topics || [];
-    }
-  } catch(e){
-    ui.studyError = 'Could not reach the server. Check your connection and try again.';
-    ui.studySubjects = []; ui.studyTopics = [];
-  }
-  ui.studyLoading = false;
-  render();
-}
-
-// Builds a demo week from the 6 pilot topics only - real weeks come from
-// study_assignments rows generated by the term-wise algorithm server-side.
-// Day pattern mirrors the agreed Term-planning pattern: Maths/English most days, Science 2-3x/week.
-function demoWeekAssignments(kidId, weekOffset){
-  const pattern = [['sub-math','sub-eng'],['sub-sci','sub-eng'],['sub-math','sub-sci'],['sub-eng','sub-math'],['sub-sci','sub-eng']];
-  const monday = addDays(mondayOf(todayISO()), weekOffset*7);
-  const cursor = {};
-  return pattern.map((subjIds, i)=>{
-    const date = toISODate(addDays(monday, i));
-    const items = subjIds.map(subjId=>{
-      const topics = DEMO_STUDY_TOPICS.filter(t=>t.subjectId===subjId);
-      const idx = (cursor[subjId]||0) % topics.length;
-      cursor[subjId] = (cursor[subjId]||0) + 1;
-      const t = topics[idx];
-      const subj = DEMO_STUDY_SUBJECTS.find(s=>s.id===subjId);
-      return {subjectId:subjId, subjectName:subj.name, topicId:t.id, topicName:t.name, status:topicStatus(kidId,t.id)};
-    });
-    return {date, dayLabel:['Mon','Tue','Wed','Thu','Fri'][i], items};
-  });
-}
-function demoOverdueForKid(kidId){
-  // Demo stand-in: any pilot topic already marked 'reassigned' for this kid is
-  // treated as "was assigned earlier, still not passed" - a real backend
-  // computes this from assigned_date < today AND status != completed instead.
-  return DEMO_STUDY_TOPICS
-    .filter(t=>topicStatus(kidId, t.id)==='reassigned')
-    .map(t=>{
-      const subj = DEMO_STUDY_SUBJECTS.find(s=>s.id===t.subjectId);
-      return {date:null, subjectName:subj.name, topicId:t.id, topicName:t.name, status:'reassigned'};
-    });
-}
-function weekCacheKey(kidId, weekOffset){ return kidId+'|'+weekOffset; }
-function weekOffsetForDate(dateISO){
-  const targetMonday = mondayOf(dateISO);
-  const thisMonday = mondayOf(todayISO());
-  return Math.round((new Date(targetMonday) - new Date(thisMonday)) / (7*86400000));
-}
-function getStudyWeekDays(kidId, weekOffset){
-  return ui.studyWeekCache[weekCacheKey(kidId, weekOffset)] || null;
-}
-// Fetches one kid's one week of assignments (+ that kid's overdue list, which
-// the backend always returns regardless of which week was requested) and
-// writes both into the shared caches. Study tab, Kid View and Parent View all
-// call this the same way - whichever view asks first populates it for the rest.
-async function fetchStudyAssignments(kidId, weekOffset){
-  if(!kidId) return;
-  const key = weekCacheKey(kidId, weekOffset);
-  if(ui.studyWeekLoading[key]) return;
-  ui.studyWeekLoading[key] = true;
-  ui.studyWeekError[key] = null;
-  render();
-
-  if(hasClaudeStorage || (state.family && state.family.isExample)){
-    ui.studyWeekCache[key] = demoWeekAssignments(kidId, weekOffset);
-    ui.studyOverdueByKid[kidId] = demoOverdueForKid(kidId);
-    ui.studyWeekError[key] = hasClaudeStorage ? 'Showing a demo week from the 6 pilot topics — real term scheduling needs the deployed backend.' : null;
-    ui.studyWeekLoading[key] = false;
-    render();
-    return;
-  }
-  try{
-    const res = await fetch(`${STUDY_ASSIGNMENTS_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&kidId=${encodeURIComponent(kidId)}&weekOffset=${weekOffset}`);
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      ui.studyWeekError[key] = err.error || 'Could not load this week\'s assignments.';
-      ui.studyWeekCache[key] = [];
-    } else {
-      const result = await res.json();
-      ui.studyWeekCache[key] = result.days || [];
-      ui.studyOverdueByKid[kidId] = result.overdue || [];
-    }
-  } catch(e){
-    ui.studyWeekError[key] = 'Could not reach the server. Check your connection and try again.';
-    ui.studyWeekCache[key] = [];
-  }
-  ui.studyWeekLoading[key] = false;
-  render();
-}
-// Called by Kid View / Parent View, which don't manage a week-offset selector
-// themselves - they just want "whatever week this date falls in", fetching
-// lazily and silently if it isn't cached yet (render() re-runs once it lands).
-function ensureStudyWeekForDate(kidId, dateISO){
-  if(!kidId) return null;
-  const wOff = weekOffsetForDate(dateISO);
-  const days = getStudyWeekDays(kidId, wOff);
-  if(days===null && !ui.studyWeekLoading[weekCacheKey(kidId, wOff)]){
-    fetchStudyAssignments(kidId, wOff);
-  }
-  return days;
-}
-function studyItemsForDate(kidId, dateISO){
-  const days = ensureStudyWeekForDate(kidId, dateISO);
-  if(!days) return null; // null = still loading, distinct from [] = loaded but empty
-  const day = days.find(d=>d.date===dateISO);
-  return day ? day.items : [];
-}
-function ensureStudyOverdue(kidId){
-  if(!kidId) return null;
-  if(ui.studyOverdueByKid[kidId]===undefined){
-    // piggybacks on the current week's fetch, which always returns overdue too
-    ensureStudyWeekForDate(kidId, todayISO());
-    return null;
-  }
-  return ui.studyOverdueByKid[kidId];
-}
-function changeStudyWeek(delta){
-  ui.studyWeekOffset += delta;
-  if(ui.studyWeekOffset < 0) ui.studyWeekOffset = 0;
-  render();
-  if(getStudyWeekDays(ui.kidId, ui.studyWeekOffset)===null){
-    fetchStudyAssignments(ui.kidId, ui.studyWeekOffset);
-  }
-}
-// Jump into a topic's study/exam view from Kid View, Parent View, or an
-// overdue banner - not just from inside the Study tab itself.
-function jumpToStudyTopic(kidId, topicId){
-  ui.tab = 'study';
-  ui.kidId = kidId;
-  ui.studyView = 'study';
-  ui.studySelectedTopicId = topicId;
-  ui.studyExamResult = null;
-  if(ui.studySubjects===null && !ui.studyLoading){ fetchStudyTopics(); }
-  if(topicStatus(kidId, topicId)==='not_started'){ upsertTopicProgress(kidId, topicId, {status:'studying'}); }
-  render();
-}
-
-function topicProgressFor(kidId, topicId){
-  return state.topicProgress.find(p=>p.kidId===kidId && p.topicId===topicId);
-}
-function topicStatus(kidId, topicId){
-  const p = topicProgressFor(kidId, topicId);
-  return p ? p.status : 'not_started';
-}
-function upsertTopicProgress(kidId, topicId, patch){
-  let p = topicProgressFor(kidId, topicId);
-  if(!p){
-    p = {id:cid(), kidId, topicId, status:'not_started', examScore:null, attemptCount:0, studyCompletedAt:null, examCompletedAt:null};
-    state.topicProgress.push(p);
-  }
-  Object.assign(p, patch, {updatedAt:new Date().toISOString()});
-  saveData();
-}
-function openStudyTopic(topicId){
-  ui.studySelectedTopicId = topicId;
-  ui.studyView = 'study';
-  ui.studyExamResult = null;
-  if(ui.kidId && topicStatus(ui.kidId, topicId)==='not_started'){
-    upsertTopicProgress(ui.kidId, topicId, {status:'studying'});
-  }
-  render();
-}
-async function startStudyExam(topicId){
-  // Real backend: fetch a sampled question set server-side (STUDY_EXAM_START_ENDPOINT)
-  // so answers are never present in client-visible network responses.
-  // Demo mode: sample straight from the embedded question array.
-  if(hasClaudeStorage || (state.family && state.family.isExample)){
-    const topic = ui.studyTopics.find(t=>t.id===topicId);
-    ui.studyExamAttempt = {attemptId:cid(), topicId, questions: topic.questions.map(q=>({id:q.id, question:q.q, options:q.options})), answers:{}};
-    ui.studyView = 'exam';
-    render();
-    return;
-  }
-  try{
-    const res = await fetch(STUDY_EXAM_START_ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({topicId})});
-    const result = await res.json();
-    ui.studyExamAttempt = {attemptId: result.attemptId, topicId, questions: result.questions, answers:{}};
-    ui.studyView = 'exam';
-  } catch(e){
-    showAlert('Could not start the exam. Check your connection and try again.');
-  }
-  render();
-}
-function setExamAnswer(questionId, optionValue){
-  if(!ui.studyExamAttempt) return;
-  ui.studyExamAttempt.answers[questionId] = optionValue;
-  render();
-}
-async function submitStudyExam(){
-  const attempt = ui.studyExamAttempt;
-  if(!attempt || !ui.kidId) return;
-  const unanswered = attempt.questions.filter(q=>!(q.id in attempt.answers));
-  if(unanswered.length){ showAlert(`Answer all ${attempt.questions.length} questions before submitting.`); return; }
-  ui.studyExamSubmitting = true; render();
-
-  if(hasClaudeStorage || (state.family && state.family.isExample)){
-    const topic = ui.studyTopics.find(t=>t.id===attempt.topicId);
-    let correct = 0;
-    topic.questions.forEach(q=>{ if(attempt.answers[q.id]===q.answer) correct++; });
-    const score = Math.round((correct/topic.questions.length)*100);
-    finishExamScoring(attempt.topicId, score, correct, topic.questions.length);
-    return;
-  }
-  try{
-    const res = await fetch(STUDY_EXAM_SUBMIT_ENDPOINT, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({familyId: state.family.id, kidId: ui.kidId, topicId: attempt.topicId, attemptId: attempt.attemptId, answers: attempt.answers})
-    });
-    const result = await res.json();
-    finishExamScoring(attempt.topicId, result.score, result.correctCount, result.total);
-  } catch(e){
-    ui.studyExamSubmitting = false;
-    showAlert('Could not submit the exam. Check your connection and try again.');
-    render();
-  }
-}
-function finishExamScoring(topicId, score, correctCount, total){
-  // 70% threshold matches the reassignment logic agreed earlier — pure client logic
-  // in demo mode; the real backend applies the same rule server-side.
-  const newStatus = score >= 70 ? 'completed' : 'reassigned';
-  upsertTopicProgress(ui.kidId, topicId, {
-    status: newStatus, examScore: score, examCompletedAt: new Date().toISOString(),
-    attemptCount: (topicProgressFor(ui.kidId, topicId)?.attemptCount||0) + 1
-  });
-  ui.studyExamResult = {score, correctCount, total, passed: score>=70};
-  ui.studyExamSubmitting = false;
-  ui.studyView = 'topics';
-  render();
 }
 
 function deviceUsageForMember(memberId){
@@ -4586,7 +3912,6 @@ function _renderInner(){
           <button class="${ui.tab==='shopping'?'active':''}" onclick="setTab('shopping')">Shopping</button>
           <button class="${ui.tab==='kid'?'active':''}" onclick="setTab('kid')">Kid View</button>
           <button class="${ui.tab==='screentime'?'active':''}" onclick="setTab('screentime')">Screen Time</button>
-          <button class="${ui.tab==='study'?'active':''}" onclick="setTab('study')">Study</button>
           <button class="${ui.tab==='settings'?'active':''}" onclick="setTab('settings')">Settings${(isParentLoggedIn() && totalPendingApprovals()>0) ? ` <span class="nav-badge">${totalPendingApprovals()}</span>` : ''}</button>
         </nav>
         <button class="search-btn" onclick="openSearch()" title="Search activities and tasks">🔍</button>
@@ -4601,7 +3926,6 @@ function _renderInner(){
       ${ui.tab==='shopping'? renderShoppingTab() : ''}
       ${ui.tab==='kid'? renderKidView() : ''}
       ${ui.tab==='screentime'? renderScreenTime() : ''}
-      ${ui.tab==='study'? renderStudyTab() : ''}
       ${ui.tab==='settings'? renderSettings() : ''}
     </main>
     ${renderModal()}
@@ -4630,12 +3954,6 @@ function setTab(t){
   }
   if(t==='screentime' && ui.deviceUsageData===null && !ui.deviceUsageLoading){
     fetchDeviceUsage();
-  }
-  if(t==='study' && ui.studySubjects===null && !ui.studyLoading){
-    fetchStudyTopics();
-  }
-  if(t==='study' && ui.kidId && getStudyWeekDays(ui.kidId, ui.studyWeekOffset)===null){
-    fetchStudyAssignments(ui.kidId, ui.studyWeekOffset);
   }
   render();
 }
@@ -5813,9 +5131,7 @@ function importData(evt){
           if(!('canAddShopping' in m)) m.canAddShopping = true;
           if(!('email' in m)) m.email = '';
           if(!('phone' in m)) m.phone = '';
-          if(!('yearLevel' in m)) m.yearLevel = null;
         });
-        if(!parsed.topicProgress) parsed.topicProgress = [];
         if(!parsed.family){ parsed.family = state.family || {id:cid(), name:'My Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:''}; }
         if(!parsed.chores) parsed.chores = [];
         parsed.chores.forEach(c=>{
@@ -5859,8 +5175,7 @@ function resetDefaults(){
       shoppingList: JSON.parse(JSON.stringify(DEFAULT_SHOPPING_LIST)),
       shoppingTrips: buildDefaultShoppingTrips(),
       shoppingItemLibrary: JSON.parse(JSON.stringify(DEFAULT_SHOPPING_ITEM_LIBRARY)),
-      activityLibrary: JSON.parse(JSON.stringify(DEFAULT_ACTIVITY_LIBRARY)),
-      topicProgress: []
+      activityLibrary: JSON.parse(JSON.stringify(DEFAULT_ACTIVITY_LIBRARY))
     };
     ui.profileId = null; ui.authenticated = false;
     saveData();
