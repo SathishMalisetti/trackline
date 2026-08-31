@@ -531,7 +531,6 @@ const STUDY_TOPICS_ENDPOINT = API_BASE + '/api/study-topics';       // GET ?year
 const STUDY_EXAM_START_ENDPOINT = API_BASE + '/api/study-exam-start'; // POST {topicId} -> sampled questions, no answers included
 const STUDY_EXAM_SUBMIT_ENDPOINT = API_BASE + '/api/study-exam-submit'; // POST {familyId, kidId, topicId, attemptId, answers} -> scored server-side
 const STUDY_ASSIGNMENTS_ENDPOINT = API_BASE + '/api/study-assignments'; // GET ?familyId&kidId&weekOffset -> this week's term-assigned work
-const STUDY_SET_YEAR_LEVEL_ENDPOINT = API_BASE + '/api/study-set-year-level'; // POST {familyId,kidId,yearLevel,calendarYear} -> saves year_level directly, wipes+regenerates schedule
 
 // ---- portable storage layer -------------------------------------------------
 // Two modes, auto-detected:
@@ -1529,7 +1528,6 @@ let ui = {
   studyWeekLoading: {},         // same key -> bool
   studyWeekError: {},           // same key -> error string
   studyOverdueByKid: {},        // kidId -> array of {date,subjectName,topicId,topicName,status} not-yet-completed items from PAST weeks
-  yearLevelSaving: null,        // kidId currently mid-save, or null
 };
 
 function selectedDateISO(){
@@ -2932,15 +2930,11 @@ function renderSettings(){
     <div class="member-notify-row">
       <label class="notify-check" style="width:100%;">
         Year level (for the Study tab)
-        <select id="yearlevel-select-${m.id}" onchange="updateMember('${m.id}','yearLevel',this.value||null)" style="margin-left:8px;">
+        <select onchange="updateMember('${m.id}','yearLevel',this.value||null)" style="margin-left:8px;">
           <option value="" ${!m.yearLevel?'selected':''}>Not set</option>
           ${['Prep','1','2','3','4','5','6','7','8'].map(y=>`<option value="${y}" ${m.yearLevel===y?'selected':''}>${y==='Prep'?'Prep':'Year '+y}</option>`).join('')}
         </select>
       </label>
-      <button class="btn ghost" style="margin-top:8px;font-size:12px;padding:7px 12px;" onclick="saveYearLevelAndGenerate('${m.id}')" ${ui.yearLevelSaving===m.id?'disabled':''}>
-        ${ui.yearLevelSaving===m.id ? 'Saving & generating…' : 'Save & generate schedule'}
-      </button>
-      <div style="font-size:11.5px;color:var(--text-dim);margin-top:4px;">Clears any existing schedule for this kid and generates a fresh one for the current year.</div>
     </div>` : ''}`).join('');
 
   return `
@@ -3581,61 +3575,6 @@ function changeStudyWeek(delta){
 }
 // Jump into a topic's study/exam view from Kid View, Parent View, or an
 // overdue banner - not just from inside the Study tab itself.
-// Called from the "Save & generate schedule" button in Settings. Does the
-// whole flow server-side in one call: saves year_level directly (bypassing
-// the family-data blob, which is what was silently dropping it), wipes any
-// existing schedule for this kid, and generates a fresh one - no manual
-// curl/Postman step required.
-async function saveYearLevelAndGenerate(kidId){
-  if(!isParentLoggedIn()) return;
-  const select = document.getElementById('yearlevel-select-'+kidId);
-  const yearLevel = select ? select.value : null;
-  if(!yearLevel){ showAlert('Choose a year level first.'); return; }
-  const kid = memberById(kidId);
-  if(!kid) return;
-
-  if(hasClaudeStorage || (state.family && state.family.isExample)){
-    // Demo mode has no real backend to call - just reflect the choice locally
-    // so the Study tab picks it up, consistent with how the rest of demo mode works.
-    updateMember(kidId, 'yearLevel', yearLevel);
-    showAlert('Year level set locally. Schedule generation needs the deployed backend.');
-    return;
-  }
-
-  ui.yearLevelSaving = kidId; render();
-  try{
-    const res = await fetch(STUDY_SET_YEAR_LEVEL_ENDPOINT, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        familyId: state.family.id, kidId, yearLevel,
-        calendarYear: new Date().getFullYear(),
-      })
-    });
-    const result = await res.json().catch(()=>({}));
-    if(!res.ok){
-      showAlert(result.error || 'Could not save year level or generate the schedule.');
-    } else {
-      kid.yearLevel = yearLevel; // reflect locally so the Study tab shows the right curriculum immediately
-      // clear cached weeks/overdue for this kid so the Study tab, Kid View and
-      // Parent View all re-fetch the freshly-generated schedule instead of
-      // showing stale (possibly now-wrong) cached data
-      Object.keys(ui.studyWeekCache).forEach(k => { if(k.startsWith(kidId+'|')) delete ui.studyWeekCache[k]; });
-      delete ui.studyOverdueByKid[kidId];
-      ui.studyWeekOffset = 0;
-      saveData(); // keep the local blob's yearLevel in sync too, even though the backend write is what actually matters
-      if(result.warning){
-        showAlert(result.warning);
-      } else {
-        showAlert(`Year level saved. Generated ${result.assignmentsCreated} scheduled sessions for this year.`);
-      }
-    }
-  } catch(e){
-    showAlert('Could not reach the server. Check your connection and try again.');
-  }
-  ui.yearLevelSaving = null;
-  render();
-}
-
 function jumpToStudyTopic(kidId, topicId){
   ui.tab = 'study';
   ui.kidId = kidId;
