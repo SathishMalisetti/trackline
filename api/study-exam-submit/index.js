@@ -154,3 +154,5 @@ module.exports = async function (context, req) {
 // Left as-is with a flat 1 for this first pass since it doesn't block testing
 // the exam flow end-to-end; fix before relying on attempt_count for anything
 // (e.g. capping retries).
+
+module.exports = require('../shared/auth').protect(module.exports, {});
