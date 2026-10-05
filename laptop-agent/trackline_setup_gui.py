@@ -20,6 +20,7 @@ import sys
 import hashlib
 import platform
 import subprocess
+from account_auth import verify_parent
 from pathlib import Path
 
 try:
@@ -256,19 +257,22 @@ def run_gui():
 
     def http_post(url, json):
         try:
-            resp = requests.post(url, json=json, timeout=15)
+            headers = verify_parent(backend_url_var.get(), account_email_var.get(), account_password_var.get(), family_id_var.get().strip().upper())
+            resp = requests.post(url, json=json, headers=headers, timeout=15)
             return {"status": resp.status_code, "json": resp.json()}
         except Exception as e:
             return {"status": 0, "json": {"error": f"Could not reach the server: {e}"}}
 
     root = tk.Tk()
     root.title("Trackline — Set up screen time on this device")
-    root.geometry("420x420")
+    root.geometry("420x580")
     root.resizable(False, False)
 
     backend_url_var = tk.StringVar(value=os.environ.get("TRACKLINE_BACKEND_URL", ""))
     family_id_var = tk.StringVar()
     family_password_var = tk.StringVar()
+    account_email_var = tk.StringVar()
+    account_password_var = tk.StringVar()
     label_var = tk.StringVar(value=f"{platform.node()}'s device")
     member_choice_var = tk.StringVar()
     members_by_label = {}  # display label -> member id
@@ -281,6 +285,11 @@ def run_gui():
 
     ttk.Label(frame, text="Family ID").pack(anchor="w")
     ttk.Entry(frame, textvariable=family_id_var, width=44).pack(fill="x", pady=(0,10))
+
+    ttk.Label(frame, text="Parent account email").pack(anchor="w")
+    ttk.Entry(frame, textvariable=account_email_var, width=44).pack(fill="x", pady=(0,10))
+    ttk.Label(frame, text="Parent account password").pack(anchor="w")
+    ttk.Entry(frame, textvariable=account_password_var, show="*", width=44).pack(fill="x", pady=(0,10))
 
     ttk.Label(frame, text="Family password").pack(anchor="w")
     ttk.Entry(frame, textvariable=family_password_var, show="*", width=44).pack(fill="x", pady=(0,10))
@@ -331,7 +340,10 @@ def run_gui():
         if not ok:
             status_label.config(text=result, foreground="#a5323a")
             return
+        result['account_email'] = account_email_var.get().strip()
         write_config(result)
+        from trackline_agent import write_status
+        write_status('ok')
 
         resolved_agent_path = find_agent_exe()
         task_ok, task_msg = install_scheduled_task(resolved_agent_path)

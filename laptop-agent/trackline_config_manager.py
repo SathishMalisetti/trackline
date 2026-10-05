@@ -17,6 +17,7 @@ import sys
 import platform
 import subprocess
 import requests
+from account_auth import verify_parent
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -37,12 +38,10 @@ def verify_family_password(cfg, password):
     backend endpoint needed, and no separate password-verification logic
     to keep in sync with the real one. Returns (ok, message)."""
     try:
-        resp = requests.post(f"{cfg['backend_url']}/api/family-members", json={
-            "familyId": cfg["family_id"], "passwordHash": simple_hash(password),
-        }, timeout=15)
-        if resp.status_code == 200:
-            return True, ""
-        return False, "Incorrect family password."
+        if not cfg.get('account_email'):
+            return False, 'Re-pair this device with your parent account before changing settings.'
+        verify_parent(cfg['backend_url'], cfg['account_email'], password, cfg['family_id'])
+        return True, ''
     except Exception as e:
         return False, f"Could not verify password: {e}"
 
@@ -434,7 +433,7 @@ def run_gui():
         cfg = read_config()
         if not cfg:
             return False
-        pwd = simpledialog.askstring("Family password required", "Enter your family password to make this change:", show="*", parent=root)
+        pwd = simpledialog.askstring("Parent account required", "Enter your parent account password to make this change:", show="*", parent=root)
         if pwd is None:
             return False
         ok, msg = verify_family_password(cfg, pwd)

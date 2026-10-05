@@ -44,6 +44,7 @@ import hashlib
 import argparse
 import platform
 import subprocess
+from account_auth import verify_parent
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -556,6 +557,9 @@ def simple_hash(s):
 def pair(backend_url):
     print("=== Pair this laptop with a Trackline family ===")
     family_id = input("Family ID: ").strip().upper()
+    account_email = input("Parent account email: ").strip()
+    account_password = getpass.getpass("Parent account password: ")
+    account_headers = verify_parent(backend_url, account_email, account_password, family_id)
     family_password = getpass.getpass("Family password: ")
     password_hash = simple_hash(family_password)
 
@@ -565,7 +569,7 @@ def pair(backend_url):
     member_id = None
     member_name = None
     try:
-        lookup_resp = requests.post(f"{backend_url}/api/family-members", json={
+        lookup_resp = requests.post(f"{backend_url}/api/family-members", headers=account_headers, json={
             "familyId": family_id, "passwordHash": password_hash,
         }, timeout=15)
         if lookup_resp.status_code == 200:
@@ -589,7 +593,7 @@ def pair(backend_url):
     label = input(f"Device label (e.g. 'Mia's Laptop') [{os.environ.get('COMPUTERNAME', 'this-laptop')}]: ").strip() \
         or os.environ.get("COMPUTERNAME", "this-laptop")
 
-    resp = requests.post(f"{backend_url}/api/device-pair", json={
+    resp = requests.post(f"{backend_url}/api/device-pair", headers=account_headers, json={
         "familyId": family_id,
         "passwordHash": password_hash,
         "memberId": member_id,
@@ -603,6 +607,7 @@ def pair(backend_url):
 
     result = resp.json()
     cfg = {
+        "account_email": account_email,
         "family_id": family_id,
         "member_id": member_id,
         "member_name": member_name,  # may be None if looked-up name wasn't available — Config Manager falls back to showing the ID
