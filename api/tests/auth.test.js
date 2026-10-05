@@ -1,0 +1,112 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const path = require('node:path');
+
+process.env.SUPABASE_URL = 'https://test.supabase.co';
+process.env.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'server-only';
+let responses, calls;
+require.cache[require.resolve('node-fetch')] = { exports: async (...args) => {
+  calls.push(args);
+  const value = responses.shift();
+  if (!value) throw new Error('Unexpected network call');
+  return { ok: value.status === 200, status: value.status, json: async () => value.body };
+}};
+const { protect } = require('../shared/auth');
+const user = { id: 'user-1', email: 'parent@example.com', email_confirmed_at: '2026-01-01' };
+const member = { family_id: 'FAMILY1', member_id: 'kid-1', role: 'kid' };
+const req = () => ({ method: 'GET', headers: { authorization: 'Bearer valid-token' }, query: { familyId: 'FAMILY1' } });
+async function run(request, options = {}, rows = [member], authUser = user, payload = { ok: true }) {
+  calls = []; responses = [{ status: 200, body: authUser }, { status: 200, body: rows }];
+  let handled = false;
+  const context = {};
+  await protect(async ctx => { handled = true; ctx.res = { status: 200, body: JSON.stringify(payload) }; }, options)(context, request);
+  return { context, handled };
+}
+
+test('missing token never reaches database or handler', async () => {
+  const request = req(); request.headers = {};
+  const result = await run(request);
+  assert.equal(result.context.res.status, 401); assert.equal(result.handled, false); assert.equal(calls.length, 0);
+});
+test('invalid token is rejected by Auth', async () => {
+  calls = []; responses = [{ status: 401, body: {} }];
+  const context = {};
+  await protect(() => assert.fail('handler reached'))(context, req());
+  assert.equal(context.res.status, 401); assert.equal(calls.length, 1);
+});
+test('cross-family reads are forbidden', async () => {
+  const request = req(); request.query.familyId = 'OTHER';
+  assert.equal((await run(request)).context.res.status, 403);
+});
+test('conflicting body and query IDs cannot bypass membership check', async () => {
+  const request = req(); request.body = { familyId: 'OTHER' };
+  assert.equal((await run(request)).context.res.status, 400);
+});
+test('user metadata cannot grant parent role', async () => {
+  const result = await run(req(), { parent: true }, [member], { ...user, user_metadata: { role: 'parent' } });
+  assert.equal(result.context.res.status, 403);
+});
+test('child cannot write full family state or access another kid', async () => {
+  const request = req(); request.method = 'POST';
+  assert.equal((await run(request, { parentWrite: true })).context.res.status, 403);
+  request.method = 'GET'; request.query.kidId = 'kid-2';
+  assert.equal((await run(request)).context.res.status, 403);
+});
+test('verified parent can perform parent actions', async () => {
+  const result = await run(req(), { parent: true }, [{ ...member, role: 'parent' }]);
+  assert.equal(result.context.res.status, 200); assert.equal(result.handled, true);
+  assert.equal(calls[0][1].headers.Authorization, 'Bearer valid-token');
+  assert.equal(calls[1][1].headers.Authorization, 'Bearer server-only');
+});
+test('unverified and anonymous accounts are rejected', async () => {
+  assert.equal((await run(req(), {}, [member], { ...user, email_confirmed_at: null })).context.res.status, 403);
+  assert.equal((await run(req(), {}, [member], { ...user, is_anonymous: true })).context.res.status, 403);
+});
+test('child responses omit password and PIN hashes and other usage', async () => {
+  const result = await run(req(), { sanitize: true }, [member], user, {
+    family: { passwordHash: 'secret' }, members: [{ id: 'parent', pinHash: 'secret' }],
+    usage: [{ memberId: 'kid-1' }, { memberId: 'kid-2' }],
+  });
+  const data = JSON.parse(result.context.res.body);
+  assert.equal(data.family.passwordHash, undefined); assert.equal(data.members[0].pinHash, undefined);
+  assert.deepEqual(data.usage, [{ memberId: 'kid-1' }]);
+});
+test('a parent cannot use a kid profile from another family', async () => {
+  calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [{ ...member, role: 'parent' }] }, { status: 200, body: [] }];
+  const request = req(); request.query.kidId = 'other-family-kid';
+  const context = {};
+  await protect(() => assert.fail('handler reached'))(context, request);
+  assert.equal(context.res.status, 403);
+});
+test('child can log only an owned chore and server sets the actor', async () => {
+  calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [member] }, { status: 200, body: [{ id: 'chore-1' }] }];
+  const request = req(); request.method = 'POST'; request.body = { familyId: 'FAMILY1', choreId: 'chore-1', loggedBy: 'parent-1' };
+  const context = {};
+  await protect((ctx, r) => { assert.equal(r.body.loggedBy, 'kid-1'); ctx.res = { status: 200, body: '{}' }; }, { chore: true })(context, request);
+  assert.equal(context.res.status, 200);
+  assert.match(calls[2][0], /member_id=eq.kid-1/);
+});
+test('device token path delegates validation to the existing device handler', async () => {
+  const result = await run({ method: 'POST', headers: {}, body: { deviceToken: 'device-secret' } }, { device: true });
+  assert.equal(result.handled, true); assert.equal(calls.length, 0);
+});
+test('every human API exports a protected wrapper', () => {
+  const fs = require('node:fs');
+  const api = path.join(__dirname, '..');
+  for (const folder of fs.readdirSync(api)) {
+    const file = path.join(api, folder, 'index.js');
+    if (!fs.existsSync(file) || ['auth-config', 'device-usage-ingest'].includes(folder)) continue;
+    assert.match(fs.readFileSync(file, 'utf8'), /protect\(/, folder);
+  }
+});
+test('public configuration never returns server credentials', async () => {
+  const config = require('../auth-config');
+  const original = process.env.SUPABASE_PUBLISHABLE_KEY;
+  for (const key of ['sb_secret_private', `x.${Buffer.from(JSON.stringify({ role: 'service_role' })).toString('base64url')}.x`]) {
+    process.env.SUPABASE_PUBLISHABLE_KEY = key;
+    const context = {}; await config(context);
+    assert.equal(context.res.status, 503); assert.equal(context.res.body.includes(key), false);
+  }
+  process.env.SUPABASE_PUBLISHABLE_KEY = original;
+});
