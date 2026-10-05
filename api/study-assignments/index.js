@@ -130,3 +130,5 @@ module.exports = async function (context, req) {
   }
 };
 
+
+module.exports = require('../shared/auth').protect(module.exports, {});
