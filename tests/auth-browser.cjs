@@ -13,12 +13,12 @@ const family = {
 const apiCalls = [];
 const server = http.createServer((req, res) => {
   if (req.url.startsWith('/api/')) {
-    apiCalls.push({ url: req.url, authorization: req.headers.authorization });
+    apiCalls.push({ url: req.url, authorization: req.headers['x-trackline-authorization'] });
     res.setHeader('Content-Type', 'application/json');
     if (req.url === '/api/auth-config') return res.end(JSON.stringify({ url: 'https://test.supabase.co', publishableKey: 'sb_publishable_test' }));
-    if (!req.headers.authorization) { res.statusCode = 401; return res.end('{}'); }
+    if (!req.headers['x-trackline-authorization']) { res.statusCode = 401; return res.end('{}'); }
     if (req.url === '/api/auth-me') {
-      const isKid = req.headers.authorization.includes('kidtoken');
+      const isKid = req.headers['x-trackline-authorization'].includes('kidtoken');
       return res.end(JSON.stringify({ email: isKid ? 'kid@example.com' : 'parent@example.com', memberships: [{ family_id: 'FAMILY1', member_id: isKid ? 'kid-1' : 'parent-1', role: isKid ? 'kid' : 'parent' }] }));
     }
     if (req.url.startsWith('/api/family-data')) return res.end(JSON.stringify(family));

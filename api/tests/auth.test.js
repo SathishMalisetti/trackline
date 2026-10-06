@@ -110,3 +110,19 @@ test('public configuration never returns server credentials', async () => {
   }
   process.env.SUPABASE_PUBLISHABLE_KEY = original;
 });
+
+// Reproduce the production gateway replacing the standard bearer token.
+test('SWA platform Authorization cannot replace the supplied Supabase token', async () => {
+  const request = req();
+  request.headers = { authorization: 'Bearer azure-platform-token', 'x-trackline-authorization': 'Bearer valid-token' };
+  const result = await run(request);
+  assert.equal(result.context.res.status, 200);
+  assert.equal(calls[0][1].headers.Authorization, 'Bearer valid-token');
+});
+test('malformed custom token cannot fall back to another Authorization header', async () => {
+  const request = req();
+  request.headers['x-trackline-authorization'] = 'not-a-bearer-token';
+  const result = await run(request);
+  assert.equal(result.context.res.status, 401);
+  assert.equal(calls.length, 0);
+});
