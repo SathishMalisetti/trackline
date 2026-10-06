@@ -1,6 +1,9 @@
 const fetch = require('node-fetch');
 const crypto = require('node:crypto');
 const cookieName = '__Host-trackline-family';
+// Azure's API proxy can replace Host with the internal Functions hostname.
+// Keep the public app origin explicit rather than trusting every Azure domain.
+const publishedOrigin = 'https://victorious-field-093009200.7.azurestaticapps.net';
 const digest = value => crypto.createHash('sha256').update(value).digest('hex');
 function sessionToken(req) {
   const match = (req.headers.cookie || '').split(';').map(value => value.trim()).find(value => value.startsWith(`${cookieName}=`));
@@ -12,7 +15,14 @@ function assertOrigin(req) {
   let origin; try { origin = new URL(req.headers.origin); } catch { throw Object.assign(new Error('Invalid origin.'), { status: 403 }); }
   const host = (req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
   const configured = process.env.TRACKLINE_APP_ORIGIN;
-  if (configured ? origin.origin !== configured : origin.host !== host) throw Object.assign(new Error('Invalid origin.'), { status: 403 });
+  let allowed;
+  if (configured) {
+    try { allowed = origin.origin === new URL(configured).origin; }
+    catch { throw Object.assign(new Error('App origin is not configured correctly.'), { status: 503 }); }
+  } else {
+    allowed = origin.origin === publishedOrigin || origin.host === host;
+  }
+  if (!allowed) throw Object.assign(new Error('Invalid origin.'), { status: 403 });
 }
 async function service(path, options = {}) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
