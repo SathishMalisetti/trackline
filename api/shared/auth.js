@@ -9,7 +9,11 @@ async function authenticate(req) {
   const key = process.env.SUPABASE_PUBLISHABLE_KEY;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key || !serviceKey) throw Object.assign(new Error('Authentication is not configured.'), { status: 503 });
-  const authorization = req.headers && (req.headers.authorization || req.headers.Authorization);
+  // Static Web Apps replaces Authorization with its own platform token.
+  // Prefer the client token in a separate header; still validate it with Supabase.
+  const headers = req.headers || {};
+  const authorization = headers['x-trackline-authorization'] || headers['X-Trackline-Authorization']
+    || headers.authorization || headers.Authorization;
   if (!authorization || !/^Bearer \S+$/i.test(authorization)) throw Object.assign(new Error('Sign in required.'), { status: 401 });
   // Validate with Auth on every request; never trust decoded JWTs or browser state.
   const result = await fetch(`${url}/auth/v1/user`, { headers: { apikey: key, Authorization: authorization }, timeout: 10000 });
