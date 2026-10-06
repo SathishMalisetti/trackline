@@ -45,6 +45,7 @@ import argparse
 import platform
 import subprocess
 from account_auth import verify_parent
+from activitywatch_recovery import ensure_activitywatch, ActivityWatchUnavailable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -211,6 +212,13 @@ def compute_window_seconds_by_hour(window_events, excluded_apps, excluded_title_
 # ActivityWatch — local API only, never touches the network beyond localhost.
 # ---------------------------------------------------------------------------
 
+def require_activitywatch(cfg):
+    try:
+        ensure_activitywatch(cfg)
+    except ActivityWatchUnavailable as exc:
+        write_status("failed", str(exc))
+        raise
+
 def aw_find_bucket(suffix):
     """Finds the first bucket whose id contains the given suffix, e.g. 'window' or 'afk'."""
     resp = requests.get(f"{AW_BASE_URL}/buckets", timeout=5)
@@ -338,6 +346,7 @@ def build_snapshot_for_date(cfg, tz, date_str):
     while ActivityWatch's own local history still has that day's data —
     a fully-off/broken laptop for that period has nothing to recover,
     regardless of this function."""
+    require_activitywatch(cfg)
     window_bucket = aw_find_bucket("window")
     web_bucket = aw_find_bucket("web")
 
@@ -389,6 +398,7 @@ def sync_date(date_str):
     return result
 
 def build_snapshot(cfg, tz):
+    require_activitywatch(cfg)
     window_bucket = aw_find_bucket("window")
     web_bucket = aw_find_bucket("web")  # optional — only present if aw-watcher-web is installed
 
@@ -413,6 +423,7 @@ def build_backfill_snapshots(cfg, tz, days=30):
     time only — not re-run on subsequent syncs. Days with no window-bucket
     data at all (e.g. before ActivityWatch was installed) are skipped
     rather than pushing an empty snapshot for them."""
+    require_activitywatch(cfg)
     window_bucket = aw_find_bucket("window")
     web_bucket = aw_find_bucket("web")
     now_local = datetime.now(tz)
@@ -844,25 +855,29 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.backend_url = args.backend_url.strip().rstrip("/")  # tolerate a trailing slash however it was typed/set
 
-    if args.pair:
-        pair(args.backend_url)
-    elif args.reregister:
-        reregister(args.backend_url)
-    elif args.uninstall:
-        uninstall(args.backend_url)
-    elif args.full_uninstall:
-        full_uninstall()
-    elif args.sync_once:
-        sync_once()
-    elif args.run:
-        run_loop()
-    elif args.sync_date:
-        sync_date(args.sync_date)
-    elif args.backfill:
-        cfg = load_config()
-        if not cfg:
-            print("Not paired yet. Run with --pair first.")
-            sys.exit(1)
-        run_backfill(cfg)
-    else:
-        parser.print_help()
+    try:
+        if args.pair:
+            pair(args.backend_url)
+        elif args.reregister:
+            reregister(args.backend_url)
+        elif args.uninstall:
+            uninstall(args.backend_url)
+        elif args.full_uninstall:
+            full_uninstall()
+        elif args.sync_once:
+            sync_once()
+        elif args.run:
+            run_loop()
+        elif args.sync_date:
+            sync_date(args.sync_date)
+        elif args.backfill:
+            cfg = load_config()
+            if not cfg:
+                print("Not paired yet. Run with --pair first.")
+                sys.exit(1)
+            run_backfill(cfg)
+        else:
+            parser.print_help()
+    except ActivityWatchUnavailable as exc:
+        print(str(exc))
+        sys.exit(1)
