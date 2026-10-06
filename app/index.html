@@ -1602,7 +1602,7 @@ async function loadData(){
   const access = tracklineAuth.membership;
   if(access){
     const member = memberById(access.member_id);
-    if(member){ member.role = access.role; ui.profileId = member.id; ui.authenticated = true; ui.kidId = access.role==='kid' ? member.id : ui.kidId; ui.tab = access.role==='parent' ? 'parent' : 'kid'; }
+    if(member){ member.role = access.role; ui.profileId = member.id; ui.kidId = access.role==='kid' ? member.id : ui.kidId; ui.tab = access.role==='parent' ? 'parent' : 'kid'; }
   }
   render();
 }
@@ -4590,6 +4590,7 @@ function render(){
 }
 function _renderInner(){
   if(!tracklineAuth.ready || !tracklineAuth.user || !tracklineAuth.membership){ tracklineAuth.renderGate(); return; }
+  if(!ui.authenticated){ tracklineAuth.renderPinGate(); return; }
   const root = document.getElementById('root');
   document.getElementById('account-bar').hidden = false;
   if(!ui.loaded){
@@ -4725,18 +4726,7 @@ function setKid(id){ ui.kidId=id; ui.copiedFlash=false; render(); }
 function toggleProfileMenu(){ ui.profileMenuOpen = !ui.profileMenuOpen; render(); }
 function openLogin(id){
   if(!tracklineAuth.membership || id !== tracklineAuth.membership.member_id) return;
-  const m = memberById(id);
-  if(!m) return;
-  ui.loginMemberId = id;
-  ui.loginMode = m.pinHash ? 'enter' : 'create';
-  const attempt = ui.loginAttempts[id];
-  ui.loginError = (attempt && attempt.lockedUntil && Date.now() < attempt.lockedUntil)
-    ? `Too many incorrect attempts. Try again in ${Math.ceil((attempt.lockedUntil - Date.now())/1000)}s.`
-    : null;
-  ui.loginOpen = true;
-  ui.profileMenuOpen = false;
-  render();
-  setTimeout(()=>{ const el=document.getElementById('pin_input'); if(el) el.focus(); }, 0);
+  tracklineAuth.lock();
 }
 function closeLogin(){
   ui.loginOpen = false;
@@ -4745,11 +4735,7 @@ function closeLogin(){
   render();
 }
 function logout(){
-  tracklineAuth.signOut();
-  ui.profileId = null;
-  ui.authenticated = false;
-  ui.profileMenuOpen = false;
-  render();
+  tracklineAuth.lock();
 }
 
 function shiftWeek(dir){

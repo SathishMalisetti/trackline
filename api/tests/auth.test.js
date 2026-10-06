@@ -17,6 +17,40 @@ const user = { id: 'user-1', email: 'parent@example.com', email_confirmed_at: '2
 const member = { family_id: 'FAMILY1', member_id: 'kid-1', role: 'kid' };
 const req = () => ({ method: 'GET', headers: { authorization: 'Bearer valid-token' }, query: { familyId: 'FAMILY1' } });
 const createFamily = require('../create-family');
+const profilePin = require('../profile-pin');
+test('PIN status reveals only existence for the linked profile', async () => {
+  calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [member] }, { status: 200, body: [{ pin_hash: 'private-hash' }] }];
+  const context = {}; await profilePin(context, req());
+  assert.deepEqual(JSON.parse(context.res.body), { hasPin: true });
+  assert.ok(calls[2][0].includes('id=eq.kid-1&family_id=eq.FAMILY1'));
+});
+test('children can set their own PIN without full family write permission', async () => {
+  calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [member] }, { status: 200, body: [{ pin_hash: null }] }, { status: 200, body: { status: 200, ok: true } }];
+  const context = {}; await profilePin(context, { ...req(), method: 'POST', body: { pin: '1234' } });
+  assert.equal(context.res.status, 200);
+  const payload = JSON.parse(calls[3][1].body);
+  assert.equal(payload.p_member_id, 'kid-1'); assert.equal(payload.p_matches, true);
+  assert.match(payload.p_new_hash, /^scrypt:[a-f0-9]{32}:[a-f0-9]{64}$/);
+  assert.ok(!context.res.body.includes(payload.p_new_hash));
+});
+test('existing legacy PIN verifies and upgrades; wrong PIN cannot overwrite it', async () => {
+  let hash = 5381; for(const digit of '1234') hash=((hash*33)^digit.charCodeAt(0))>>>0;
+  for(const pin of ['1234','9999']) {
+    calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [member] }, { status: 200, body: [{ pin_hash: hash.toString(16) }] }, { status: 200, body: { status: pin==='1234'?200:403 } }];
+    const context = {}; await profilePin(context, { ...req(), method: 'POST', body: { pin } });
+    const payload = JSON.parse(calls[3][1].body);
+    assert.equal(payload.p_matches, pin==='1234');
+    if(pin==='9999') assert.equal(payload.p_new_hash, null);
+  }
+});
+test('PIN endpoint rejects other child profiles and invalid PINs', async () => {
+  calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [member] }];
+  const context = {}; await profilePin(context, { ...req(), method: 'POST', body: { pin: '1234', memberId: 'other' } });
+  assert.equal(context.res.status, 403); assert.equal(calls.length, 2);
+  calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [member] }, { status: 200, body: [{ pin_hash: null }] }];
+  await profilePin(context, { ...req(), method: 'POST', body: { pin: '123' } });
+  assert.equal(context.res.status, 400); assert.equal(calls.length, 3);
+});
 test('family creation uses verified account identity and ignores submitted IDs and roles', async () => {
   calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [] }, { status: 200, body: { family_id: 'NEW', role: 'parent' } }];
   const context = {};
