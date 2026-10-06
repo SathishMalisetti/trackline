@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trackline — Family Schedule</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -105,12 +105,12 @@
     width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;flex:none;
   }
   .search-btn:hover{border-color:var(--text-dim);}
-  .search-result{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px dashed #cfc7ac;cursor:pointer;}
+  .search-result{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px dashed var(--line);cursor:pointer;}
   .search-result:last-child{border-bottom:none;}
-  .search-result:hover{background:#e3dcc6;}
+  .search-result:hover{background:var(--ink-3);}
   .search-result .dot{width:10px;height:10px;border-radius:50%;flex:none;}
   .search-result .title{font-weight:700;font-size:14px;}
-  .search-result .meta{font-size:11.5px;color:#6b6650;font-family:'IBM Plex Mono',monospace;}
+  .search-result .meta{font-size:11.5px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
   .filter-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
   .filter-chip{
     display:flex;align-items:center;gap:6px;
@@ -166,12 +166,12 @@
     box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden;z-index:40;
   }
   .profile-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink);}
-  .profile-item:hover{background:#e3dcc6;}
-  .profile-item.current{background:#e3dcc6;}
+  .profile-item:hover{background:var(--ink-3);}
+  .profile-item.current{background:var(--ink-3);}
   .profile-item .dot{width:20px;height:20px;border-radius:50%;flex:none;}
-  .profile-menu-footer{border-top:1px solid #cfc7ac;padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#5c5847;cursor:pointer;}
-  .profile-menu-footer:hover{background:#e3dcc6;}
-  .profile-none{padding:12px 14px;font-size:12.5px;color:#6b6650;}
+  .profile-menu-footer{border-top:1px solid var(--line);padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;}
+  .profile-menu-footer:hover{background:var(--ink-3);}
+  .profile-none{padding:12px 14px;font-size:12.5px;color:var(--text-dim);}
 
   /* ONBOARDING */
   .onboard-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
@@ -179,11 +179,11 @@
   .onboard-brand{text-align:center;margin-bottom:22px;}
   .onboard-brand .flap{font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);}
   .onboard-brand .flap span{color:#B8791F;}
-  .onboard-brand .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6b6650;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+  .onboard-brand .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
   .onboard-card h2{font-family:'Archivo Narrow',sans-serif;font-size:19px;text-transform:uppercase;letter-spacing:.02em;text-align:center;margin:0 0 6px;}
-  .onboard-card .lead{font-size:13px;color:#5c5847;text-align:center;margin:0 0 20px;}
-  .onboard-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:#8a8468;font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
-  .onboard-divider::before,.onboard-divider::after{content:'';flex:1;height:1px;background:#cfc7ac;}
+  .onboard-card .lead{font-size:13px;color:var(--text-dim);text-align:center;margin:0 0 20px;}
+  .onboard-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+  .onboard-divider::before,.onboard-divider::after{content:'';flex:1;height:1px;background:var(--ink-3);}
 
   /* PRE-LOGIN DASHBOARD */
   .dash-wrap{max-width:640px;margin:40px auto;padding:0 20px;text-align:center;}
@@ -225,7 +225,7 @@
   .day-pill.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
   .day-pill.today .dname::after{content:" •";color:var(--amber);}
   .day-pill.active.today .dname::after{color:var(--ink);}
-  .skip-note{font-size:12px;color:#6b6650;background:#e3dcc6;border-radius:7px;padding:8px 10px;margin:-4px 0 14px;}
+  .skip-note{font-size:12px;color:var(--text-dim);background:var(--ink-3);border-radius:7px;padding:8px 10px;margin:-4px 0 14px;}
 
   /* BOARD GRID */
   .board-wrap{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--ink-2);}
@@ -305,9 +305,9 @@
   .modal{background:var(--paper);color:var(--ink);width:100%;max-width:440px;border-radius:14px;padding:22px;max-height:88vh;overflow-y:auto;}
   .modal h2{font-family:'Archivo Narrow',sans-serif;font-size:20px;letter-spacing:.02em;margin:0 0 14px;text-transform:uppercase;}
   .field{margin-bottom:14px;}
-  .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#5c5847;margin-bottom:5px;}
+  .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:5px;}
   .field input[type=text],.field input[type=time],.field input[type=number],.field select{
-    width:100%;padding:10px 11px;border-radius:7px;border:1px solid #c9c2ab;background:#fff;
+    width:100%;padding:10px 11px;border-radius:7px;border:1px solid var(--line);background:#fff;
     font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);
   }
   .row2{display:flex;gap:10px;}
@@ -333,37 +333,37 @@
   .kid-select button.active{color:var(--ink);}
   .kid-big{background:var(--paper);color:var(--ink);border-radius:16px;padding:26px;}
   .kid-big h2{font-family:'Archivo Narrow',sans-serif;font-size:26px;letter-spacing:.02em;margin:0 0 4px;text-transform:uppercase;}
-  .kid-big .kd{font-family:'IBM Plex Mono',monospace;color:#6b6650;margin-bottom:20px;}
-  .kid-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed #cfc7ac;align-items:flex-start;}
+  .kid-big .kd{font-family:'IBM Plex Mono',monospace;color:var(--text-dim);margin-bottom:20px;}
+  .kid-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed var(--line);align-items:flex-start;}
   .kid-item:last-child{border-bottom:none;}
-  .kid-time{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;min-width:100px;color:#5c5847;}
+  .kid-time{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;min-width:100px;color:var(--text-dim);}
   .kid-title{font-weight:700;font-size:20px;}
-  .kid-loc{color:#6b6650;font-size:14px;margin-top:2px;}
-  .kid-empty{padding:30px 0;text-align:center;color:#8a8468;font-size:15px;}
+  .kid-loc{color:var(--text-dim);font-size:14px;margin-top:2px;}
+  .kid-empty{padding:30px 0;text-align:center;color:var(--text-dim);font-size:15px;}
 
   /* CHORES */
   .chore-group{background:var(--paper);color:var(--ink);border-radius:14px;padding:18px 20px;margin-bottom:16px;}
   .chore-group-head{display:flex;align-items:center;gap:9px;margin-bottom:12px;}
   .chore-group-head .swatch{width:12px;height:12px;border-radius:50%;flex:none;}
   .chore-group-head .name{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.02em;}
-  .chore-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .chore-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line);}
   .chore-row:last-child{border-bottom:none;}
   .chore-info{flex:1;cursor:pointer;}
   .chore-title{font-weight:700;font-size:14.5px;}
-  .chore-freq{font-size:11px;color:#8a8468;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .chore-freq{font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
   .chore-done-badge{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#3d7a4f;background:#dcecdf;border-radius:20px;padding:6px 12px;cursor:pointer;white-space:nowrap;}
   .chore-pending-btn{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:.03em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:none;border-radius:20px;padding:9px 16px;cursor:pointer;white-space:nowrap;}
-  .chore-locked-btn{font-size:11.5px;color:#8a8468;white-space:nowrap;}
+  .chore-locked-btn{font-size:11.5px;color:var(--text-dim);white-space:nowrap;}
   .chore-empty-day{text-align:center;color:var(--text-dim);padding:40px 0;font-size:14px;}
-  .shop-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .shop-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px dashed var(--line);}
   .shop-row:last-child{border-bottom:none;}
   .shop-check-label{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:600;cursor:pointer;flex:1;}
   .shop-check-label input{width:19px;height:19px;flex:none;}
-  .shop-row-checked .shop-check-label span{text-decoration:line-through;color:#8a8468;font-weight:400;}
+  .shop-row-checked .shop-check-label span{text-decoration:line-through;color:var(--text-dim);font-weight:400;}
   .shop-row-selected{background:rgba(232,163,61,.15);border-radius:6px;padding-left:6px;margin-left:-6px;}
   .shop-select-check{width:19px;height:19px;accent-color:var(--amber);flex:none;}
   .shop-remove{background:none;border:none;color:#a5323a;cursor:pointer;font-size:16px;padding:4px 8px;}
-  .shop-divider{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#8a8468;padding:14px 0 6px;border-top:1px solid #cfc7ac;margin-top:6px;}
+  .shop-divider{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);padding:14px 0 6px;border-top:1px solid var(--line);margin-top:6px;}
   .shop-add-bar{position:fixed;left:0;right:0;bottom:0;background:var(--ink-2);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;z-index:15;}
   .shop-add-bar input{flex:1;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--chrome);color:var(--text-on-ink);font-size:15px;}
   .shop-add-bar input::placeholder{color:var(--text-dim);}
@@ -375,12 +375,12 @@
     background:var(--ink-2);border:1px solid var(--line);color:var(--text-dim);padding:9px 16px;border-radius:20px;cursor:pointer;
   }
   .shop-mode-toggle button.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
-  .trip-row{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;border-bottom:1px dashed #cfc7ac;cursor:pointer;}
+  .trip-row{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;border-bottom:1px dashed var(--line);cursor:pointer;}
   .trip-row:last-child{border-bottom:none;}
-  .trip-row:hover{background:#e3dcc6;}
+  .trip-row:hover{background:var(--ink-3);}
   .trip-title{font-weight:700;font-size:14.5px;}
-  .trip-meta{font-size:11.5px;color:#6b6650;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
-  .trip-chevron{font-size:20px;color:#8a8468;}
+  .trip-meta{font-size:11.5px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .trip-chevron{font-size:20px;color:var(--text-dim);}
   .trip-done-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#dcecdf;color:#3d7a4f;border-radius:10px;padding:2px 8px;}
   .trip-pending-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#f3e6c6;color:#8a6a1f;border-radius:10px;padding:2px 8px;}
 
@@ -422,33 +422,33 @@
   .screentime-bar-track{width:100%;flex:1;display:flex;align-items:flex-end;}
   .screentime-bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:2px;background:var(--amber);}
   .screentime-bar-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);}
-  .approval-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .approval-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);}
   .approval-row:last-child{border-bottom:none;}
-  .trip-item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .trip-item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);}
   .trip-item-row:last-child{border-bottom:none;}
   .trip-item-name{flex:1;font-weight:600;font-size:14.5px;}
   .trip-item-status-btn{
     font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;
-    background:#e3dcc6;border:1px solid #c9c2ab;color:#5c5847;padding:7px 13px;border-radius:16px;cursor:pointer;white-space:nowrap;
+    background:var(--ink-3);border:1px solid var(--line);color:var(--text-dim);padding:7px 13px;border-radius:16px;cursor:pointer;white-space:nowrap;
   }
   .trip-item-bought .trip-item-status-btn{background:#dcecdf;border-color:#a8d3af;color:#3d7a4f;}
-  .trip-item-bought .trip-item-name{text-decoration:line-through;color:#8a8468;}
+  .trip-item-bought .trip-item-name{text-decoration:line-through;color:var(--text-dim);}
   .trip-item-unavailable .trip-item-status-btn{background:#f3d9d9;border-color:#e0a8a8;color:#a5323a;}
   .trip-item-unavailable .trip-item-name{color:#a5323a;}
   .trip-item-remove{background:none;border:none;color:#a5323a;cursor:pointer;font-size:15px;padding:4px 6px;}
   .quick-add-row{margin-top:16px;padding-bottom:80px;}
-  .quick-add-label{font-size:11.5px;color:#8a8468;text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-bottom:8px;}
+  .quick-add-label{font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-bottom:8px;}
   .quick-add-chip{
     display:inline-block;margin:0 6px 6px 0;font-size:12.5px;font-weight:600;
-    background:#fff;border:1px solid #c9c2ab;color:#5c5847;padding:6px 12px;border-radius:16px;cursor:pointer;
+    background:#fff;border:1px solid var(--line);color:var(--text-dim);padding:6px 12px;border-radius:16px;cursor:pointer;
   }
-  .quick-add-chip:hover{background:#e3dcc6;}
+  .quick-add-chip:hover{background:var(--ink-3);}
   .quick-add-chip-added{background:#dcecdf !important;border-color:#a8d3af !important;color:#3d7a4f !important;cursor:default !important;opacity:.85;}
   .days-picker{display:flex;gap:6px;flex-wrap:wrap;}
-  .days-picker label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#5c5847;cursor:pointer;}
+  .days-picker label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text-dim);cursor:pointer;}
   .days-picker input{width:16px;height:16px;}
   .trip-quicklist-picker{display:flex;flex-wrap:wrap;gap:8px 14px;max-height:140px;overflow-y:auto;padding:4px 0;}
-  .trip-quicklist-check{display:flex;align-items:center;gap:6px;font-size:13.5px;color:#3a3628;cursor:pointer;}
+  .trip-quicklist-check{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--text-dim);cursor:pointer;}
   .trip-quicklist-check input{width:16px;height:16px;}
   .copybar{margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
   .copied{font-size:12.5px;color:#3d7a4f;font-weight:600;font-family:'IBM Plex Mono',monospace;}
@@ -461,19 +461,19 @@
   .settings-card h3{font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;margin:0 0 12px;}
   .member-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px;}
   .member-contact-row{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px 44px;}
-  .member-contact-row input{flex:1;padding:7px 9px;border-radius:6px;border:1px solid #c9c2ab;font-size:12.5px;color:#5c5847;}
+  .member-contact-row input{flex:1;padding:7px 9px;border-radius:6px;border:1px solid var(--line);font-size:12.5px;color:var(--text-dim);}
   .member-notify-row{display:flex;gap:16px;margin:0 0 16px 44px;flex-wrap:wrap;}
-  .notify-check{display:flex;align-items:center;gap:6px;font-size:12px;color:#5c5847;cursor:pointer;}
+  .notify-check{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);cursor:pointer;}
   .notify-check input{width:14px;height:14px;}
   .member-row input[type=color]{width:34px;height:34px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;}
-  .member-row input[type=text]{flex:1;min-width:120px;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;font-size:14px;}
-  .member-row select{padding:9px 8px;border-radius:7px;border:1px solid #c9c2ab;font-size:13px;}
+  .member-row input[type=text]{flex:1;min-width:120px;padding:9px 10px;border-radius:7px;border:1px solid var(--line);font-size:14px;}
+  .member-row select{padding:9px 8px;border-radius:7px;border:1px solid var(--line);font-size:13px;}
   .chore-lib-chips{display:flex;flex-wrap:wrap;gap:8px;}
-  .chore-lib-chip{display:inline-flex;align-items:center;gap:6px;background:#e3dcc6;border-radius:16px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:600;color:#4a4636;}
+  .chore-lib-chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink-3);border-radius:16px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:600;color:var(--text-dim);}
   .chore-lib-chip button{background:none;border:none;color:#a5323a;cursor:pointer;font-size:13px;padding:2px;line-height:1;}
   .member-row button{background:none;border:none;color:#a5323a;cursor:pointer;font-size:18px;padding:4px;}
   .add-member{display:flex;gap:8px;margin-top:10px;}
-  .add-member input{flex:1;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;}
+  .add-member input{flex:1;padding:9px 10px;border-radius:7px;border:1px solid var(--line);}
 
   ::-webkit-scrollbar{height:8px;width:8px;}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
@@ -498,6 +498,96 @@
       text-align:center;
     }
   }
+  /* Responsive UI foundation: preserve legacy selectors and theme switch. */
+  :root{
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;
+    --chrome:#141b28;--ink:#eeeae2;--ink-2:#1d2635;--ink-3:#283346;
+    --paper:#202a3a;--paper-dim:#2b3749;--line:#354155;
+    --text-on-ink:#eeeae2;--text-dim:#b4bdca;--amber:#e8b461;--contrast-ink:#181c2a;
+    --field-bg:#151e2c;--success:#9bd0ae;--success-bg:#223d32;--danger:#f0a5a5;--danger-bg:#422c34;
+    --warning:#e9bd73;--warning-bg:#403621;--focus:#e8b461;--radius:12px;
+  }
+  body.day-mode{
+    --chrome:#f6f3ed;--ink:#222b35;--ink-2:#fffcf7;--ink-3:#eee8de;
+    --paper:#fffcf7;--paper-dim:#eee8de;--line:#ded8cd;
+    --text-on-ink:#222b35;--text-dim:#61686d;--amber:#e8b461;--field-bg:#fff;
+    --success:#286743;--success-bg:#e4f0e7;--danger:#a33939;--danger-bg:#f8e5e3;
+    --warning:#795018;--warning-bg:#f6ecd9;--focus:#8a5a21;
+  }
+  body{font-size:16px;line-height:1.5;}
+  [hidden]{display:none!important;}
+  button,input,select,textarea{font:inherit;}
+  button{min-height:44px;touch-action:manipulation;transition:background-color .12s,color .12s,border-color .12s;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  :where(button,a,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--focus);outline-offset:3px;}
+  input:not([type=checkbox]):not([type=radio]):not([type=color]),select,textarea{min-height:44px;max-width:100%;font-size:16px!important;background:var(--field-bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+  input[type=checkbox],input[type=radio]{accent-color:var(--amber);}
+  .app{max-width:none;}
+  main{padding:24px 32px 100px;overscroll-behavior:contain;}
+  h1,h2,h3{line-height:1.2;}
+  .brand .flap{font-size:30px;text-transform:none;letter-spacing:-.03em;}
+  .brand .sub{font:500 13px 'Inter',sans-serif;letter-spacing:0;text-transform:none;}
+  .field label,.quick-add-label,.settings-card h3,.chore-group-head .name,.tile-section-head{font-family:'Inter',sans-serif;text-transform:none;letter-spacing:0;font-size:14px;}
+  .field label{color:var(--text-dim);font-weight:600;margin-bottom:8px;}
+  .field{margin-bottom:20px;}
+  .row2>*{min-width:0;}
+  .btn,.chore-pending-btn,.trip-item-status-btn,.kid-select button,.shop-mode-toggle button{font-family:'Inter',sans-serif;font-size:14px;letter-spacing:0;text-transform:none;font-weight:600;}
+  .btn{border-radius:12px;padding:11px 18px;}
+  .btn.ghost{color:var(--text-on-ink);border-color:var(--line);}
+  .btn.danger{color:var(--danger);font-size:14px;}
+  .btn.primary{background:var(--amber);color:var(--contrast-ink);}
+  .day-pill.active,.kid-select button.active,nav.tabs button.active,.fab,.tile-task-mark,.undo-toast button{color:var(--contrast-ink);}
+  .settings-card,.chore-group,.kid-big,.person-tile,.modal{border-radius:16px;border:1px solid var(--line);box-shadow:none;}
+  .settings-card,.chore-group,.kid-big{padding:24px;}
+  .person-tiles-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:20px;}
+  .person-tile{padding:20px;gap:18px;}
+  .tile-name{font-size:20px;}
+  .tile-role,.tile-empty,.tile-sched-time,.tile-progress-label,.chore-freq,.trip-meta,.search-result .meta,.hint{font-size:13px;line-height:1.5;}
+  .tile-task-row,.chore-row,.trip-row,.shop-row,.approval-row{min-height:56px;}
+  .chore-title,.trip-title{font-size:16px;}
+  .chore-freq,.hint,.tile-empty{color:var(--text-dim);}
+  .chore-done-badge,.trip-done-badge,.trip-item-bought .trip-item-status-btn{color:var(--success);background:var(--success-bg);}
+  .trip-pending-badge{color:var(--warning);background:var(--warning-bg);}
+  .trip-item-unavailable .trip-item-status-btn{color:var(--danger);background:var(--danger-bg);}
+  .chore-locked-btn{font-size:13px;white-space:normal;}
+  .tile-task-mark,.trip-done-badge,.trip-pending-badge{font-size:12px;padding:4px 10px;}
+  .settings-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px;}
+  .member-contact-row,.member-notify-row{margin-left:0;}
+  .member-contact-row input{min-width:0;}
+  .notify-check{font-size:14px;min-height:44px;}
+  .notify-check input{width:20px;height:20px;}
+  .member-row{padding-top:16px;border-top:1px solid var(--line);}
+  .member-row button,.shop-remove,.trip-item-remove,.chore-lib-chip button{min-width:44px;min-height:44px;}
+  .member-row input[type=color]{width:44px;height:44px;}
+  .modal{max-width:520px;padding:28px;max-height:calc(100dvh - 32px);box-shadow:0 18px 50px #0003;}
+  .modal h2{font-size:26px;text-transform:none;letter-spacing:0;}
+  .overlay{background:#101622a6;}
+  .chore-empty-day,.kid-empty{padding:40px 24px;border:1px dashed var(--line);border-radius:16px;font-size:15px;line-height:1.6;}
+  .search-btn{height:44px;width:44px;border-radius:12px;display:inline-grid;place-items:center;}
+  .ui-icon{width:21px;height:21px;flex:none;vertical-align:middle;}
+  .week-nav .arrow{width:44px;height:44px;}
+  .day-pill{min-height:56px;min-width:64px;}
+  .filter-chip{min-height:44px;font-family:inherit;}
+  .fab{box-shadow:0 4px 12px #0002;}
+  .undo-toast{box-shadow:0 4px 14px #0002;}
+  #root>main:only-child{width:calc(100% - 32px);max-width:520px!important;margin:32px auto!important;padding:28px!important;border:1px solid var(--line);background:var(--paper)!important;color:var(--ink)!important;border-radius:20px!important;}
+  #root>main:only-child label{display:block;font-weight:600;font-size:14px;}
+  #root>main:only-child button{padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:var(--ink-3);color:var(--ink);}
+  #root>main:only-child button[type=submit]{background:var(--amber);color:var(--contrast-ink);font-weight:700;}
+  #root>main:only-child [role=status]:not(:empty){padding:12px;background:var(--ink-3);border-radius:12px;font-size:14px;}
+  @media(max-width:699px){
+    main{padding:20px 16px 120px;}
+    .settings-card-wide{grid-column:auto;}
+    .settings-card,.chore-group,.kid-big{padding:20px;}
+    .row2{flex-direction:column;gap:0;}
+    .modal{padding:22px;}
+    .modal-actions{gap:12px;flex-wrap:wrap;}
+    .kid-item{gap:12px;flex-wrap:wrap;}
+    .kid-time{min-width:76px;font-size:14px;}.kid-title{font-size:18px;}
+    .shop-add-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+  }
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}
+
 </style>
 </head>
 <body>
@@ -2229,14 +2319,14 @@ function renderTripModal(){
         <label>Who's going</label>
         <select id="f_trip_member">${memberOptions}</select>
       </div>
-      <p style="font-size:11.5px;color:#8a8468;margin:-8px 0 14px;">Set a time and this trip shows up on the Week Board calendar too, alongside activities and tasks — not just here.</p>
+      <p style="font-size:11.5px;color:var(--text-dim);margin:-8px 0 14px;">Set a time and this trip shows up on the Week Board calendar too, alongside activities and tasks — not just here.</p>
       <div class="field">
         <label>Link to an existing task (optional)</label>
         <select id="f_trip_chore">
           <option value="">— None —</option>
           ${choreOptions}
         </select>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Linking just shows on the trip that it's tied to that task — marking the task done and completing the trip stay independent.</p>
+        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Linking just shows on the trip that it's tied to that task — marking the task done and completing the trip stay independent.</p>
       </div>
       ${quickListPicker}
       ${!isEdit ? `
@@ -2904,7 +2994,7 @@ function renderPendingApprovals(){
   return `
     <div class="settings-card" style="max-width:560px;">
       <h3>Pending approval (${total})</h3>
-      <p style="font-size:12.5px;color:#5c5847;margin-top:0;">Things kids have added, waiting for a parent to approve before they go live.</p>
+      <p style="font-size:12.5px;color:var(--text-dim);margin-top:0;">Things kids have added, waiting for a parent to approve before they go live.</p>
       ${choreRows}${itemRows}${tripRows}
     </div>`;
 }
@@ -2914,7 +3004,7 @@ function renderSettings(){
     return `
       <div class="settings-card" style="text-align:center;max-width:560px;">
         <h3>🔒 Parent login required</h3>
-        <p style="font-size:13.5px;color:#5c5847;">Log in as a parent (top right) to manage family members, colors, and data.</p>
+        <p style="font-size:13.5px;color:var(--text-dim);">Log in as a parent (top right) to manage family members, colors, and data.</p>
       </div>`;
   }
 
@@ -2928,7 +3018,7 @@ function renderSettings(){
         <option value="parent" ${m.role==='parent'?'selected':''}>Parent</option>
         <option value="kid" ${m.role==='kid'?'selected':''}>Kid</option>
       </select>
-      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:11px;background:none;border:1px solid #c9c2ab;border-radius:6px;padding:6px 8px;cursor:pointer;color:#5c5847;">${m.pinHash?'Reset PIN':'No PIN'}</button>
+      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:11px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text-dim);">${m.pinHash?'Reset PIN':'No PIN'}</button>
       <button onclick="removeMember('${m.id}')" title="Remove">✕</button>
     </div>
     <div class="member-contact-row">
@@ -2965,9 +3055,9 @@ function renderSettings(){
     <div class="settings-card settings-card-wide">
       <h3>Family</h3>
       <div class="field">
-        <label>Family ID <span style="font-weight:400;color:#8a8468;">(for other devices to join)</span></label>
+        <label>Family ID <span style="font-weight:400;color:var(--text-dim);">(for other devices to join)</span></label>
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;letter-spacing:.06em;background:#e3dcc6;border-radius:8px;padding:8px 14px;">${escapeHtml(fam.id||'')}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;letter-spacing:.06em;background:var(--ink-3);border-radius:8px;padding:8px 14px;">${escapeHtml(fam.id||'')}</div>
           <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="copyToClipboard('${fam.id||''}','familyIdCopied')">${ui.familyIdCopied?'Copied ✓':'Copy'}</button>
         </div>
       </div>
@@ -2977,7 +3067,7 @@ function renderSettings(){
           <input type="password" id="fam_newPassword" placeholder="${fam.passwordHash? 'Set a new family password':'No password set yet — set one'}" style="flex:1;">
           <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="changeFamilyPassword()">${fam.passwordHash?'Change':'Set'}</button>
         </div>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Family members use the Family ID above plus this password to join from their own device, then pick their own name and set their own PIN.</p>
+        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Family members use the Family ID above plus this password to join from their own device, then pick their own name and set their own PIN.</p>
       </div>
       <div class="field">
         <label>Family name</label>
@@ -2993,7 +3083,7 @@ function renderSettings(){
           <input type="tel" value="${escapeHtml(fam.primaryHolderPhone||'')}" onchange="updateFamily('primaryHolderPhone',this.value)">
         </div>
       </div>
-      <p style="font-size:12px;color:#6b6650;margin:0;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
+      <p style="font-size:12px;color:var(--text-dim);margin:0;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
     </div>
     ${renderPendingApprovals()}
     <div class="settings-card">
@@ -3003,11 +3093,11 @@ function renderSettings(){
         <input type="text" id="newMemberName" placeholder="Add a person (e.g. Kid 3, Grandma)">
         <button class="btn primary" onclick="addMember()">Add</button>
       </div>
-      <p style="font-size:12px;color:#6b6650;margin-top:12px;">"Reset PIN" clears that person's PIN — they'll be asked to set a new one next time they log in.</p>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:12px;">"Reset PIN" clears that person's PIN — they'll be asked to set a new one next time they log in.</p>
     </div>
     <div class="settings-card">
       <h3>Task list</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">These names show up as suggestions when adding a task, so nobody has to retype "Unload dishwasher" from scratch every time.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">These names show up as suggestions when adding a task, so nobody has to retype "Unload dishwasher" from scratch every time.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn ghost" onclick="openTaskLibraryModal()">Manage task list (${(state.choreLibrary||[]).length})</button>
         <button class="btn ghost" onclick="triggerCSVImport('task')">Import tasks from CSV</button>
@@ -3015,7 +3105,7 @@ function renderSettings(){
     </div>
     <div class="settings-card">
       <h3>Activity list</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Same idea for activities — "Dentist," "Swimming," "GP appointment" show up as suggestions instead of typing them fresh every time.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Same idea for activities — "Dentist," "Swimming," "GP appointment" show up as suggestions instead of typing them fresh every time.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn ghost" onclick="openActivityLibraryModal()">Manage activity list (${(state.activityLibrary||[]).length})</button>
         <button class="btn ghost" onclick="triggerCSVImport('activity')">Import activities from CSV</button>
@@ -3024,21 +3114,21 @@ function renderSettings(){
     <div class="settings-card">
       <h3>This device</h3>
       ${isKioskDevice() ? `
-        <p style="font-size:13px;color:#5c5847;margin-top:0;">This device is set up as a display for ${escapeHtml(state.family.name||'this family')} — it shows Parent View without needing to log in each time.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin-top:0;">This device is set up as a display for ${escapeHtml(state.family.name||'this family')} — it shows Parent View without needing to log in each time.</p>
         <button class="btn ghost" onclick="disableKioskMode()">Turn off display mode</button>
       ` : `
-        <p style="font-size:13px;color:#5c5847;margin-top:0;">For a tablet or screen mounted somewhere the family sees often — always shows Parent View, no login needed to just look. Making changes still requires logging in.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin-top:0;">For a tablet or screen mounted somewhere the family sees often — always shows Parent View, no login needed to just look. Making changes still requires logging in.</p>
         <button class="btn ghost" onclick="enableKioskMode()">Make this device a display</button>
       `}
     </div>
     <div class="settings-card">
       <h3>Notifications</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">A browser notification before upcoming tasks and activities. Only fires while this tab is open (even in the background) — not if the browser itself is fully closed. Applies to this device, not synced with the family.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">A browser notification before upcoming tasks and activities. Only fires while this tab is open (even in the background) — not if the browser itself is fully closed. Applies to this device, not synced with the family.</p>
       ${(() => { const np = getNotifyPrefs(); return np.enabled ? `
         <p style="font-size:12.5px;color:#3d7a4f;font-weight:600;margin-bottom:10px;">✓ Enabled on this device</p>
         <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">First reminder <input type="number" min="0" value="${np.firstReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid #c9c2ab;" onchange="setNotifyReminderMinutes('firstReminder', this.value)"> min before</label>
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">Second reminder <input type="number" min="0" value="${np.secondReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid #c9c2ab;" onchange="setNotifyReminderMinutes('secondReminder', this.value)"> min before</label>
+          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">First reminder <input type="number" min="0" value="${np.firstReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid var(--line);" onchange="setNotifyReminderMinutes('firstReminder', this.value)"> min before</label>
+          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">Second reminder <input type="number" min="0" value="${np.secondReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid var(--line);" onchange="setNotifyReminderMinutes('secondReminder', this.value)"> min before</label>
         </div>
         <button class="btn ghost" onclick="disableNotifications()">Turn off notifications</button>
       ` : `
@@ -3047,25 +3137,25 @@ function renderSettings(){
     </div>
     <div class="settings-card">
       <h3>Screen time devices</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Laptops paired for automatic screen-time reporting. Removing one deletes its usage history permanently.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Laptops paired for automatic screen-time reporting. Removing one deletes its usage history permanently.</p>
       <button class="btn ghost" onclick="openDeviceManager()">Manage registered devices</button>
     </div>
     <div class="settings-card">
       <h3>Set up a new laptop</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Download, then a few quick steps on the kid's laptop.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Download, then a few quick steps on the kid's laptop.</p>
       <div style="margin-bottom:14px;">
         <a href="${TRACKLINE_AGENT_DOWNLOAD_URL}" target="_blank" rel="noopener" class="btn primary" style="text-decoration:none;text-align:center;display:block;">Download Trackline Agent (.zip)</a>
       </div>
-      <ol style="font-size:13px;color:#5c5847;padding-left:20px;margin:0;line-height:1.7;">
-        <li>Create a folder: <code style="background:#e3dcc6;padding:1px 5px;border-radius:4px;">C:\\trackline</code></li>
+      <ol style="font-size:13px;color:var(--text-dim);padding-left:20px;margin:0;line-height:1.7;">
+        <li>Create a folder: <code style="background:var(--ink-3);padding:1px 5px;border-radius:4px;">C:\\trackline</code></li>
         <li>Extract every file from the downloaded zip into that folder.</li>
-        <li>Run <code style="background:#e3dcc6;padding:1px 5px;border-radius:4px;">TracklineSetup.exe</code> from inside it, and follow the pairing steps.</li>
+        <li>Run <code style="background:var(--ink-3);padding:1px 5px;border-radius:4px;">TracklineSetup.exe</code> from inside it, and follow the pairing steps.</li>
       </ol>
     </div>
     <div class="settings-card">
       <h3>Data</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Your schedule is saved automatically to this app. Use export/import to move data or keep a backup.</p>
-      <p style="font-size:12px;color:#6b6650;background:#e3dcc6;border-radius:7px;padding:8px 10px;">
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Your schedule is saved automatically to this app. Use export/import to move data or keep a backup.</p>
+      <p style="font-size:12px;color:var(--text-dim);background:var(--ink-3);border-radius:7px;padding:8px 10px;">
         Storage mode: <strong>${hasClaudeStorage?'Claude account storage':backendReachable?'Cloud (synced across devices)':backendReachable===false?'This browser only (localStorage) — backend unreachable':'Checking connection…'}</strong>${(!hasClaudeStorage && backendReachable===false)?' — this device won\u2019t automatically see schedules saved on other devices until the backend is reachable again.':''}${(!hasClaudeStorage && backendReachable)?' — this family\u2019s data is synced through the backend, so any device pointed at the same deployment sees the same schedule.':''}
       </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -3159,7 +3249,7 @@ function renderModal(){
           </div>
         </div>
         <div class="field">
-          <label>Repeats until <span style="font-weight:400;color:#8a8468;">(optional — leave blank to repeat indefinitely)</span></label>
+          <label>Repeats until <span style="font-weight:400;color:var(--text-dim);">(optional — leave blank to repeat indefinitely)</span></label>
           <input type="date" id="f_recurrenceEndDate" value="${recurrenceEndDate}" ${dis}>
         </div>
       </div>
@@ -3180,7 +3270,7 @@ function renderModal(){
       </div>
       <div class="field">
         <label>Notes (optional)</label>
-        <textarea id="f_notes" placeholder="e.g. Bring $10 for excursion, coach's number: ..." rows="2" style="width:100%;padding:10px 11px;border-radius:7px;border:1px solid #c9c2ab;background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);resize:vertical;" ${dis}>${escapeHtml(notes)}</textarea>
+        <textarea id="f_notes" placeholder="e.g. Bring $10 for excursion, coach's number: ..." rows="2" style="width:100%;padding:10px 11px;border-radius:7px;border:1px solid var(--line);background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);resize:vertical;" ${dis}>${escapeHtml(notes)}</textarea>
       </div>
       <div class="checkline">
         <input type="checkbox" id="f_needsDrive" ${needsDrive?'checked':''} onchange="toggleDriveFields(this.checked)" ${dis}>
@@ -3197,7 +3287,7 @@ function renderModal(){
             <input type="number" id="f_travel" value="${travelMin}" min="0" step="5" ${dis}>
           </div>
         </div>
-        <p style="font-size:12px;color:#6b6650;margin:-6px 0 4px;">This blocks the driver's calendar before and after the activity automatically.</p>
+        <p style="font-size:12px;color:var(--text-dim);margin:-6px 0 4px;">This blocks the driver's calendar before and after the activity automatically.</p>
       </div>
 
       ${(canSkip && !readOnly && !movedOverride)? `<div class="skip-note">Recurring activity. To skip just ${formatDateNice(occurrenceDate)} (e.g. a holiday) without deleting the whole series, use "Skip this date" below — or "Reschedule" to move just this one to a different day/time instead.</div>`:''}
@@ -3286,7 +3376,7 @@ function renderChoreModal(){
         <div class="days-picker">${daysPicker}</div>
       </div>
       <div id="choreFortnightAnchorField" class="field" style="${frequency==='fortnightly'?'':'display:none'}">
-        <p style="font-size:11.5px;color:#8a8468;margin:0 0 6px;">Uses the "Starts on" date below to work out the every-2-weeks pattern.</p>
+        <p style="font-size:11.5px;color:var(--text-dim);margin:0 0 6px;">Uses the "Starts on" date below to work out the every-2-weeks pattern.</p>
       </div>
       <div id="choreMonthlyFields" class="field" style="${frequency==='monthly'?'':'display:none'}">
         <label>Day of month</label>
@@ -3295,7 +3385,7 @@ function renderChoreModal(){
       <div id="choreStartDateField" class="field" style="${showStartDate?'':'display:none'}">
         <label>Starts on</label>
         <input type="date" id="f_chore_startDate" value="${startDateClamped}" min="${today}" ${dis}>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Won't show as due on any date before this — new tasks can't retroactively apply to past days.</p>
+        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Won't show as due on any date before this — new tasks can't retroactively apply to past days.</p>
       </div>
       <div id="choreDueDateField" class="field" style="${showDueDate?'':'display:none'}">
         <label>Date</label>
@@ -3304,12 +3394,12 @@ function renderChoreModal(){
       <div class="field">
         <label>Due time (optional)</label>
         <input type="time" id="f_chore_dueTime" value="${dueTime}" ${dis}>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Leave blank for "anytime today" — set a time if it needs doing by a specific point in the day.</p>
+        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Leave blank for "anytime today" — set a time if it needs doing by a specific point in the day.</p>
       </div>
       <div class="field">
         <label>Points (optional)</label>
         <input type="number" id="f_chore_points" value="${points}" min="0" max="100" step="1" ${dis}>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Earned each time this is marked done. Set to 0 for no points.</p>
+        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Earned each time this is marked done. Set to 0 for no points.</p>
       </div>
 
       <div class="modal-actions">
@@ -3339,9 +3429,9 @@ function renderCompleteChoreModal(){
   <div class="overlay" onclick="if(event.target===this) closeCompleteModal()">
     <div class="modal" style="max-width:340px;text-align:center;">
       <h2 style="margin-bottom:4px;">Nice work!</h2>
-      <p style="font-size:13.5px;color:#5c5847;margin:0 0 18px;">What time did you finish "${escapeHtml(chore.title)}"?</p>
+      <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 18px;">What time did you finish "${escapeHtml(chore.title)}"?</p>
       <input type="time" id="f_complete_time" value="${defaultTime}"
-        style="width:100%;text-align:center;font-size:22px;padding:12px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;">
+        style="width:100%;text-align:center;font-size:22px;padding:12px;border-radius:8px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;">
       <div style="display:flex;gap:8px;margin-top:18px;">
         <button class="btn ghost" style="flex:1;" onclick="closeCompleteModal()">Cancel</button>
         <button class="btn primary" style="flex:1;" onclick="submitCompleteChore()">Save</button>
@@ -3927,7 +4017,7 @@ function renderDayDrillModal(){
 
   let body;
   if(ui.dayDrillLoading){
-    body = `<p style="font-size:13px;color:#8a8468;">Loading...</p>`;
+    body = `<p style="font-size:13px;color:var(--text-dim);">Loading...</p>`;
   } else if(ui.dayDrillError){
     body = `<p style="font-size:13px;color:#a5323a;">${escapeHtml(ui.dayDrillError)}</p>`;
   } else if(ui.dayDrillData){
@@ -3951,7 +4041,7 @@ function renderDayDrillModal(){
     }).join('<span style="color:#c9c2ab;">·</span>');
 
     const rows = shown.length===0
-      ? `<p style="font-size:13px;color:#8a8468;">No app usage recorded that day.</p>`
+      ? `<p style="font-size:13px;color:var(--text-dim);">No app usage recorded that day.</p>`
       : shown.map((a,i)=>{
           const pct = totalMinutes>0 ? Math.round((a.minutesUsed/totalMinutes)*100) : 0;
           const barPct = Math.round((a.minutesUsed/maxMinutes)*100);
@@ -3959,7 +4049,7 @@ function renderDayDrillModal(){
           return `<div class="approval-row" style="flex-direction:column;align-items:stretch;gap:6px;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a8468;width:14px;flex:none;">${i+1}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);width:14px;flex:none;">${i+1}</span>
                 <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};flex:none;"></span>
                 <div style="min-width:0;">
                   <div class="trip-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.name)}</div>
@@ -3968,7 +4058,7 @@ function renderDayDrillModal(){
               </div>
               <div style="font-family:'Archivo Narrow',sans-serif;font-weight:700;flex:none;padding-left:10px;">${formatMinutesAsHM(a.minutesUsed)}</div>
             </div>
-            <div style="height:5px;background:#e3dcc6;border-radius:3px;overflow:hidden;">
+            <div style="height:5px;background:var(--ink-3);border-radius:3px;overflow:hidden;">
               <div style="height:100%;width:${barPct}%;background:${color};border-radius:3px;"></div>
             </div>
           </div>`;
@@ -3980,7 +4070,7 @@ function renderDayDrillModal(){
 
     body = `
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-        <p style="font-size:13px;color:#5c5847;margin:0;">Total tracked: <strong>${formatMinutesAsHM(totalMinutes)}</strong></p>
+        <p style="font-size:13px;color:var(--text-dim);margin:0;">Total tracked: <strong>${formatMinutesAsHM(totalMinutes)}</strong></p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">${catSummary}</div>
       </div>
       ${rows}
@@ -4012,7 +4102,7 @@ function renderDeviceManagerModal(){
     <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
       <div class="modal" style="max-width:360px;">
         <h2>Registered devices</h2>
-        <p style="font-size:13px;color:#8a8468;">Loading…</p>
+        <p style="font-size:13px;color:var(--text-dim);">Loading…</p>
       </div>
     </div>`;
   }
@@ -4047,8 +4137,8 @@ function renderDeviceManagerModal(){
   <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
     <div class="modal" style="max-width:440px;">
       <h2>Registered devices</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Removing a device deletes all of its usage history permanently.</p>
-      ${devices.length===0? '<p style="font-size:13px;color:#8a8468;">No devices paired yet.</p>' : rows}
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">Removing a device deletes all of its usage history permanently.</p>
+      ${devices.length===0? '<p style="font-size:13px;color:var(--text-dim);">No devices paired yet.</p>' : rows}
       <div class="modal-actions" style="margin-top:16px;">
         <div></div>
         <button class="btn primary" onclick="closeDeviceManager()">Done</button>
@@ -4139,9 +4229,9 @@ function renderSearchModal(){
     <div class="modal" style="max-width:420px;">
       <h2>Search</h2>
       <input type="text" id="f_search" value="${escapeHtml(ui.searchQuery)}" oninput="onSearchInput(this.value)" placeholder="Search activities and tasks..." autofocus
-        style="width:100%;padding:11px 12px;border-radius:8px;border:1px solid #c9c2ab;font-size:15px;margin-bottom:14px;">
-      ${!hasQuery? `<p style="font-size:13px;color:#8a8468;text-align:center;padding:20px 0;">Start typing to search by title, location, or notes.</p>` : ''}
-      ${noResults? `<p style="font-size:13px;color:#8a8468;text-align:center;padding:20px 0;">No matches for "${escapeHtml(ui.searchQuery)}".</p>` : ''}
+        style="width:100%;padding:11px 12px;border-radius:8px;border:1px solid var(--line);font-size:15px;margin-bottom:14px;">
+      ${!hasQuery? `<p style="font-size:13px;color:var(--text-dim);text-align:center;padding:20px 0;">Start typing to search by title, location, or notes.</p>` : ''}
+      ${noResults? `<p style="font-size:13px;color:var(--text-dim);text-align:center;padding:20px 0;">No matches for "${escapeHtml(ui.searchQuery)}".</p>` : ''}
       ${eventRows}
       ${choreRows}
       <div class="modal-actions" style="margin-top:16px;">
@@ -4236,18 +4326,18 @@ function renderLoginModal(){
     <div class="modal" style="max-width:340px;text-align:center;">
       <span class="profile-avatar" style="background:${m.color};width:52px;height:52px;font-size:18px;margin:0 auto 12px;">${initials(m.name)}</span>
       <h2 style="margin-bottom:4px;">${isCreate? 'Set a PIN':'Enter PIN'}</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 18px;">${isCreate? `Choose a 4-digit PIN for ${escapeHtml(m.name)}. You'll use this to log in from now on.` : `Logging in as ${escapeHtml(m.name)}`}</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 18px;">${isCreate? `Choose a 4-digit PIN for ${escapeHtml(m.name)}. You'll use this to log in from now on.` : `Logging in as ${escapeHtml(m.name)}`}</p>
 
       <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin_input"
         placeholder="••••" autocomplete="off" autofocus
         onkeydown="if(event.key==='Enter'){ ${isCreate? `const c=document.getElementById('pin_confirm'); if(c) c.focus();` : `submitLogin();`} }"
-        style="width:100%;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;">
+        style="width:100%;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border-radius:8px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;">
 
       ${isCreate? `
       <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin_confirm"
         placeholder="Confirm PIN" autocomplete="off"
         onkeydown="if(event.key==='Enter') submitLogin();"
-        style="width:100%;text-align:center;font-size:18px;letter-spacing:6px;padding:10px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;margin-top:10px;">
+        style="width:100%;text-align:center;font-size:18px;letter-spacing:6px;padding:10px;border-radius:8px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;margin-top:10px;">
       `:''}
 
       ${ui.loginError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.loginError)}</div>`:''}
@@ -4332,11 +4422,11 @@ function renderOnboarding(){
         </div>
         <h2>Family created 🎉</h2>
         <p class="lead">Share this with the rest of your family so their own devices can join.</p>
-        <div style="background:#e3dcc6;border-radius:10px;padding:16px;margin-bottom:16px;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6650;margin-bottom:4px;">Family ID</div>
+        <div style="background:var(--ink-3);border-radius:10px;padding:16px;margin-bottom:16px;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-bottom:4px;">Family ID</div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;letter-spacing:.08em;color:var(--ink);">${escapeHtml(ui.justCreatedFamilyId)}</div>
         </div>
-        <p style="font-size:12.5px;color:#6b6650;margin-bottom:18px;">Each family member opens this same website, taps <strong>"Join an existing family,"</strong> enters this Family ID and the family password you just set, then picks their own name and sets their own PIN.</p>
+        <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:18px;">Each family member opens this same website, taps <strong>"Join an existing family,"</strong> enters this Family ID and the family password you just set, then picks their own name and sets their own PIN.</p>
         <button class="btn primary" style="width:100%;padding:13px;" onclick="continueAfterFamilyCreated()">Continue — set my PIN</button>
       </div>
     </div>`;
@@ -4401,7 +4491,7 @@ function renderOnboarding(){
       <div class="field">
         <label>Family password</label>
         <input type="password" id="ob_familyPassword" placeholder="For other family members to join with">
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">You'll get a Family ID after creating this — other family members use that ID plus this password to join from their own device.</p>
+        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">You'll get a Family ID after creating this — other family members use that ID plus this password to join from their own device.</p>
       </div>
       ${ui.onboardingError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.onboardingError)}</div>`:''}
       <button class="btn primary" style="width:100%;padding:13px;" onclick="submitOnboarding()">Create my family</button>
@@ -4410,7 +4500,7 @@ function renderOnboarding(){
       <button class="btn ghost" style="width:100%;padding:11px;" onclick="openJoinFamily()">Join an existing family</button>
       <button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="loadExampleData()">Just show me an example first</button>
       ${hasSnapshotToReturnTo ? `<button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="cancelNewFamilySetup()">← Back to my existing family</button>` : ''}
-      <p style="font-size:11.5px;color:#8a8468;text-align:center;margin:14px 0 0;">Email/phone are stored so this is ready for notifications later — this app can't send real emails or texts yet.</p>
+      <p style="font-size:11.5px;color:var(--text-dim);text-align:center;margin:14px 0 0;">Email/phone are stored so this is ready for notifications later — this app can't send real emails or texts yet.</p>
     </div>
   </div>`;
 }
@@ -4912,7 +5002,7 @@ function renderRescheduleModal(){
   <div class="overlay" onclick="if(event.target===this) closeReschedule()">
     <div class="modal" style="max-width:360px;">
       <h2>Reschedule this occurrence</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 16px;">Moves just ${formatDateNice(originalDate)}'s "${escapeHtml(ev.title)}" — the rest of the series is unaffected.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 16px;">Moves just ${formatDateNice(originalDate)}'s "${escapeHtml(ev.title)}" — the rest of the series is unaffected.</p>
       <div class="field">
         <label>New date</label>
         <input type="date" id="f_resched_date" value="${originalDate}">
@@ -5242,14 +5332,14 @@ function renderLibraryPickerModal(){
   <div class="overlay" onclick="if(event.target===this) closeLibraryPicker()">
     <div class="modal" style="max-width:460px;">
       <h2>Add from your item list</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Tap any item to add it straight to your Quick List — already-added items are checked off. Don't see what you need? Type it below.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">Tap any item to add it straight to your Quick List — already-added items are checked off. Don't see what you need? Type it below.</p>
       <div class="shop-add-bar" style="position:static;background:none;border:none;padding:0;margin-bottom:16px;">
         <input type="text" id="newLibraryPickerItem" placeholder="Type a new item..." onkeydown="if(event.key==='Enter') addShoppingItemFromPicker()">
         <button class="btn primary" onclick="addShoppingItemFromPicker()">Add</button>
       </div>
       <div style="max-height:300px;overflow-y:auto;">
         ${library.length===0
-          ? `<p style="font-size:13px;color:#8a8468;">No saved items yet — anything you add (here or on a shopping trip) gets saved for next time.</p>`
+          ? `<p style="font-size:13px;color:var(--text-dim);">No saved items yet — anything you add (here or on a shopping trip) gets saved for next time.</p>`
           : chips}
       </div>
       <div class="modal-actions" style="margin-top:16px;">
@@ -5606,9 +5696,9 @@ function renderTaskLibraryModal(){
   <div class="overlay" onclick="if(event.target===this) closeTaskLibraryModal()">
     <div class="modal" style="max-width:460px;">
       <h2>Task list</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">New titles typed while adding a task get added here automatically too.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">New titles typed while adding a task get added here automatically too.</p>
       <div class="chore-lib-chips">
-        ${(state.choreLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved task names yet.</span>' :
+        ${(state.choreLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:var(--text-dim);">No saved task names yet.</span>' :
           state.choreLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeChoreLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
       </div>
       <div class="add-member" style="margin-top:12px;">
@@ -5654,9 +5744,9 @@ function renderActivityLibraryModal(){
   <div class="overlay" onclick="if(event.target===this) closeActivityLibraryModal()">
     <div class="modal" style="max-width:460px;">
       <h2>Activity list</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">New titles typed while adding an activity get added here automatically too.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">New titles typed while adding an activity get added here automatically too.</p>
       <div class="chore-lib-chips">
-        ${(state.activityLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved activity names yet.</span>' :
+        ${(state.activityLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:var(--text-dim);">No saved activity names yet.</span>' :
           state.activityLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeActivityLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
       </div>
       <div class="add-member" style="margin-top:12px;">
@@ -5810,7 +5900,7 @@ function renderCSVImportModal(){
   return '<div class="overlay" onclick="if(event.target===this) closeCSVImport()">'
     + '<div class="modal" style="max-width:460px;">'
     + '<h2>Import preview</h2>'
-    + '<p style="font-size:13px;color:#5c5847;margin:0 0 14px;">'
+    + '<p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">'
     + '<strong style="color:#3d7a4f;">'+valid.length+' '+typeLabel+' ready to import</strong>'
     + (invalid.length ? ' · <strong style="color:#a5323a;">'+invalid.length+' with errors (will be skipped)</strong>' : '')
     + '</p>'
@@ -5828,8 +5918,8 @@ function renderExportModal(){
   <div class="overlay" onclick="if(event.target===this) closeExportModal()">
     <div class="modal" style="max-width:360px;">
       <h2>Confirm export</h2>
-      <p style="font-size:13.5px;color:#5c5847;margin:0 0 16px;">Enter your family password to export a backup. This is verified on the server — PIN and password hashes are never included in the download.</p>
-      <input type="password" id="f_export_password" placeholder="Family password" style="width:100%;padding:11px;border-radius:8px;border:1px solid #c9c2ab;font-size:15px;">
+      <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 16px;">Enter your family password to export a backup. This is verified on the server — PIN and password hashes are never included in the download.</p>
+      <input type="password" id="f_export_password" placeholder="Family password" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);font-size:15px;">
       ${ui.exportError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.exportError)}</div>`:''}
       <div class="modal-actions" style="margin-top:16px;">
         <div></div>
