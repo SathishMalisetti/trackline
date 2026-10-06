@@ -501,7 +501,7 @@
 </style>
 </head>
 <body>
-<div id="account-bar" hidden style="padding:8px;text-align:right;background:#181c2a;color:white"><button onclick="tracklineAuth.signOut()">Sign out of account</button></div>
+<div id="account-bar" hidden style="padding:8px;text-align:right;background:#181c2a;color:white"><button onclick="tracklineAuth.lock()">Switch member</button> <button onclick="tracklineAuth.signOut()">Sign out of account</button></div>
 <div id="root" class="app"></div>
 
 <script src="/auth-client.js"></script>
@@ -755,8 +755,9 @@ async function storageSet(key, value){
           body: JSON.stringify({familyId, data: rest})
         });
         backendReachable = res.ok;
+        if(!res.ok){ const error=await res.json().catch(()=>({})); throw new Error(error.error || 'Could not save changes to the database.'); }
       }
-    } catch(e){ backendReachable = false; console.error('Backend sync failed, saved locally only for now', e); }
+    } catch(e){ backendReachable = false; throw e; }
   }
   return {key, value};
 }
@@ -1614,7 +1615,7 @@ async function saveData(){
     return;
   }
   try{ await storageSet('trackline-data', JSON.stringify(state)); }
-  catch(e){ console.error('save failed', e); }
+  catch(e){ console.error('save failed', e); showAlert('Changes were not saved to the database. '+e.message); }
 }
 
 function memberById(id){ return state.members.find(m=>m.id===id); }
@@ -3638,7 +3639,8 @@ async function saveYearLevelAndGenerate(kidId){
       Object.keys(ui.studyWeekCache).forEach(k => { if(k.startsWith(kidId+'|')) delete ui.studyWeekCache[k]; });
       delete ui.studyOverdueByKid[kidId];
       ui.studyWeekOffset = 0;
-      saveData(); // keep the local blob's yearLevel in sync too, even though the backend write is what actually matters
+      // The endpoint has saved the year level and assignments. Do not issue a
+      // full-family write that can race unrelated changes or overwrite study data.
       if(result.warning){
         showAlert(result.warning);
       } else {
@@ -3677,7 +3679,13 @@ function upsertTopicProgress(kidId, topicId, patch){
     state.topicProgress.push(p);
   }
   Object.assign(p, patch, {updatedAt:new Date().toISOString()});
-  saveData();
+  if(!hasClaudeStorage && state.family && !state.family.isExample){
+    if(patch.status==='studying'){
+      tracklineAuth.fetch(API_BASE+'/api/study-progress', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({familyId:state.family.id,kidId,topicId})})
+        .then(async response=>{ if(!response.ok){ const error=await response.json(); throw new Error(error.error || 'Could not save study progress.'); } })
+        .catch(error=>showAlert(error.message));
+    }
+  } else saveData();
 }
 function openStudyTopic(topicId){
   ui.studySelectedTopicId = topicId;
@@ -4726,7 +4734,9 @@ function setKid(id){ ui.kidId=id; ui.copiedFlash=false; render(); }
 
 function toggleProfileMenu(){ ui.profileMenuOpen = !ui.profileMenuOpen; render(); }
 function openLogin(id){
-  if(!tracklineAuth.membership || id !== tracklineAuth.membership.member_id) return;
+  if(!tracklineAuth.membership) return;
+  if(tracklineAuth.sessionMode==='family'){ tracklineAuth.selectedMemberId = id; tracklineAuth.lock(); return; }
+  if(id !== tracklineAuth.membership.member_id){ showAlert('Use Join family with the family ID and password to switch members on this screen.'); return; }
   tracklineAuth.lock();
 }
 function closeLogin(){
@@ -5298,7 +5308,8 @@ function clearCheckedShoppingItems(){
 }
 
 function kidsCanAddTasks(memberId){
-  if(!isParentLoggedIn()) return false;
+  if(!isLoggedIn()) return false;
+  if(!isParentLoggedIn() && memberId && memberId !== ui.profileId) return false;
   const m = memberById(memberId || ui.profileId);
   return !!(m && m.canAddTasks !== false);
 }
@@ -5421,7 +5432,7 @@ function addToActivityLibrary(title){
   }
 }
 
-function saveChore(){
+async function saveChore(){
   if(ui.editingChoreId && !isParentLoggedIn()) return; // editing existing: parent only
   if(!ui.editingChoreId && !isLoggedIn()) return; // creating new: must be logged in
   if(!ui.editingChoreId && !isParentLoggedIn() && !kidsCanAddTasks()){
@@ -5450,6 +5461,20 @@ function saveChore(){
   }
   const dueTime = document.getElementById('f_chore_dueTime').value || null;
   const points = Math.max(0, Math.min(100, parseInt(document.getElementById('f_chore_points').value||'0',10) || 0));
+
+  if(!isParentLoggedIn()){
+    if(ui.savingChildTask) return;
+    ui.savingChildTask = true;
+    try {
+      const response = await tracklineAuth.fetch(API_BASE+'/api/child-task', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({familyId:state.family.id, title, frequency, days, dayOfMonth, startDate, dueDate, dueTime})});
+      const result = await response.json();
+      if(!response.ok) throw new Error(result.error || 'Could not save your task.');
+      state.chores.push(result.task);
+      closeChoreModal();
+    } catch(error){ showAlert(error.message); }
+    finally { ui.savingChildTask = false; }
+    return;
+  }
 
   if(ui.editingChoreId){
     const c = state.chores.find(c=>c.id===ui.editingChoreId);
