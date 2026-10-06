@@ -1,0 +1,12 @@
+{
+  "name": "trackline-checks",
+  "private": true,
+  "scripts": {
+    "test:browser": "node tests/auth-browser.cjs",
+    "test:sql": "node tests/auth-sql.cjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.14",
+    "playwright": "1.62.1"
+  }
+}

@@ -103,3 +103,5 @@ module.exports = async function (context, req) {
     context.res = jsonRes(500, { error: 'Server error', detail: String(err && err.message || err) });
   }
 };
+
+module.exports = require('../shared/auth').protect(module.exports, {"parent": true});

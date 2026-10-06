@@ -501,8 +501,11 @@
 </style>
 </head>
 <body>
+<div id="account-bar" hidden style="padding:8px;text-align:right;background:#181c2a;color:white"><button onclick="tracklineAuth.signOut()">Sign out of account</button></div>
 <div id="root" class="app"></div>
 
+<script src="/auth-client.js"></script>
+<script src="/auth.js"></script>
 <script>
 // ==============================================================================
 // No database URLs or keys live here anymore — on purpose. The browser only
@@ -713,7 +716,7 @@ async function storageGet(key){
     const familyId = window.localStorage.getItem(LOCAL_FAMILY_ID_KEY);
     if(familyId){
       try{
-        const res = await fetch(`${FAMILY_ENDPOINT}?familyId=${encodeURIComponent(familyId)}`);
+        const res = await tracklineAuth.fetch(`${FAMILY_ENDPOINT}?familyId=${encodeURIComponent(familyId)}`);
         if(res.ok){
           backendReachable = true;
           const data = await res.json();
@@ -745,7 +748,7 @@ async function storageSet(key, value){
         // tables) to avoid rewriting the whole family record every time one
         // task gets checked off or one shopping trip's items change.
         const { choreLogs, shoppingTrips, ...rest } = parsed;
-        const res = await fetch(FAMILY_ENDPOINT, {
+        const res = await tracklineAuth.fetch(FAMILY_ENDPOINT, {
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({familyId, data: rest})
@@ -763,7 +766,7 @@ async function storageSet(key, value){
 async function fetchFamilyById(familyId){
   if(hasClaudeStorage) return null; // Claude storage is already account-scoped; joining by ID doesn't apply here
   try{
-    const res = await fetch(`${FAMILY_ENDPOINT}?familyId=${encodeURIComponent(familyId)}`);
+    const res = await tracklineAuth.fetch(`${FAMILY_ENDPOINT}?familyId=${encodeURIComponent(familyId)}`);
     if(!res.ok) return null;
     return await res.json();
   } catch(e){ console.error('Lookup failed, check network/deployment', e); return null; }
@@ -775,7 +778,7 @@ async function fetchFamilyById(familyId){
 async function pushChoreLog(logEntry){
   if(hasClaudeStorage) return; // Claude mode keeps everything in the one blob, no separate log table there
   try{
-    await fetch(CHORE_LOG_ENDPOINT, {
+    await tracklineAuth.fetch(CHORE_LOG_ENDPOINT, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify(logEntry)
@@ -785,7 +788,7 @@ async function pushChoreLog(logEntry){
 async function deleteChoreLog(familyId, choreId, date){
   if(hasClaudeStorage) return;
   try{
-    await fetch(`${CHORE_LOG_ENDPOINT}?familyId=${encodeURIComponent(familyId)}&choreId=${encodeURIComponent(choreId)}&date=${encodeURIComponent(date)}`, {
+    await tracklineAuth.fetch(`${CHORE_LOG_ENDPOINT}?familyId=${encodeURIComponent(familyId)}&choreId=${encodeURIComponent(choreId)}&date=${encodeURIComponent(date)}`, {
       method:'DELETE'
     });
   } catch(e){ console.error('Chore log delete sync failed', e); }
@@ -798,7 +801,7 @@ async function deleteChoreLog(familyId, choreId, date){
 async function pushTrip(trip){
   if(hasClaudeStorage) return;
   try{
-    await fetch(TRIP_ENDPOINT, {
+    await tracklineAuth.fetch(TRIP_ENDPOINT, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({familyId: state.family.id, trip})
@@ -808,7 +811,7 @@ async function pushTrip(trip){
 async function deleteTripRemote(tripId){
   if(hasClaudeStorage) return;
   try{
-    await fetch(`${TRIP_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&tripId=${encodeURIComponent(tripId)}`, {
+    await tracklineAuth.fetch(`${TRIP_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&tripId=${encodeURIComponent(tripId)}`, {
       method:'DELETE'
     });
   } catch(e){ console.error('Trip delete sync failed', e); }
@@ -1536,13 +1539,15 @@ function selectedDateISO(){
   return toISODate(addDays(ui.weekStart, ui.selectedOffset));
 }
 
-function isLoggedIn(){ return ui.authenticated && !!ui.profileId; }
+function isLoggedIn(){ return !!tracklineAuth.user && !!tracklineAuth.membership && ui.authenticated && !!ui.profileId; }
 function currentMember(){ return ui.profileId ? memberById(ui.profileId) : null; }
-function isParentLoggedIn(){ const m = currentMember(); return isLoggedIn() && m && m.role==='parent'; }
+function isParentLoggedIn(){ const m = currentMember(); return isLoggedIn() && m && m.role==='parent' && tracklineAuth.membership.role==='parent'; }
 
 async function loadData(){
+  const accountRevision = tracklineAuth.revision || 0;
   try{
     const r = await storageGet('trackline-data');
+    if(accountRevision !== (tracklineAuth.revision || 0)) return;
     if(r && r.value){
       const parsed = JSON.parse(r.value);
       if(parsed.members && parsed.events){
@@ -1594,9 +1599,19 @@ async function loadData(){
     const firstKid = state.members.find(m=>m.role==='kid');
     ui.kidId = firstKid ? firstKid.id : null;
   }
+  const access = tracklineAuth.membership;
+  if(access){
+    const member = memberById(access.member_id);
+    if(member){ member.role = access.role; ui.profileId = member.id; ui.authenticated = true; ui.kidId = access.role==='kid' ? member.id : ui.kidId; ui.tab = access.role==='parent' ? 'parent' : 'kid'; }
+  }
   render();
 }
 async function saveData(){
+  if(tracklineAuth.membership && tracklineAuth.membership.role==='kid'){
+    // Child completion and exam submissions use their scoped endpoints.
+    // A child account cannot replace the family's complete state.
+    return;
+  }
   try{ await storageSet('trackline-data', JSON.stringify(state)); }
   catch(e){ console.error('save failed', e); }
 }
@@ -2117,7 +2132,7 @@ function renderTripDetail(tripId){
   const member = memberById(trip.memberId);
   const items = trip.items||[];
   const canEditMeta = isParentLoggedIn();
-  const canEditItems = isLoggedIn(); // collaborative — anyone logged in can update item status/add items, since whoever's actually at the store needs to be able to update it
+  const canEditItems = isParentLoggedIn();
 
   const statusLabel = {pending:'Pending', bought:'Bought', unavailable:'Unavailable'};
   const statusClass = {pending:'', bought:'trip-item-bought', unavailable:'trip-item-unavailable'};
@@ -3402,7 +3417,7 @@ async function fetchDeviceUsage(){
   ui.deviceUsageError = null;
   render();
   try{
-    const res = await fetch(`${DEVICE_USAGE_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&days=${ui.deviceUsageDays}`);
+    const res = await tracklineAuth.fetch(`${DEVICE_USAGE_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&days=${ui.deviceUsageDays}`);
     if(!res.ok){
       const err = await res.json().catch(()=>({}));
       ui.deviceUsageError = err.error || 'Could not load screen time data.';
@@ -3448,7 +3463,7 @@ async function fetchStudyTopics(){
   try{
     const kid = memberById(ui.kidId);
     const yearLevel = kid ? kid.yearLevel : null;
-    const res = await fetch(`${STUDY_TOPICS_ENDPOINT}?yearLevel=${encodeURIComponent(yearLevel||'')}`);
+    const res = await tracklineAuth.fetch(`${STUDY_TOPICS_ENDPOINT}?yearLevel=${encodeURIComponent(yearLevel||'')}`);
     if(!res.ok){
       const err = await res.json().catch(()=>({}));
       ui.studyError = err.error || 'Could not load study content.';
@@ -3527,7 +3542,7 @@ async function fetchStudyAssignments(kidId, weekOffset){
     return;
   }
   try{
-    const res = await fetch(`${STUDY_ASSIGNMENTS_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&kidId=${encodeURIComponent(kidId)}&weekOffset=${weekOffset}`);
+    const res = await tracklineAuth.fetch(`${STUDY_ASSIGNMENTS_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&kidId=${encodeURIComponent(kidId)}&weekOffset=${weekOffset}`);
     if(!res.ok){
       const err = await res.json().catch(()=>({}));
       ui.studyWeekError[key] = err.error || 'Could not load this week\'s assignments.';
@@ -3604,7 +3619,7 @@ async function saveYearLevelAndGenerate(kidId){
 
   ui.yearLevelSaving = kidId; render();
   try{
-    const res = await fetch(STUDY_SET_YEAR_LEVEL_ENDPOINT, {
+    const res = await tracklineAuth.fetch(STUDY_SET_YEAR_LEVEL_ENDPOINT, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
         familyId: state.family.id, kidId, yearLevel,
@@ -3684,8 +3699,9 @@ async function startStudyExam(topicId){
     return;
   }
   try{
-    const res = await fetch(STUDY_EXAM_START_ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({topicId})});
+    const res = await tracklineAuth.fetch(STUDY_EXAM_START_ENDPOINT, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({familyId: state.family.id, kidId: ui.kidId, topicId})});
     const result = await res.json();
+    if(!res.ok) throw new Error(result.error || 'Could not start exam');
     ui.studyExamAttempt = {attemptId: result.attemptId, topicId, questions: result.questions, answers:{}};
     ui.studyView = 'exam';
   } catch(e){
@@ -3714,11 +3730,12 @@ async function submitStudyExam(){
     return;
   }
   try{
-    const res = await fetch(STUDY_EXAM_SUBMIT_ENDPOINT, {
+    const res = await tracklineAuth.fetch(STUDY_EXAM_SUBMIT_ENDPOINT, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({familyId: state.family.id, kidId: ui.kidId, topicId: attempt.topicId, attemptId: attempt.attemptId, answers: attempt.answers})
     });
     const result = await res.json();
+    if(!res.ok) throw new Error(result.error || 'Could not submit exam');
     finishExamScoring(attempt.topicId, result.score, result.correctCount, result.total);
   } catch(e){
     ui.studyExamSubmitting = false;
@@ -3789,7 +3806,7 @@ async function openDayDrill(memberId, date){
     return;
   }
   try{
-    const res = await fetch(`${DEVICE_USAGE_DETAIL_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&memberId=${encodeURIComponent(memberId)}&date=${date}`);
+    const res = await tracklineAuth.fetch(`${DEVICE_USAGE_DETAIL_ENDPOINT}?familyId=${encodeURIComponent(state.family.id)}&memberId=${encodeURIComponent(memberId)}&date=${date}`);
     if(!res.ok){
       const err = await res.json().catch(()=>({}));
       ui.dayDrillError = err.error || 'Could not load details for that day.';
@@ -3849,7 +3866,7 @@ async function openDeviceManager(){
   ui.deviceManagerLoading = true;
   render();
   try{
-    const res = await fetch(DEVICE_LIST_ENDPOINT, {
+    const res = await tracklineAuth.fetch(DEVICE_LIST_ENDPOINT, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ familyId: state.family.id, passwordHash: state.family.passwordHash })
     });
@@ -3878,7 +3895,7 @@ function confirmRemoveDeviceByIndex(idx){
 }
 async function removeDevice(deviceId){
   try{
-    const res = await fetch(DEVICE_DEREGISTER_ENDPOINT, {
+    const res = await tracklineAuth.fetch(DEVICE_DEREGISTER_ENDPOINT, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ familyId: state.family.id, passwordHash: state.family.passwordHash, deviceId })
     });
@@ -4419,7 +4436,7 @@ async function submitJoinFamily(){
   render(); // clear any previous error while the lookup runs
 
   try{
-    const res = await fetch(JOIN_FAMILY_ENDPOINT, {
+    const res = await tracklineAuth.fetch(JOIN_FAMILY_ENDPOINT, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ familyId, passwordHash: simpleHash(password) })
@@ -4572,7 +4589,9 @@ function render(){
   if(newMain) newMain.scrollTop = prevScrollTop;
 }
 function _renderInner(){
+  if(!tracklineAuth.ready || !tracklineAuth.user || !tracklineAuth.membership){ tracklineAuth.renderGate(); return; }
   const root = document.getElementById('root');
+  document.getElementById('account-bar').hidden = false;
   if(!ui.loaded){
     root.innerHTML = `<div style="padding:60px;text-align:center;color:#9AA0C0;font-family:'IBM Plex Mono',monospace;">Loading schedule…</div>`;
     return;
@@ -4705,6 +4724,7 @@ function setKid(id){ ui.kidId=id; ui.copiedFlash=false; render(); }
 
 function toggleProfileMenu(){ ui.profileMenuOpen = !ui.profileMenuOpen; render(); }
 function openLogin(id){
+  if(!tracklineAuth.membership || id !== tracklineAuth.membership.member_id) return;
   const m = memberById(id);
   if(!m) return;
   ui.loginMemberId = id;
@@ -4725,6 +4745,7 @@ function closeLogin(){
   render();
 }
 function logout(){
+  tracklineAuth.signOut();
   ui.profileId = null;
   ui.authenticated = false;
   ui.profileMenuOpen = false;
@@ -4759,6 +4780,7 @@ function requireAuth(){
 }
 
 function openAdd(prefill){
+  if(!isParentLoggedIn()) return;
   if(!requireAuth()) return;
   ui.modalOpen = true;
   ui.editingId = null;
@@ -4807,6 +4829,7 @@ function currentRecurMode(){
 }
 
 function saveEvent(){
+  if(!isParentLoggedIn()) return;
   if(ui.editingId && !isParentLoggedIn()) return; // editing existing: parent only
   if(!ui.editingId && !isLoggedIn()) return; // creating new: must be logged in
   const title = document.getElementById('f_title').value.trim() || 'Untitled';
@@ -5087,7 +5110,7 @@ function addToShoppingItemLibrary(name){
   }
 }
 function addTripItem(tripId){
-  if(!isLoggedIn()) return;
+  if(!isParentLoggedIn()) return;
   const input = document.getElementById('newTripItem');
   const name = (input.value||'').trim();
   if(!name) return;
@@ -5103,7 +5126,7 @@ function addTripItem(tripId){
   if(el && el.focus) el.focus();
 }
 function addTripItemFromLibrary(tripId, libraryIndex){
-  if(!isLoggedIn()) return;
+  if(!isParentLoggedIn()) return;
   const name = (state.shoppingItemLibrary||[])[libraryIndex];
   if(!name) return;
   const trip = (state.shoppingTrips||[]).find(t=>t.id===tripId);
@@ -5116,7 +5139,7 @@ function addTripItemFromLibrary(tripId, libraryIndex){
   render();
 }
 function cycleTripItemStatus(tripId, itemId){
-  if(!isLoggedIn()) return;
+  if(!isParentLoggedIn()) return;
   const trip = (state.shoppingTrips||[]).find(t=>t.id===tripId);
   if(!trip) return;
   const item = (trip.items||[]).find(i=>i.id===itemId);
@@ -5257,7 +5280,7 @@ function addShoppingItem(){
   setTimeout(()=>{ const el=document.getElementById('newShoppingItem'); if(el) el.focus(); }, 0);
 }
 function toggleShoppingItem(id){
-  if(!isLoggedIn()) return;
+  if(!isParentLoggedIn()) return;
   const item = state.shoppingList.find(i=>i.id===id);
   if(!item) return;
   item.checked = !item.checked;
@@ -5265,7 +5288,7 @@ function toggleShoppingItem(id){
   render();
 }
 function removeShoppingItem(id){
-  if(!isLoggedIn()) return;
+  if(!isParentLoggedIn()) return;
   const removed = state.shoppingList.find(i=>i.id===id);
   state.shoppingList = state.shoppingList.filter(i=>i.id!==id);
   saveData();
@@ -5279,7 +5302,7 @@ function removeShoppingItem(id){
   }
 }
 function clearCheckedShoppingItems(){
-  if(!isLoggedIn()) return;
+  if(!isParentLoggedIn()) return;
   showConfirm('Clear all checked-off items?', ()=>{
     state.shoppingList = state.shoppingList.filter(i=>!i.checked);
     saveData();
@@ -5288,10 +5311,12 @@ function clearCheckedShoppingItems(){
 }
 
 function kidsCanAddTasks(memberId){
+  if(!isParentLoggedIn()) return false;
   const m = memberById(memberId || ui.profileId);
   return !!(m && m.canAddTasks !== false);
 }
 function kidsCanAddShopping(memberId){
+  if(!isParentLoggedIn()) return false;
   const m = memberById(memberId || ui.profileId);
   return !!(m && m.canAddShopping !== false);
 }
@@ -5833,7 +5858,7 @@ async function submitExport(){
   }
 
   try{
-    const res = await fetch(`${API_BASE}/api/export-family`, {
+    const res = await tracklineAuth.fetch(`${API_BASE}/api/export-family`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ familyId: state.family.id, passwordHash: simpleHash(pwd) })
@@ -5930,7 +5955,7 @@ function resetDefaults(){
 }
 
 applyDayModeClass();
-loadData();
+tracklineAuth.init();
 setInterval(()=>{ if(ui.tab==='board' && !ui.modalOpen) render(); }, 60000); // refresh now-line each minute — skipped while a modal is open, since a full render would silently wipe whatever's being typed into an open form
 setInterval(checkAndFireNotificationReminders, 60000); // independent of tab/modal state — a reminder should fire even if you're not currently looking at the board
 </script>
@@ -5976,4 +6001,3 @@ If/when you want to take that step, come back and I can help scaffold the
 backend, the database schema, and the API — happy to pick this up from here.
 =================================================================================
 -->
-

@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@supabase/supabase-js": "2.117.2",
+    "esbuild": "0.25.11"
+  },
+  "private": true,
+  "scripts": {
+    "build": "esbuild auth-entry.js --bundle --minify --format=iife --outfile=auth-client.js"
+  }
+}
