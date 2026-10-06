@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trackline — Family Schedule</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -71,7 +71,7 @@
   .brand .flap span{color:var(--amber);}
   .brand .sub{
     font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
+    font-size:13px;
     color:var(--text-dim);
     letter-spacing:0.08em;
     text-transform:uppercase;
@@ -94,7 +94,7 @@
   nav.tabs button:hover{color:var(--text-on-ink);border-color:var(--text-dim);}
   nav.tabs button.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
   .nav-badge{
-    display:inline-block;background:#D6484E;color:#fff;font-size:10px;font-weight:800;
+    display:inline-block;background:#D6484E;color:#fff;font-size:12px;font-weight:800;
     border-radius:9px;padding:1px 6px;margin-left:2px;vertical-align:middle;
   }
 
@@ -105,12 +105,12 @@
     width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:15px;flex:none;
   }
   .search-btn:hover{border-color:var(--text-dim);}
-  .search-result{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px dashed #cfc7ac;cursor:pointer;}
+  .search-result{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px dashed var(--line);cursor:pointer;}
   .search-result:last-child{border-bottom:none;}
-  .search-result:hover{background:#e3dcc6;}
+  .search-result:hover{background:var(--ink-3);}
   .search-result .dot{width:10px;height:10px;border-radius:50%;flex:none;}
   .search-result .title{font-weight:700;font-size:14px;}
-  .search-result .meta{font-size:11.5px;color:#6b6650;font-family:'IBM Plex Mono',monospace;}
+  .search-result .meta{font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
   .filter-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
   .filter-chip{
     display:flex;align-items:center;gap:6px;
@@ -127,7 +127,7 @@
   .month-header{background:var(--ink-2);}
   .month-daylabel{
     padding:8px 4px;text-align:center;
-    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.03em;
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.03em;
     color:var(--text-dim);border-bottom:1px solid var(--line);
   }
   .month-cell{
@@ -141,13 +141,13 @@
   .month-daynum{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-on-ink);margin-bottom:6px;}
   .month-dots{display:flex;flex-wrap:wrap;gap:3px;}
   .month-dot{width:7px;height:7px;border-radius:50%;flex:none;}
-  .month-more{font-size:9px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
+  .month-more{font-size:12px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
   .month-ticks{position:absolute;bottom:5px;right:6px;display:flex;gap:4px;align-items:center;}
-  .month-task-tick{font-size:10px;color:var(--amber);}
-  .month-trip-tick{font-size:9px;}
+  .month-task-tick{font-size:12px;color:var(--amber);}
+  .month-trip-tick{font-size:12px;}
   @media(max-width:640px){
     .month-cell{min-height:52px;padding:4px;}
-    .month-daynum{font-size:10.5px;margin-bottom:3px;}
+    .month-daynum{font-size:12px;margin-bottom:3px;}
   }
 
   .profile-wrap{position:relative;}
@@ -159,19 +159,19 @@
   .profile-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:12px;color:#151726;flex:none;}
   .profile-btn .pname{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:13px;letter-spacing:.02em;text-transform:uppercase;}
-  .profile-btn .caret{font-size:10px;color:var(--text-dim);}
+  .profile-btn .caret{font-size:12px;color:var(--text-dim);}
   .profile-menu{
     position:absolute;top:calc(100% + 8px);right:0;min-width:190px;
     background:var(--paper);color:var(--ink);border-radius:10px;
     box-shadow:0 10px 30px rgba(0,0,0,.45);overflow:hidden;z-index:40;
   }
   .profile-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink);}
-  .profile-item:hover{background:#e3dcc6;}
-  .profile-item.current{background:#e3dcc6;}
+  .profile-item:hover{background:var(--ink-3);}
+  .profile-item.current{background:var(--ink-3);}
   .profile-item .dot{width:20px;height:20px;border-radius:50%;flex:none;}
-  .profile-menu-footer{border-top:1px solid #cfc7ac;padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#5c5847;cursor:pointer;}
-  .profile-menu-footer:hover{background:#e3dcc6;}
-  .profile-none{padding:12px 14px;font-size:12.5px;color:#6b6650;}
+  .profile-menu-footer{border-top:1px solid var(--line);padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;}
+  .profile-menu-footer:hover{background:var(--ink-3);}
+  .profile-none{padding:12px 14px;font-size:12.5px;color:var(--text-dim);}
 
   /* ONBOARDING */
   .onboard-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
@@ -179,11 +179,11 @@
   .onboard-brand{text-align:center;margin-bottom:22px;}
   .onboard-brand .flap{font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);}
   .onboard-brand .flap span{color:#B8791F;}
-  .onboard-brand .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6b6650;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+  .onboard-brand .sub{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
   .onboard-card h2{font-family:'Archivo Narrow',sans-serif;font-size:19px;text-transform:uppercase;letter-spacing:.02em;text-align:center;margin:0 0 6px;}
-  .onboard-card .lead{font-size:13px;color:#5c5847;text-align:center;margin:0 0 20px;}
-  .onboard-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:#8a8468;font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
-  .onboard-divider::before,.onboard-divider::after{content:'';flex:1;height:1px;background:#cfc7ac;}
+  .onboard-card .lead{font-size:13px;color:var(--text-dim);text-align:center;margin:0 0 20px;}
+  .onboard-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:var(--text-dim);font-size:13px;text-transform:uppercase;letter-spacing:.05em;}
+  .onboard-divider::before,.onboard-divider::after{content:'';flex:1;height:1px;background:var(--ink-3);}
 
   /* PRE-LOGIN DASHBOARD */
   .dash-wrap{max-width:640px;margin:40px auto;padding:0 20px;text-align:center;}
@@ -192,7 +192,7 @@
   .dash-stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
   .dash-stat{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:20px 26px;min-width:130px;}
   .dash-stat .num{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:var(--amber);}
-  .dash-stat .label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-top:4px;}
+  .dash-stat .label{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-top:4px;}
   .dash-cta{background:var(--amber);color:var(--ink);border:none;font-family:'Archivo Narrow',sans-serif;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:14px 28px;border-radius:30px;font-size:14px;cursor:pointer;}
 
   main{padding:18px 20px 60px;flex:1;overflow-y:auto;}
@@ -220,19 +220,19 @@
     min-width:64px;
   }
   .day-pill .dname{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;}
-  .day-pill .dnum{font-size:11px;opacity:.75;}
+  .day-pill .dnum{font-size:13px;opacity:.75;}
   .day-pill.today{border-color:var(--amber);}
   .day-pill.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
   .day-pill.today .dname::after{content:" •";color:var(--amber);}
   .day-pill.active.today .dname::after{color:var(--ink);}
-  .skip-note{font-size:12px;color:#6b6650;background:#e3dcc6;border-radius:7px;padding:8px 10px;margin:-4px 0 14px;}
+  .skip-note{font-size:12px;color:var(--text-dim);background:var(--ink-3);border-radius:7px;padding:8px 10px;margin:-4px 0 14px;}
 
   /* BOARD GRID */
   .board-wrap{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--ink-2);}
   .time-axis{width:56px;flex:none;border-right:1px solid var(--line);}
   .time-axis .tick{
     position:absolute;left:0;right:0;
-    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);
     padding-left:6px;transform:translateY(-6px);
   }
   .columns{display:flex;flex:1;overflow-x:auto;}
@@ -259,7 +259,7 @@
     z-index:1;
   }
   .block .t{font-weight:700;font-size:12.5px;line-height:1.2;color:#151726;}
-  .block .m{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#151726;opacity:.75;margin-top:2px;}
+  .block .m{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#151726;opacity:.75;margin-top:2px;}
   .block.transit{
     background:repeating-linear-gradient(135deg, var(--transit), var(--transit) 6px, #6f6a5c 6px, #6f6a5c 12px);
     color:#fff;border-color:#5c5748;
@@ -305,9 +305,9 @@
   .modal{background:var(--paper);color:var(--ink);width:100%;max-width:440px;border-radius:14px;padding:22px;max-height:88vh;overflow-y:auto;}
   .modal h2{font-family:'Archivo Narrow',sans-serif;font-size:20px;letter-spacing:.02em;margin:0 0 14px;text-transform:uppercase;}
   .field{margin-bottom:14px;}
-  .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#5c5847;margin-bottom:5px;}
+  .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:5px;}
   .field input[type=text],.field input[type=time],.field input[type=number],.field select{
-    width:100%;padding:10px 11px;border-radius:7px;border:1px solid #c9c2ab;background:#fff;
+    width:100%;padding:10px 11px;border-radius:7px;border:1px solid var(--line);background:#fff;
     font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);
   }
   .row2{display:flex;gap:10px;}
@@ -321,8 +321,8 @@
     border:none;border-radius:8px;padding:11px 18px;font-size:13.5px;cursor:pointer;
   }
   .btn.primary{background:var(--ink);color:var(--paper);}
-  .btn.ghost{background:transparent;color:#8a5a3a;border:1px solid #8a5a3a;}
-  .btn.danger{background:transparent;color:#a5323a;font-size:12px;padding:8px 12px;}
+  .btn.ghost{background:transparent;color:var(--text-dim);border:1px solid #8a5a3a;}
+  .btn.danger{background:transparent;color:var(--danger);font-size:12px;padding:8px 12px;}
 
   /* KID VIEW */
   .kid-select{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
@@ -333,37 +333,37 @@
   .kid-select button.active{color:var(--ink);}
   .kid-big{background:var(--paper);color:var(--ink);border-radius:16px;padding:26px;}
   .kid-big h2{font-family:'Archivo Narrow',sans-serif;font-size:26px;letter-spacing:.02em;margin:0 0 4px;text-transform:uppercase;}
-  .kid-big .kd{font-family:'IBM Plex Mono',monospace;color:#6b6650;margin-bottom:20px;}
-  .kid-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed #cfc7ac;align-items:flex-start;}
+  .kid-big .kd{font-family:'IBM Plex Mono',monospace;color:var(--text-dim);margin-bottom:20px;}
+  .kid-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px dashed var(--line);align-items:flex-start;}
   .kid-item:last-child{border-bottom:none;}
-  .kid-time{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;min-width:100px;color:#5c5847;}
+  .kid-time{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;min-width:100px;color:var(--text-dim);}
   .kid-title{font-weight:700;font-size:20px;}
-  .kid-loc{color:#6b6650;font-size:14px;margin-top:2px;}
-  .kid-empty{padding:30px 0;text-align:center;color:#8a8468;font-size:15px;}
+  .kid-loc{color:var(--text-dim);font-size:14px;margin-top:2px;}
+  .kid-empty{padding:30px 0;text-align:center;color:var(--text-dim);font-size:15px;}
 
   /* CHORES */
   .chore-group{background:var(--paper);color:var(--ink);border-radius:14px;padding:18px 20px;margin-bottom:16px;}
   .chore-group-head{display:flex;align-items:center;gap:9px;margin-bottom:12px;}
   .chore-group-head .swatch{width:12px;height:12px;border-radius:50%;flex:none;}
   .chore-group-head .name{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:.02em;}
-  .chore-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .chore-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line);}
   .chore-row:last-child{border-bottom:none;}
   .chore-info{flex:1;cursor:pointer;}
   .chore-title{font-weight:700;font-size:14.5px;}
-  .chore-freq{font-size:11px;color:#8a8468;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
-  .chore-done-badge{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#3d7a4f;background:#dcecdf;border-radius:20px;padding:6px 12px;cursor:pointer;white-space:nowrap;}
+  .chore-freq{font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .chore-done-badge{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--success);background:var(--success-bg);border-radius:20px;padding:6px 12px;cursor:pointer;white-space:nowrap;}
   .chore-pending-btn{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:.03em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:none;border-radius:20px;padding:9px 16px;cursor:pointer;white-space:nowrap;}
-  .chore-locked-btn{font-size:11.5px;color:#8a8468;white-space:nowrap;}
+  .chore-locked-btn{font-size:13px;color:var(--text-dim);white-space:nowrap;}
   .chore-empty-day{text-align:center;color:var(--text-dim);padding:40px 0;font-size:14px;}
-  .shop-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .shop-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px dashed var(--line);}
   .shop-row:last-child{border-bottom:none;}
   .shop-check-label{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:600;cursor:pointer;flex:1;}
   .shop-check-label input{width:19px;height:19px;flex:none;}
-  .shop-row-checked .shop-check-label span{text-decoration:line-through;color:#8a8468;font-weight:400;}
+  .shop-row-checked .shop-check-label span{text-decoration:line-through;color:var(--text-dim);font-weight:400;}
   .shop-row-selected{background:rgba(232,163,61,.15);border-radius:6px;padding-left:6px;margin-left:-6px;}
   .shop-select-check{width:19px;height:19px;accent-color:var(--amber);flex:none;}
-  .shop-remove{background:none;border:none;color:#a5323a;cursor:pointer;font-size:16px;padding:4px 8px;}
-  .shop-divider{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#8a8468;padding:14px 0 6px;border-top:1px solid #cfc7ac;margin-top:6px;}
+  .shop-remove{background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;padding:4px 8px;}
+  .shop-divider{font-family:'IBM Plex Mono',monospace;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);padding:14px 0 6px;border-top:1px solid var(--line);margin-top:6px;}
   .shop-add-bar{position:fixed;left:0;right:0;bottom:0;background:var(--ink-2);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;z-index:15;}
   .shop-add-bar input{flex:1;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--chrome);color:var(--text-on-ink);font-size:15px;}
   .shop-add-bar input::placeholder{color:var(--text-dim);}
@@ -375,14 +375,14 @@
     background:var(--ink-2);border:1px solid var(--line);color:var(--text-dim);padding:9px 16px;border-radius:20px;cursor:pointer;
   }
   .shop-mode-toggle button.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
-  .trip-row{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;border-bottom:1px dashed #cfc7ac;cursor:pointer;}
+  .trip-row{display:flex;align-items:center;justify-content:space-between;padding:13px 4px;border-bottom:1px dashed var(--line);cursor:pointer;}
   .trip-row:last-child{border-bottom:none;}
-  .trip-row:hover{background:#e3dcc6;}
+  .trip-row:hover{background:var(--ink-3);}
   .trip-title{font-weight:700;font-size:14.5px;}
-  .trip-meta{font-size:11.5px;color:#6b6650;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
-  .trip-chevron{font-size:20px;color:#8a8468;}
-  .trip-done-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#dcecdf;color:#3d7a4f;border-radius:10px;padding:2px 8px;}
-  .trip-pending-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#f3e6c6;color:#8a6a1f;border-radius:10px;padding:2px 8px;}
+  .trip-meta{font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .trip-chevron{font-size:20px;color:var(--text-dim);}
+  .trip-done-badge{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--success-bg);color:var(--success);border-radius:10px;padding:2px 8px;}
+  .trip-pending-badge{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--warning-bg);color:#8a6a1f;border-radius:10px;padding:2px 8px;}
 
   /* PARENT VIEW — per-person tiles */
   .person-tiles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding-bottom:40px;}
@@ -393,7 +393,7 @@
   .person-tile-attention{box-shadow:0 0 0 1px #D6484E, 0 2px 10px rgba(214,72,78,.25);}
   .tile-header{display:flex;align-items:center;gap:10px;}
   .tile-name{font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:16px;color:var(--text-on-ink);}
-  .tile-role{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-family:'IBM Plex Mono',monospace;}
+  .tile-role{font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-family:'IBM Plex Mono',monospace;}
   .tile-section{display:flex;flex-direction:column;gap:6px;}
   .tile-section-head{
     display:flex;justify-content:space-between;align-items:center;
@@ -405,7 +405,7 @@
   .tile-progress-fill{height:100%;border-radius:3px;}
   .tile-empty{font-size:12.5px;color:var(--text-dim);font-style:italic;}
   .tile-sched-row{display:flex;gap:8px;font-size:13px;color:var(--text-on-ink);align-items:baseline;}
-  .tile-sched-time{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);flex:none;min-width:80px;}
+  .tile-sched-time{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--amber);flex:none;min-width:80px;}
   .tile-sched-title{flex:1;}
   .tile-task-row{
     display:flex;justify-content:space-between;align-items:center;gap:8px;
@@ -414,44 +414,44 @@
   .tile-task-done{color:#7fbf8c;cursor:default;}
   .tile-task-overdue{color:#e08a8f;}
   .tile-task-mark{
-    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.02em;
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.02em;
     background:var(--amber);color:var(--ink);padding:3px 8px;border-radius:10px;flex:none;
   }
   .screentime-bars{display:flex;gap:6px;align-items:flex-end;height:70px;}
   .screentime-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end;}
   .screentime-bar-track{width:100%;flex:1;display:flex;align-items:flex-end;}
   .screentime-bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:2px;background:var(--amber);}
-  .screentime-bar-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);}
-  .approval-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .screentime-bar-label{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);}
+  .approval-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);}
   .approval-row:last-child{border-bottom:none;}
-  .trip-item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed #cfc7ac;}
+  .trip-item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);}
   .trip-item-row:last-child{border-bottom:none;}
   .trip-item-name{flex:1;font-weight:600;font-size:14.5px;}
   .trip-item-status-btn{
-    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;
-    background:#e3dcc6;border:1px solid #c9c2ab;color:#5c5847;padding:7px 13px;border-radius:16px;cursor:pointer;white-space:nowrap;
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:13px;letter-spacing:.02em;text-transform:uppercase;
+    background:var(--ink-3);border:1px solid var(--line);color:var(--text-dim);padding:7px 13px;border-radius:16px;cursor:pointer;white-space:nowrap;
   }
-  .trip-item-bought .trip-item-status-btn{background:#dcecdf;border-color:#a8d3af;color:#3d7a4f;}
-  .trip-item-bought .trip-item-name{text-decoration:line-through;color:#8a8468;}
-  .trip-item-unavailable .trip-item-status-btn{background:#f3d9d9;border-color:#e0a8a8;color:#a5323a;}
-  .trip-item-unavailable .trip-item-name{color:#a5323a;}
-  .trip-item-remove{background:none;border:none;color:#a5323a;cursor:pointer;font-size:15px;padding:4px 6px;}
+  .trip-item-bought .trip-item-status-btn{background:var(--success-bg);border-color:#a8d3af;color:var(--success);}
+  .trip-item-bought .trip-item-name{text-decoration:line-through;color:var(--text-dim);}
+  .trip-item-unavailable .trip-item-status-btn{background:var(--danger-bg);border-color:#e0a8a8;color:var(--danger);}
+  .trip-item-unavailable .trip-item-name{color:var(--danger);}
+  .trip-item-remove{background:none;border:none;color:var(--danger);cursor:pointer;font-size:15px;padding:4px 6px;}
   .quick-add-row{margin-top:16px;padding-bottom:80px;}
-  .quick-add-label{font-size:11.5px;color:#8a8468;text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-bottom:8px;}
+  .quick-add-label{font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-bottom:8px;}
   .quick-add-chip{
     display:inline-block;margin:0 6px 6px 0;font-size:12.5px;font-weight:600;
-    background:#fff;border:1px solid #c9c2ab;color:#5c5847;padding:6px 12px;border-radius:16px;cursor:pointer;
+    background:#fff;border:1px solid var(--line);color:var(--text-dim);padding:6px 12px;border-radius:16px;cursor:pointer;
   }
-  .quick-add-chip:hover{background:#e3dcc6;}
-  .quick-add-chip-added{background:#dcecdf !important;border-color:#a8d3af !important;color:#3d7a4f !important;cursor:default !important;opacity:.85;}
+  .quick-add-chip:hover{background:var(--ink-3);}
+  .quick-add-chip-added{background:var(--success-bg) !important;border-color:#a8d3af !important;color:var(--success) !important;cursor:default !important;opacity:.85;}
   .days-picker{display:flex;gap:6px;flex-wrap:wrap;}
-  .days-picker label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#5c5847;cursor:pointer;}
+  .days-picker label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--text-dim);cursor:pointer;}
   .days-picker input{width:16px;height:16px;}
   .trip-quicklist-picker{display:flex;flex-wrap:wrap;gap:8px 14px;max-height:140px;overflow-y:auto;padding:4px 0;}
-  .trip-quicklist-check{display:flex;align-items:center;gap:6px;font-size:13.5px;color:#3a3628;cursor:pointer;}
+  .trip-quicklist-check{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--text-dim);cursor:pointer;}
   .trip-quicklist-check input{width:16px;height:16px;}
   .copybar{margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-  .copied{font-size:12.5px;color:#3d7a4f;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  .copied{font-size:12.5px;color:var(--success);font-weight:600;font-family:'IBM Plex Mono',monospace;}
   .hint{font-size:12.5px;color:var(--text-dim);margin-top:10px;line-height:1.5;}
 
   /* SETTINGS */
@@ -461,19 +461,19 @@
   .settings-card h3{font-family:'Archivo Narrow',sans-serif;text-transform:uppercase;letter-spacing:.03em;font-size:15px;margin:0 0 12px;}
   .member-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px;}
   .member-contact-row{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px 44px;}
-  .member-contact-row input{flex:1;padding:7px 9px;border-radius:6px;border:1px solid #c9c2ab;font-size:12.5px;color:#5c5847;}
+  .member-contact-row input{flex:1;padding:7px 9px;border-radius:6px;border:1px solid var(--line);font-size:12.5px;color:var(--text-dim);}
   .member-notify-row{display:flex;gap:16px;margin:0 0 16px 44px;flex-wrap:wrap;}
-  .notify-check{display:flex;align-items:center;gap:6px;font-size:12px;color:#5c5847;cursor:pointer;}
+  .notify-check{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim);cursor:pointer;}
   .notify-check input{width:14px;height:14px;}
   .member-row input[type=color]{width:34px;height:34px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;}
-  .member-row input[type=text]{flex:1;min-width:120px;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;font-size:14px;}
-  .member-row select{padding:9px 8px;border-radius:7px;border:1px solid #c9c2ab;font-size:13px;}
+  .member-row input[type=text]{flex:1;min-width:120px;padding:9px 10px;border-radius:7px;border:1px solid var(--line);font-size:14px;}
+  .member-row select{padding:9px 8px;border-radius:7px;border:1px solid var(--line);font-size:13px;}
   .chore-lib-chips{display:flex;flex-wrap:wrap;gap:8px;}
-  .chore-lib-chip{display:inline-flex;align-items:center;gap:6px;background:#e3dcc6;border-radius:16px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:600;color:#4a4636;}
-  .chore-lib-chip button{background:none;border:none;color:#a5323a;cursor:pointer;font-size:13px;padding:2px;line-height:1;}
-  .member-row button{background:none;border:none;color:#a5323a;cursor:pointer;font-size:18px;padding:4px;}
+  .chore-lib-chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink-3);border-radius:16px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:600;color:var(--text-dim);}
+  .chore-lib-chip button{background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;padding:2px;line-height:1;}
+  .member-row button{background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;padding:4px;}
   .add-member{display:flex;gap:8px;margin-top:10px;}
-  .add-member input{flex:1;padding:9px 10px;border-radius:7px;border:1px solid #c9c2ab;}
+  .add-member input{flex:1;padding:9px 10px;border-radius:7px;border:1px solid var(--line);}
 
   ::-webkit-scrollbar{height:8px;width:8px;}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
@@ -492,11 +492,193 @@
       flex:none;
       width:100%;
       padding:9px 4px;
-      font-size:11px;
+      font-size:13px;
       white-space:normal;
       line-height:1.25;
       text-align:center;
     }
+  }
+  /* Responsive UI foundation: preserve legacy selectors and theme switch. */
+  :root{
+    --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;
+    --chrome:#141b28;--ink:#eeeae2;--ink-2:#1d2635;--ink-3:#283346;
+    --paper:#202a3a;--paper-dim:#2b3749;--line:#354155;
+    --text-on-ink:#eeeae2;--text-dim:#b4bdca;--amber:#e8b461;--contrast-ink:#181c2a;
+    --field-bg:#151e2c;--success:#9bd0ae;--success-bg:#223d32;--danger:#f0a5a5;--danger-bg:#422c34;
+    --warning:#e9bd73;--warning-bg:#403621;--focus:#e8b461;--radius:12px;
+  }
+  body.day-mode{
+    --chrome:#f6f3ed;--ink:#222b35;--ink-2:#fffcf7;--ink-3:#eee8de;
+    --paper:#fffcf7;--paper-dim:#eee8de;--line:#ded8cd;
+    --text-on-ink:#222b35;--text-dim:#61686d;--amber:#e8b461;--field-bg:#fff;
+    --success:#286743;--success-bg:#e4f0e7;--danger:#a33939;--danger-bg:#f8e5e3;
+    --warning:#795018;--warning-bg:#f6ecd9;--focus:#8a5a21;
+  }
+  body{font-size:16px;line-height:1.5;}
+  [hidden]{display:none!important;}
+  button,input,select,textarea{font:inherit;}
+  button{min-height:44px;touch-action:manipulation;transition:background-color .12s,color .12s,border-color .12s;}
+  button:disabled{opacity:.5;cursor:not-allowed;}
+  :where(button,a,input,select,textarea,[tabindex]):focus-visible{outline:3px solid var(--focus);outline-offset:3px;}
+  input:not([type=checkbox]):not([type=radio]):not([type=color]),select,textarea{min-height:44px;max-width:100%;font-size:16px!important;background:var(--field-bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px 12px;}
+  input[type=checkbox],input[type=radio]{accent-color:var(--amber);}
+  .app{max-width:none;}
+  main{padding:24px 32px 100px;overscroll-behavior:contain;}
+  h1,h2,h3{line-height:1.2;}
+  .brand .flap{font-size:30px;text-transform:none;letter-spacing:-.03em;}
+  .brand .sub{font:500 13px 'Inter',sans-serif;letter-spacing:0;text-transform:none;}
+  .field label,.quick-add-label,.settings-card h3,.chore-group-head .name,.tile-section-head{font-family:'Inter',sans-serif;text-transform:none;letter-spacing:0;font-size:14px;}
+  .field label{color:var(--text-dim);font-weight:600;margin-bottom:8px;}
+  .field{margin-bottom:20px;}
+  .row2>*{min-width:0;}
+  .btn,.chore-pending-btn,.trip-item-status-btn,.kid-select button,.shop-mode-toggle button{font-family:'Inter',sans-serif;font-size:14px;letter-spacing:0;text-transform:none;font-weight:600;}
+  .btn{border-radius:12px;padding:11px 18px;}
+  .btn.ghost{color:var(--text-on-ink);border-color:var(--line);}
+  .btn.danger{color:var(--danger);font-size:14px;}
+  .btn.primary{background:var(--amber);color:var(--contrast-ink);}
+  .day-pill.active,.kid-select button.active,nav.tabs button.active,.fab,.tile-task-mark,.undo-toast button{color:var(--contrast-ink);}
+  .settings-card,.chore-group,.kid-big,.person-tile,.modal{border-radius:16px;border:1px solid var(--line);box-shadow:none;}
+  .settings-card,.chore-group,.kid-big{padding:24px;}
+  .person-tiles-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:20px;}
+  .person-tile{padding:20px;gap:18px;}
+  .tile-name{font-size:20px;}
+  .tile-role,.tile-empty,.tile-sched-time,.tile-progress-label,.chore-freq,.trip-meta,.search-result .meta,.hint{font-size:13px;line-height:1.5;}
+  .tile-task-row,.chore-row,.trip-row,.shop-row,.approval-row{min-height:56px;}
+  .chore-title,.trip-title{font-size:16px;}
+  .chore-freq,.hint,.tile-empty{color:var(--text-dim);}
+  .chore-done-badge,.trip-done-badge,.trip-item-bought .trip-item-status-btn{color:var(--success);background:var(--success-bg);}
+  .trip-pending-badge{color:var(--warning);background:var(--warning-bg);}
+  .trip-item-unavailable .trip-item-status-btn{color:var(--danger);background:var(--danger-bg);}
+  .chore-locked-btn{font-size:13px;white-space:normal;}
+  .tile-task-mark,.trip-done-badge,.trip-pending-badge{font-size:12px;padding:4px 10px;}
+  .settings-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:24px;}
+  .member-contact-row,.member-notify-row{margin-left:0;}
+  .member-contact-row input{min-width:0;}
+  .notify-check{font-size:14px;min-height:44px;}
+  .notify-check input{width:20px;height:20px;}
+  .member-row{padding-top:16px;border-top:1px solid var(--line);}
+  .member-row button,.shop-remove,.trip-item-remove,.chore-lib-chip button{min-width:44px;min-height:44px;}
+  .member-row input[type=color]{width:44px;height:44px;}
+  .modal{max-width:520px;padding:28px;max-height:calc(100dvh - 32px);box-shadow:0 18px 50px #0003;}
+  .modal h2{font-size:26px;text-transform:none;letter-spacing:0;}
+  .overlay{background:#101622a6;}
+  .chore-empty-day,.kid-empty{padding:40px 24px;border:1px dashed var(--line);border-radius:16px;font-size:15px;line-height:1.6;}
+  .search-btn{height:44px;width:44px;border-radius:12px;display:inline-grid;place-items:center;}
+  .ui-icon{width:21px;height:21px;flex:none;vertical-align:middle;}
+  .week-nav .arrow{width:44px;height:44px;}
+  .day-pill{min-height:56px;min-width:64px;}
+  .filter-chip{min-height:44px;font-family:inherit;}
+  .fab{box-shadow:0 4px 12px #0002;}
+  .undo-toast{box-shadow:0 4px 14px #0002;}
+  #root>main:only-child{width:calc(100% - 32px);max-width:520px!important;margin:32px auto!important;padding:28px!important;border:1px solid var(--line);background:var(--paper)!important;color:var(--ink)!important;border-radius:20px!important;}
+  #root>main:only-child label{display:block;font-weight:600;font-size:14px;}
+  #root>main:only-child button{padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:var(--ink-3);color:var(--ink);}
+  #root>main:only-child button[type=submit]{background:var(--amber);color:var(--contrast-ink);font-weight:700;}
+  #root>main:only-child [role=status]:not(:empty){padding:12px;background:var(--ink-3);border-radius:12px;font-size:14px;}
+  @media(max-width:699px){
+    main{padding:20px 16px 120px;}
+    .settings-card-wide{grid-column:auto;}
+    .settings-card,.chore-group,.kid-big{padding:20px;}
+    .row2{flex-direction:column;gap:0;}
+    .modal{padding:22px;}
+    .modal-actions{gap:12px;flex-wrap:wrap;}
+    .kid-item{gap:12px;flex-wrap:wrap;}
+    .kid-time{min-width:76px;font-size:14px;}.kid-title{font-size:18px;}
+    .shop-add-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+  }
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}
+
+  /* Navigation uses existing setTab values and role visibility. */
+  body:has(.desktop-nav) #account-bar{display:none;}
+  body:has(.desktop-nav) .app{padding-left:240px;}
+  header.board{padding:20px 32px;min-height:88px;gap:16px;}
+  body:has(.desktop-nav) header.board .brand{position:fixed;top:28px;left:24px;z-index:24;flex-direction:column;gap:2px;}
+  .header-right{margin-left:auto;gap:10px;}
+  nav.tabs.desktop-nav{position:fixed;inset:0 auto 0 0;width:240px;background:var(--ink-2);border-right:1px solid var(--line);padding:112px 16px 20px;display:flex;flex-direction:column;gap:6px;z-index:21;overflow-y:auto;}
+  nav.tabs button{text-transform:none;letter-spacing:0;font:600 14px 'Inter',sans-serif;border:0;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;text-align:left;}
+  nav.tabs button:hover{background:var(--ink-3);}
+  nav.tabs button.active{background:var(--amber);color:var(--contrast-ink);}
+  .nav-caption{margin:0 12px 10px;font-size:12px;font-weight:600;color:var(--text-dim);}
+  .nav-footer{margin-top:auto;padding-top:24px;border-top:1px solid var(--line);display:grid;gap:4px;}
+  nav.tabs.mobile-nav{display:none;}
+  .page-heading{margin-bottom:28px;max-width:760px;}
+  .page-heading h1{font-family:'Archivo Narrow',sans-serif;font-size:38px;letter-spacing:-.02em;margin:4px 0 8px;text-transform:none;}
+  .page-heading p{margin:0;color:var(--text-dim);font-size:15px;}
+  .page-heading .page-eyebrow{font-size:13px;font-weight:600;}
+  .profile-btn{min-height:48px;padding:6px 12px;border-radius:12px;background:var(--ink-2);border:1px solid var(--line);color:var(--text-on-ink);}
+  .profile-btn .pname{display:flex;flex-direction:column;align-items:flex-start;line-height:1.3;font-size:14px;}
+  .profile-btn .pname small{font-size:12px;color:var(--text-dim);font-weight:400;}
+  .profile-menu{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px #0002;max-height:60dvh;overflow-y:auto;}
+  .profile-menu .profile-item,.profile-menu-footer{width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;color:var(--ink);text-align:left;font-size:14px;min-height:52px;}
+  .profile-menu .profile-item:hover,.profile-menu-footer:hover{background:var(--ink-3);}
+  @media(min-width:700px) and (max-width:1099px){
+    body:has(.desktop-nav) .app{padding-left:200px;}
+    nav.tabs.desktop-nav{width:200px;padding-left:12px;padding-right:12px;}
+    nav.tabs button{padding:12px;gap:10px;}
+    body:has(.desktop-nav) header.board .brand{left:20px;}
+    header.board,main{padding-left:24px;padding-right:24px;}
+    .settings-card-wide{grid-column:1/-1;}
+  }
+  @media(max-width:699px){
+    body:has(.desktop-nav) .app{padding-left:0;}
+    nav.tabs.desktop-nav{display:none;}
+    body:has(.desktop-nav) header.board .brand{position:static;}
+    header.board{padding:12px 16px;min-height:80px;flex-wrap:nowrap;}
+    .brand .flap{font-size:24px;}.brand .sub{font-size:12px;}
+    .header-right{gap:6px;flex-wrap:nowrap;}
+    .header-right .profile-btn{padding:4px 8px;}
+    .header-right .search-btn{width:40px;min-width:40px;}
+    .profile-btn .pname{max-width:88px;overflow:hidden;}
+    .profile-btn .pname>span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .profile-avatar{width:30px;height:30px;flex:none;}
+    .profile-menu{position:fixed;top:80px;right:12px;left:12px;width:auto;}
+    .page-heading{margin-bottom:24px;}.page-heading h1{font-size:32px;}
+    nav.tabs.mobile-nav{position:fixed;bottom:0;left:0;right:0;z-index:22;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:6px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--ink-2);}
+    nav.tabs.mobile-nav>button,.nav-more>summary{display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:56px;padding:6px 2px;font-size:12px;border-radius:12px;cursor:pointer;text-align:center;color:var(--text-dim);list-style:none;}
+    .nav-more>summary::-webkit-details-marker{display:none;}
+    .nav-more>summary.active,.nav-more[open]>summary{background:var(--ink-3);color:var(--text-on-ink);}
+    .nav-more-panel{position:absolute;bottom:calc(100% + 8px);left:12px;right:12px;padding:16px;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px #0002;max-height:65dvh;overflow:auto;display:grid;gap:4px;}
+    .nav-more-panel button{width:100%;}
+    .nav-more>summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px;}
+    body:has(.mobile-nav) .fab{bottom:calc(88px + env(safe-area-inset-bottom));right:16px;}
+    body:has(.mobile-nav) .fab.fab-secondary{bottom:calc(144px + env(safe-area-inset-bottom));}
+    body:has(.mobile-nav) .shop-add-bar{bottom:calc(70px + env(safe-area-inset-bottom));padding-bottom:12px;}
+    body:has(.mobile-nav) main{padding-bottom:calc(160px + env(safe-area-inset-bottom));}
+  }
+  @media(max-width:380px){.brand .sub{display:none;}.profile-btn .pname{max-width:64px;}.header-right{gap:2px;}}
+
+
+  input:not([type=color]):not([type=checkbox]):not([type=radio]),select,textarea{background:var(--field-bg)!important;color:var(--ink)!important;border-color:var(--line)!important;}
+  .checkline,.shop-check-label,.days-picker label{min-height:44px;}
+  .profile-item .dot{width:12px;height:12px;}
+  .kid-big h2{font-size:28px;text-transform:none;letter-spacing:0;}
+  .chore-group-head .name{font-size:18px;}
+  .chore-row,.shop-row,.approval-row{gap:16px;}
+  .tile-task-done{color:var(--success);}.tile-task-overdue{color:var(--danger);}
+  .tile-section-head{font-weight:600;}.tile-section{gap:10px;}
+  .person-tile-attention{border-color:var(--danger);box-shadow:none;}
+  .kid-loc,.kid-big .kd,.trip-meta,.search-result .meta{color:var(--text-dim);}
+  .chore-lib-chip,.quick-add-chip,.trip-item-status-btn{background:var(--ink-3);color:var(--ink);border-color:var(--line);}
+  .chore-freq,.tile-empty,.trip-meta{font-family:'Inter',sans-serif;}
+  .settings-card h3{font-size:20px;margin-bottom:20px;}
+  .chore-group,.settings-card{overflow-wrap:anywhere;}
+  @media(min-width:1100px){body:has(.desktop-nav) .shop-add-bar{left:240px;padding-left:32px;padding-right:32px;}}
+  @media(min-width:700px) and (max-width:1099px){body:has(.desktop-nav) .shop-add-bar{left:200px;}}
+  @media(max-width:699px){.chore-row,.approval-row{flex-wrap:wrap;}.chore-info{min-width:140px;}.settings-grid{display:flex;flex-direction:column;}.settings-card{width:100%;}.nav-more-panel .nav-caption{font-size:13px;}}
+
+  .profile-btn .pname{font-family:'Inter',sans-serif;text-transform:none;letter-spacing:0;}
+  .search-result:hover,.trip-row:hover{background:var(--ink-3);}
+  .overlay input:disabled,.overlay select:disabled{opacity:.55;}
+  @media(max-width:699px){
+    header.board{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;gap:8px 10px;}
+    .header-right{display:contents;}
+    .header-right .search-btn{width:44px;}
+    .header-right .profile-wrap{grid-column:1/-1;width:100%;}
+    .header-right .profile-btn{width:100%;padding:6px 12px;}
+    .profile-btn .pname{max-width:none;}
+    .profile-btn .caret{margin-left:auto;}
+    .profile-menu{top:132px;}
+    .brand .sub{display:block;}
   }
 </style>
 </head>
@@ -1869,7 +2051,7 @@ function renderMonthGrid(){
         <div class="month-dots">${dotsHtml}</div>
         <div class="month-ticks">
           ${hasTasks? '<span class="month-task-tick" title="Tasks due">✓</span>' : ''}
-          ${hasTrips? '<span class="month-trip-tick" title="Shopping trip">🛒</span>' : ''}
+          ${hasTrips? '<span class="month-trip-tick" title="Shopping trip">Shopping</span>' : ''}
         </div>
       </div>`;
     }).join('');
@@ -1988,7 +2170,7 @@ function renderBoard(){
       if(it.kind==='transit'){
         const cls = it._conflict ? 'block transit conflict' : 'block transit';
         return `<div class="${cls}" style="${posStyle}" onclick="openEdit('${it.sourceId}','${dateISO}')">
-          <div class="t">${it._conflict?'⚠ ':''}🚗 ${escapeHtml(it.label)}</div>
+          <div class="t">${it._conflict?'⚠ ':''}Travel · ${escapeHtml(it.label)}</div>
           <div class="m">${minToShort(it.start)}–${minToShort(it.end)}</div>
         </div>`;
       }
@@ -2002,7 +2184,7 @@ function renderBoard(){
       if(it.kind==='trip'){
         const cls = it._conflict ? 'block trip-block conflict' : 'block trip-block';
         return `<div class="${cls}" style="${posStyle}background:${it.color};" onclick="jumpToTripFromElsewhere('${it.id}')">
-          <div class="t">${it._conflict?'⚠ ':''}🛒 ${escapeHtml(it.title)}</div>
+          <div class="t">${it._conflict?'⚠ ':''}Shopping · ${escapeHtml(it.title)}</div>
           <div class="m">${minToShort(it.start)}</div>
         </div>`;
       }
@@ -2229,14 +2411,14 @@ function renderTripModal(){
         <label>Who's going</label>
         <select id="f_trip_member">${memberOptions}</select>
       </div>
-      <p style="font-size:11.5px;color:#8a8468;margin:-8px 0 14px;">Set a time and this trip shows up on the Week Board calendar too, alongside activities and tasks — not just here.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:-8px 0 14px;">Set a time and this trip shows up on the Week Board calendar too, alongside activities and tasks — not just here.</p>
       <div class="field">
         <label>Link to an existing task (optional)</label>
         <select id="f_trip_chore">
           <option value="">— None —</option>
           ${choreOptions}
         </select>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Linking just shows on the trip that it's tied to that task — marking the task done and completing the trip stay independent.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Linking just shows on the trip that it's tied to that task — marking the task done and completing the trip stay independent.</p>
       </div>
       ${quickListPicker}
       ${!isEdit ? `
@@ -2319,7 +2501,7 @@ function renderParentView(){
       : scheduleItems.map(it=>`
         <div class="tile-sched-row">
           <span class="tile-sched-time">${minToShort(it.start)}–${minToShort(it.end)}</span>
-          <span class="tile-sched-title">${it.kind==='transit'?'🚗 ':''}${escapeHtml(it.title)}${it.location?` · ${escapeHtml(it.location)}`:''}</span>
+          <span class="tile-sched-title">${it.kind==='transit'?'Travel · ':''}${escapeHtml(it.title)}${it.location?` · ${escapeHtml(it.location)}`:''}</span>
         </div>`).join('');
 
     // tasks due today for this person, with a quick-complete button right on the tile
@@ -2390,7 +2572,7 @@ function renderParentView(){
           const items = t.items||[];
           const bought = items.filter(i=>i.status==='bought').length;
           return `<div class="tile-sched-row" style="cursor:pointer;" onclick="jumpToTripFromElsewhere('${t.id}')">
-            <span class="tile-sched-time">🛒</span>
+            <span class="tile-sched-time">Shopping</span>
             <span class="tile-sched-title">${escapeHtml(t.name)} · ${bought}/${items.length} bought</span>
           </div>`;
         }).join('')}
@@ -2450,7 +2632,7 @@ function renderKidView(){
   if(kid){
     const evs = eventsForDateMember(dateISO, kid.id).slice().sort((a,b)=>a.start-b.start);
     if(evs.length===0){
-      items = `<div class="kid-empty">Nothing scheduled for ${formatDateNice(dateISO)}. Free day 🎉</div>`;
+      items = `<div class="kid-empty">Nothing scheduled for ${formatDateNice(dateISO)}. Free day </div>`;
       plain = kid.name + ' schedule — ' + formatDateNice(dateISO) + '\nNothing scheduled. Free day!';
     } else {
       items = evs.map(e=>`
@@ -2618,7 +2800,7 @@ function renderOverdueBanner(kid){
   return `<div style="background:rgba(214,72,78,.12);border:1px solid #D6484E;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
     <div style="font-weight:700;font-size:13px;color:#D6484E;margin-bottom:6px;">⚠ ${overdue.length} study ${overdue.length===1?'task':'tasks'} from earlier still pending</div>
     ${overdue.map(o=>`<div style="font-size:13px;padding:4px 0;cursor:pointer;" onclick="jumpToStudyTopic('${kid.id}','${o.topicId}')">
-      ${escapeHtml(o.subjectName)}: ${escapeHtml(o.topicName)} ${o.date?`<span style="color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;">(assigned ${escapeHtml(o.date)})</span>`:''}
+      ${escapeHtml(o.subjectName)}: ${escapeHtml(o.topicName)} ${o.date?`<span style="color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:13px;">(assigned ${escapeHtml(o.date)})</span>`:''}
     </div>`).join('')}
   </div>`;
 }
@@ -2650,7 +2832,7 @@ function renderStudyAssignmentsPanel(kid){
         const todayISOval = todayISO();
         const isToday = day.date === todayISOval;
         return `<div style="margin-bottom:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;${isToday?'border-color:var(--amber);':''}">
-          <div style="background:var(--ink-2);padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${isToday?'var(--amber)':'var(--text-dim)'};text-transform:uppercase;letter-spacing:.04em;">
+          <div style="background:var(--ink-2);padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:${isToday?'var(--amber)':'var(--text-dim)'};text-transform:uppercase;letter-spacing:.04em;">
             ${day.dayLabel} · ${escapeHtml(day.date)}${isToday?' · Today':''}
           </div>
           ${day.items.map(it=>{
@@ -2684,7 +2866,7 @@ function renderStudySubjectsAndTopics(kid){
     return `<div style="margin-bottom:22px;">
       <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
         ${escapeHtml(subj.name)}
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--text-dim);text-transform:none;letter-spacing:0;">${completedCount}/${topics.length} complete</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--text-dim);text-transform:none;letter-spacing:0;">${completedCount}/${topics.length} complete</span>
       </div>
       <div>
         ${topics.map(t=>{
@@ -2712,7 +2894,7 @@ function renderStudyTopicDetail(kid){
   return `
     <button class="btn ghost" style="margin-bottom:14px;" onclick="ui.studyView='topics';ui.studySelectedTopicId=null;render();">← Back to topics</button>
     <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:20px;margin-bottom:4px;">${escapeHtml(t.name)}</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:16px;">${escapeHtml(t.vcaaCode||'')}</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);margin-bottom:16px;">${escapeHtml(t.vcaaCode||'')}</div>
     ${prog && prog.examScore!=null ? `<div style="margin-bottom:14px;font-size:13px;color:var(--text-dim);">Last exam score: <strong style="color:var(--text-on-ink);">${prog.examScore}%</strong> (attempt ${prog.attemptCount})</div>` : ''}
     <div style="background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:18px;line-height:1.6;font-size:14.5px;">
       ${escapeHtml(t.studyContent||'Study content not available.')}
@@ -2727,7 +2909,7 @@ function renderStudyExamView(){
   const answeredCount = Object.keys(attempt.answers).length;
   return `
     <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:18px;margin-bottom:4px;">Exam</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:18px;">${answeredCount}/${attempt.questions.length} answered</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);margin-bottom:18px;">${answeredCount}/${attempt.questions.length} answered</div>
     ${attempt.questions.map((q,i)=>`
       <div style="margin-bottom:18px;">
         <div style="font-weight:600;font-size:14px;margin-bottom:8px;">${i+1}. ${escapeHtml(q.question)}</div>
@@ -2867,8 +3049,8 @@ function renderPendingApprovals(){
         <div class="trip-meta">${m?escapeHtml(m.name):''} · ${frequencyLabel(c)}</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingChore('${c.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingChore('${c.id}')">Approve</button>
+        <button class="btn ghost" style="padding:7px 12px;font-size:13px;" onclick="rejectPendingChore('${c.id}')">Reject</button>
+        <button class="btn primary" style="padding:7px 12px;font-size:13px;" onclick="approvePendingChore('${c.id}')">Approve</button>
       </div>
     </div>`;
   }).join('');
@@ -2881,8 +3063,8 @@ function renderPendingApprovals(){
         <div class="trip-meta">${m?escapeHtml(m.name):''}</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingShopItem('${i.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingShopItem('${i.id}')">Approve</button>
+        <button class="btn ghost" style="padding:7px 12px;font-size:13px;" onclick="rejectPendingShopItem('${i.id}')">Reject</button>
+        <button class="btn primary" style="padding:7px 12px;font-size:13px;" onclick="approvePendingShopItem('${i.id}')">Approve</button>
       </div>
     </div>`;
   }).join('');
@@ -2895,8 +3077,8 @@ function renderPendingApprovals(){
         <div class="trip-meta">${formatDateNice(t.date)} · ${m?escapeHtml(m.name):''} · ${(t.items||[]).length} item${(t.items||[]).length===1?'':'s'}</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingTrip('${t.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingTrip('${t.id}')">Approve</button>
+        <button class="btn ghost" style="padding:7px 12px;font-size:13px;" onclick="rejectPendingTrip('${t.id}')">Reject</button>
+        <button class="btn primary" style="padding:7px 12px;font-size:13px;" onclick="approvePendingTrip('${t.id}')">Approve</button>
       </div>
     </div>`;
   }).join('');
@@ -2904,7 +3086,7 @@ function renderPendingApprovals(){
   return `
     <div class="settings-card" style="max-width:560px;">
       <h3>Pending approval (${total})</h3>
-      <p style="font-size:12.5px;color:#5c5847;margin-top:0;">Things kids have added, waiting for a parent to approve before they go live.</p>
+      <p style="font-size:12.5px;color:var(--text-dim);margin-top:0;">Things kids have added, waiting for a parent to approve before they go live.</p>
       ${choreRows}${itemRows}${tripRows}
     </div>`;
 }
@@ -2913,8 +3095,8 @@ function renderSettings(){
   if(!isParentLoggedIn()){
     return `
       <div class="settings-card" style="text-align:center;max-width:560px;">
-        <h3>🔒 Parent login required</h3>
-        <p style="font-size:13.5px;color:#5c5847;">Log in as a parent (top right) to manage family members, colors, and data.</p>
+        <h3>Parent access required</h3>
+        <p style="font-size:13.5px;color:var(--text-dim);">Log in as a parent (top right) to manage family members, colors, and data.</p>
       </div>`;
   }
 
@@ -2922,13 +3104,13 @@ function renderSettings(){
 
   const memberRows = state.members.map(m=>`
     <div class="member-row">
-      <input type="color" value="${m.color}" onchange="updateMember('${m.id}','color',this.value)">
-      <input type="text" value="${escapeHtml(m.name)}" onchange="updateMember('${m.id}','name',this.value)" placeholder="Name">
-      <select onchange="updateMember('${m.id}','role',this.value)">
+      <input aria-label="Colour for ${escapeHtml(m.name)}" type="color" value="${m.color}" onchange="updateMember('${m.id}','color',this.value)">
+      <input aria-label="Member name" type="text" value="${escapeHtml(m.name)}" onchange="updateMember('${m.id}','name',this.value)" placeholder="Name">
+      <select aria-label="Member role" onchange="updateMember('${m.id}','role',this.value)">
         <option value="parent" ${m.role==='parent'?'selected':''}>Parent</option>
         <option value="kid" ${m.role==='kid'?'selected':''}>Kid</option>
       </select>
-      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:11px;background:none;border:1px solid #c9c2ab;border-radius:6px;padding:6px 8px;cursor:pointer;color:#5c5847;">${m.pinHash?'Reset PIN':'No PIN'}</button>
+      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:13px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text-dim);">${m.pinHash?'Reset PIN':'No PIN'}</button>
       <button onclick="removeMember('${m.id}')" title="Remove">✕</button>
     </div>
     <div class="member-contact-row">
@@ -2957,7 +3139,7 @@ function renderSettings(){
       <button class="btn ghost" style="margin-top:8px;font-size:12px;padding:7px 12px;" onclick="saveYearLevelAndGenerate('${m.id}')" ${ui.yearLevelSaving===m.id?'disabled':''}>
         ${ui.yearLevelSaving===m.id ? 'Saving & generating…' : 'Save & generate schedule'}
       </button>
-      <div style="font-size:11.5px;color:var(--text-dim);margin-top:4px;">Clears any existing schedule for this kid and generates a fresh one for the current year.</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">Clears any existing schedule for this kid and generates a fresh one for the current year.</div>
     </div>` : ''}`).join('');
 
   return `
@@ -2965,9 +3147,9 @@ function renderSettings(){
     <div class="settings-card settings-card-wide">
       <h3>Family</h3>
       <div class="field">
-        <label>Family ID <span style="font-weight:400;color:#8a8468;">(for other devices to join)</span></label>
+        <label>Family ID <span style="font-weight:400;color:var(--text-dim);">(for other devices to join)</span></label>
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;letter-spacing:.06em;background:#e3dcc6;border-radius:8px;padding:8px 14px;">${escapeHtml(fam.id||'')}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;letter-spacing:.06em;background:var(--ink-3);border-radius:8px;padding:8px 14px;">${escapeHtml(fam.id||'')}</div>
           <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="copyToClipboard('${fam.id||''}','familyIdCopied')">${ui.familyIdCopied?'Copied ✓':'Copy'}</button>
         </div>
       </div>
@@ -2977,7 +3159,7 @@ function renderSettings(){
           <input type="password" id="fam_newPassword" placeholder="${fam.passwordHash? 'Set a new family password':'No password set yet — set one'}" style="flex:1;">
           <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="changeFamilyPassword()">${fam.passwordHash?'Change':'Set'}</button>
         </div>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Family members use the Family ID above plus this password to join from their own device, then pick their own name and set their own PIN.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Family members use the Family ID above plus this password to join from their own device, then pick their own name and set their own PIN.</p>
       </div>
       <div class="field">
         <label>Family name</label>
@@ -2993,7 +3175,7 @@ function renderSettings(){
           <input type="tel" value="${escapeHtml(fam.primaryHolderPhone||'')}" onchange="updateFamily('primaryHolderPhone',this.value)">
         </div>
       </div>
-      <p style="font-size:12px;color:#6b6650;margin:0;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
+      <p style="font-size:12px;color:var(--text-dim);margin:0;">This app can't send real emails or texts yet — these are captured so it's ready to plug into that later.</p>
     </div>
     ${renderPendingApprovals()}
     <div class="settings-card">
@@ -3003,11 +3185,11 @@ function renderSettings(){
         <input type="text" id="newMemberName" placeholder="Add a person (e.g. Kid 3, Grandma)">
         <button class="btn primary" onclick="addMember()">Add</button>
       </div>
-      <p style="font-size:12px;color:#6b6650;margin-top:12px;">"Reset PIN" clears that person's PIN — they'll be asked to set a new one next time they log in.</p>
+      <p style="font-size:12px;color:var(--text-dim);margin-top:12px;">"Reset PIN" clears that person's PIN — they'll be asked to set a new one next time they log in.</p>
     </div>
     <div class="settings-card">
       <h3>Task list</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">These names show up as suggestions when adding a task, so nobody has to retype "Unload dishwasher" from scratch every time.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">These names show up as suggestions when adding a task, so nobody has to retype "Unload dishwasher" from scratch every time.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn ghost" onclick="openTaskLibraryModal()">Manage task list (${(state.choreLibrary||[]).length})</button>
         <button class="btn ghost" onclick="triggerCSVImport('task')">Import tasks from CSV</button>
@@ -3015,7 +3197,7 @@ function renderSettings(){
     </div>
     <div class="settings-card">
       <h3>Activity list</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Same idea for activities — "Dentist," "Swimming," "GP appointment" show up as suggestions instead of typing them fresh every time.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Same idea for activities — "Dentist," "Swimming," "GP appointment" show up as suggestions instead of typing them fresh every time.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn ghost" onclick="openActivityLibraryModal()">Manage activity list (${(state.activityLibrary||[]).length})</button>
         <button class="btn ghost" onclick="triggerCSVImport('activity')">Import activities from CSV</button>
@@ -3024,21 +3206,21 @@ function renderSettings(){
     <div class="settings-card">
       <h3>This device</h3>
       ${isKioskDevice() ? `
-        <p style="font-size:13px;color:#5c5847;margin-top:0;">This device is set up as a display for ${escapeHtml(state.family.name||'this family')} — it shows Parent View without needing to log in each time.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin-top:0;">This device is set up as a display for ${escapeHtml(state.family.name||'this family')} — it shows Parent View without needing to log in each time.</p>
         <button class="btn ghost" onclick="disableKioskMode()">Turn off display mode</button>
       ` : `
-        <p style="font-size:13px;color:#5c5847;margin-top:0;">For a tablet or screen mounted somewhere the family sees often — always shows Parent View, no login needed to just look. Making changes still requires logging in.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin-top:0;">For a tablet or screen mounted somewhere the family sees often — always shows Parent View, no login needed to just look. Making changes still requires logging in.</p>
         <button class="btn ghost" onclick="enableKioskMode()">Make this device a display</button>
       `}
     </div>
     <div class="settings-card">
       <h3>Notifications</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">A browser notification before upcoming tasks and activities. Only fires while this tab is open (even in the background) — not if the browser itself is fully closed. Applies to this device, not synced with the family.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">A browser notification before upcoming tasks and activities. Only fires while this tab is open (even in the background) — not if the browser itself is fully closed. Applies to this device, not synced with the family.</p>
       ${(() => { const np = getNotifyPrefs(); return np.enabled ? `
-        <p style="font-size:12.5px;color:#3d7a4f;font-weight:600;margin-bottom:10px;">✓ Enabled on this device</p>
+        <p style="font-size:12.5px;color:var(--success);font-weight:600;margin-bottom:10px;">✓ Enabled on this device</p>
         <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">First reminder <input type="number" min="0" value="${np.firstReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid #c9c2ab;" onchange="setNotifyReminderMinutes('firstReminder', this.value)"> min before</label>
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">Second reminder <input type="number" min="0" value="${np.secondReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid #c9c2ab;" onchange="setNotifyReminderMinutes('secondReminder', this.value)"> min before</label>
+          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">First reminder <input type="number" min="0" value="${np.firstReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid var(--line);" onchange="setNotifyReminderMinutes('firstReminder', this.value)"> min before</label>
+          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">Second reminder <input type="number" min="0" value="${np.secondReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid var(--line);" onchange="setNotifyReminderMinutes('secondReminder', this.value)"> min before</label>
         </div>
         <button class="btn ghost" onclick="disableNotifications()">Turn off notifications</button>
       ` : `
@@ -3047,25 +3229,25 @@ function renderSettings(){
     </div>
     <div class="settings-card">
       <h3>Screen time devices</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Laptops paired for automatic screen-time reporting. Removing one deletes its usage history permanently.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Laptops paired for automatic screen-time reporting. Removing one deletes its usage history permanently.</p>
       <button class="btn ghost" onclick="openDeviceManager()">Manage registered devices</button>
     </div>
     <div class="settings-card">
       <h3>Set up a new laptop</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Download, then a few quick steps on the kid's laptop.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Download, then a few quick steps on the kid's laptop.</p>
       <div style="margin-bottom:14px;">
         <a href="${TRACKLINE_AGENT_DOWNLOAD_URL}" target="_blank" rel="noopener" class="btn primary" style="text-decoration:none;text-align:center;display:block;">Download Trackline Agent (.zip)</a>
       </div>
-      <ol style="font-size:13px;color:#5c5847;padding-left:20px;margin:0;line-height:1.7;">
-        <li>Create a folder: <code style="background:#e3dcc6;padding:1px 5px;border-radius:4px;">C:\\trackline</code></li>
+      <ol style="font-size:13px;color:var(--text-dim);padding-left:20px;margin:0;line-height:1.7;">
+        <li>Create a folder: <code style="background:var(--ink-3);padding:1px 5px;border-radius:4px;">C:\\trackline</code></li>
         <li>Extract every file from the downloaded zip into that folder.</li>
-        <li>Run <code style="background:#e3dcc6;padding:1px 5px;border-radius:4px;">TracklineSetup.exe</code> from inside it, and follow the pairing steps.</li>
+        <li>Run <code style="background:var(--ink-3);padding:1px 5px;border-radius:4px;">TracklineSetup.exe</code> from inside it, and follow the pairing steps.</li>
       </ol>
     </div>
     <div class="settings-card">
       <h3>Data</h3>
-      <p style="font-size:13px;color:#5c5847;margin-top:0;">Your schedule is saved automatically to this app. Use export/import to move data or keep a backup.</p>
-      <p style="font-size:12px;color:#6b6650;background:#e3dcc6;border-radius:7px;padding:8px 10px;">
+      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Your schedule is saved automatically to this app. Use export/import to move data or keep a backup.</p>
+      <p style="font-size:12px;color:var(--text-dim);background:var(--ink-3);border-radius:7px;padding:8px 10px;">
         Storage mode: <strong>${hasClaudeStorage?'Claude account storage':backendReachable?'Cloud (synced across devices)':backendReachable===false?'This browser only (localStorage) — backend unreachable':'Checking connection…'}</strong>${(!hasClaudeStorage && backendReachable===false)?' — this device won\u2019t automatically see schedules saved on other devices until the backend is reachable again.':''}${(!hasClaudeStorage && backendReachable)?' — this family\u2019s data is synced through the backend, so any device pointed at the same deployment sees the same schedule.':''}
       </p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -3129,7 +3311,7 @@ function renderModal(){
         <label>Activity color</label>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="f_color" value="${color}" style="width:44px;height:38px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;" ${dis}>
-          ${readOnly?'':`<button type="button" class="btn ghost" style="padding:8px 12px;font-size:11.5px;" onclick="resetColorToMember()">Use member's color</button>`}
+          ${readOnly?'':`<button type="button" class="btn ghost" style="padding:8px 12px;font-size:13px;" onclick="resetColorToMember()">Use member's color</button>`}
         </div>
       </div>
 
@@ -3147,8 +3329,8 @@ function renderModal(){
         <div class="field">
           <label>Days of week</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:11.5px;" onclick="setActivityDayPreset([0,1,2,3,4])" ${dis}>Every weekday (Mon–Fri)</button>
-            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:11.5px;" onclick="setActivityDayPreset([0,1,2,3,4,5,6])" ${dis}>Every day</button>
+            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:13px;" onclick="setActivityDayPreset([0,1,2,3,4])" ${dis}>Every weekday (Mon–Fri)</button>
+            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:13px;" onclick="setActivityDayPreset([0,1,2,3,4,5,6])" ${dis}>Every day</button>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
             ${DAYS.map((d,i)=>`
@@ -3159,7 +3341,7 @@ function renderModal(){
           </div>
         </div>
         <div class="field">
-          <label>Repeats until <span style="font-weight:400;color:#8a8468;">(optional — leave blank to repeat indefinitely)</span></label>
+          <label>Repeats until <span style="font-weight:400;color:var(--text-dim);">(optional — leave blank to repeat indefinitely)</span></label>
           <input type="date" id="f_recurrenceEndDate" value="${recurrenceEndDate}" ${dis}>
         </div>
       </div>
@@ -3180,7 +3362,7 @@ function renderModal(){
       </div>
       <div class="field">
         <label>Notes (optional)</label>
-        <textarea id="f_notes" placeholder="e.g. Bring $10 for excursion, coach's number: ..." rows="2" style="width:100%;padding:10px 11px;border-radius:7px;border:1px solid #c9c2ab;background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);resize:vertical;" ${dis}>${escapeHtml(notes)}</textarea>
+        <textarea id="f_notes" placeholder="e.g. Bring $10 for excursion, coach's number: ..." rows="2" style="width:100%;padding:10px 11px;border-radius:7px;border:1px solid var(--line);background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);resize:vertical;" ${dis}>${escapeHtml(notes)}</textarea>
       </div>
       <div class="checkline">
         <input type="checkbox" id="f_needsDrive" ${needsDrive?'checked':''} onchange="toggleDriveFields(this.checked)" ${dis}>
@@ -3197,7 +3379,7 @@ function renderModal(){
             <input type="number" id="f_travel" value="${travelMin}" min="0" step="5" ${dis}>
           </div>
         </div>
-        <p style="font-size:12px;color:#6b6650;margin:-6px 0 4px;">This blocks the driver's calendar before and after the activity automatically.</p>
+        <p style="font-size:12px;color:var(--text-dim);margin:-6px 0 4px;">This blocks the driver's calendar before and after the activity automatically.</p>
       </div>
 
       ${(canSkip && !readOnly && !movedOverride)? `<div class="skip-note">Recurring activity. To skip just ${formatDateNice(occurrenceDate)} (e.g. a holiday) without deleting the whole series, use "Skip this date" below — or "Reschedule" to move just this one to a different day/time instead.</div>`:''}
@@ -3286,7 +3468,7 @@ function renderChoreModal(){
         <div class="days-picker">${daysPicker}</div>
       </div>
       <div id="choreFortnightAnchorField" class="field" style="${frequency==='fortnightly'?'':'display:none'}">
-        <p style="font-size:11.5px;color:#8a8468;margin:0 0 6px;">Uses the "Starts on" date below to work out the every-2-weeks pattern.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:0 0 6px;">Uses the "Starts on" date below to work out the every-2-weeks pattern.</p>
       </div>
       <div id="choreMonthlyFields" class="field" style="${frequency==='monthly'?'':'display:none'}">
         <label>Day of month</label>
@@ -3295,7 +3477,7 @@ function renderChoreModal(){
       <div id="choreStartDateField" class="field" style="${showStartDate?'':'display:none'}">
         <label>Starts on</label>
         <input type="date" id="f_chore_startDate" value="${startDateClamped}" min="${today}" ${dis}>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Won't show as due on any date before this — new tasks can't retroactively apply to past days.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Won't show as due on any date before this — new tasks can't retroactively apply to past days.</p>
       </div>
       <div id="choreDueDateField" class="field" style="${showDueDate?'':'display:none'}">
         <label>Date</label>
@@ -3304,12 +3486,12 @@ function renderChoreModal(){
       <div class="field">
         <label>Due time (optional)</label>
         <input type="time" id="f_chore_dueTime" value="${dueTime}" ${dis}>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Leave blank for "anytime today" — set a time if it needs doing by a specific point in the day.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Leave blank for "anytime today" — set a time if it needs doing by a specific point in the day.</p>
       </div>
       <div class="field">
         <label>Points (optional)</label>
         <input type="number" id="f_chore_points" value="${points}" min="0" max="100" step="1" ${dis}>
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">Earned each time this is marked done. Set to 0 for no points.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Earned each time this is marked done. Set to 0 for no points.</p>
       </div>
 
       <div class="modal-actions">
@@ -3339,9 +3521,9 @@ function renderCompleteChoreModal(){
   <div class="overlay" onclick="if(event.target===this) closeCompleteModal()">
     <div class="modal" style="max-width:340px;text-align:center;">
       <h2 style="margin-bottom:4px;">Nice work!</h2>
-      <p style="font-size:13.5px;color:#5c5847;margin:0 0 18px;">What time did you finish "${escapeHtml(chore.title)}"?</p>
+      <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 18px;">What time did you finish "${escapeHtml(chore.title)}"?</p>
       <input type="time" id="f_complete_time" value="${defaultTime}"
-        style="width:100%;text-align:center;font-size:22px;padding:12px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;">
+        style="width:100%;text-align:center;font-size:22px;padding:12px;border-radius:8px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;">
       <div style="display:flex;gap:8px;margin-top:18px;">
         <button class="btn ghost" style="flex:1;" onclick="closeCompleteModal()">Cancel</button>
         <button class="btn primary" style="flex:1;" onclick="submitCompleteChore()">Save</button>
@@ -3358,30 +3540,48 @@ function initials(name){
   return (name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
 }
 
+function uiIcon(name){
+  const paths={calendar:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18"/>',home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',tasks:'<path d="m3 6 2 2 4-4m-6 10 2 2 4-4M12 6h9M12 14h9M12 21h9"/>',shopping:'<path d="M6 7h12l2 14H4L6 7Zm3 0V5a3 3 0 0 1 6 0v2"/>',people:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m2-17a3 3 0 0 1 0 6m1 5a5 5 0 0 1 3 5"/>',screen:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>',study:'<path d="M12 5C9 3 5 3 2 4v15c3-1 7-1 10 1 3-2 7-2 10-1V4c-3-1-7-1-10 1Zm0 0v15"/>',settings:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/>',search:'<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"/>',moon:'<path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z"/>',more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>'};
+  return `<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.home}</svg>`;
+}
+function renderAppNavigation(){
+  const parent=isParentLoggedIn();
+  const routes=[['parent','Family overview','home'],['board','Calendar','calendar'],['chores','Tasks','tasks'],['shopping','Shopping','shopping'],['kid',parent?'Children':'Today','people'],['study','Study','study'],['screentime','Screen time','screen'],['settings','Settings','settings']].filter(([id])=>id!=='parent'||parent);
+  const button=([id,label,icon],mobile=false)=>`<button type="button" class="${ui.tab===id?'active':''}" ${ui.tab===id?'aria-current="page"':''} onclick="setTab('${id}')">${uiIcon(icon)}<span>${mobile&&(id==='parent'||id==='kid')?'Today':label}</span>${id==='settings'&&parent&&totalPendingApprovals()>0?`<span class="nav-badge" aria-label="Pending approvals">${totalPendingApprovals()}</span>`:''}</button>`;
+  const primary=parent?['parent','board','chores']:['kid','chores','study'];
+  return `<nav class="tabs desktop-nav" aria-label="Main navigation"><p class="nav-caption">Your family</p>${routes.map(r=>button(r)).join('')}<div class="nav-footer"><button onclick="tracklineAuth.lock()">${uiIcon('people')}<span>Switch member</span></button><button onclick="tracklineAuth.signOut()">${uiIcon('lock')}<span>Sign out</span></button></div></nav>
+    <nav class="tabs mobile-nav" aria-label="Main navigation">${primary.map(id=>button(routes.find(r=>r[0]===id),true)).join('')}<details class="nav-more"><summary class="${primary.includes(ui.tab)?'':'active'}">${uiIcon('more')}<span>More</span></summary><div class="nav-more-panel"><p class="nav-caption">More for your family</p>${routes.filter(r=>!primary.includes(r[0])).map(r=>button(r)).join('')}<button onclick="tracklineAuth.lock()">${uiIcon('people')}<span>Switch member</span></button><button onclick="tracklineAuth.signOut()">${uiIcon('lock')}<span>Sign out</span></button></div></details></nav>`;
+}
+function renderPageHeading(){
+  const labels={parent:['Family overview','A clear picture of everyone’s day.'],board:['Family calendar','Plan activities, travel and time together.'],chores:['Tasks','Small steps that keep family life moving.'],shopping:['Shopping','Shared lists and trips, in one place.'],kid:['Today','Your schedule, tasks and study for the day.'],study:['Study','Your weekly sessions and saved progress.'],screentime:['Screen time','Understand your family’s device activity.'],settings:['Family settings','Members, permissions and family preferences.']};
+  const item=labels[ui.tab]||labels.kid;
+  return `<div class="page-heading"><p class="page-eyebrow">${escapeHtml(state.family?.name||'Your family')}</p><h1>${item[0]}</h1><p>${item[1]}</p></div>`;
+}
+
 function renderProfileDropdown(){
   const current = currentMember();
   const btnLabel = isLoggedIn() ? escapeHtml(current.name) : 'Log in';
   const avatarBg = isLoggedIn() ? current.color : '#555B7A';
-  const avatarText = isLoggedIn() ? initials(current.name) : '🔒';
+  const avatarText = isLoggedIn() ? initials(current.name) : uiIcon('lock');
 
   const items = state.members.map(m=>`
-    <div class="profile-item ${m.id===ui.profileId?'current':''}" onclick="openLogin('${m.id}')">
+    <button type="button" class="profile-item ${m.id===ui.profileId?'current':''}" onclick="openLogin('${m.id}')">
       <span class="dot" style="background:${m.color}"></span>
       <span>${escapeHtml(m.name)}</span>
-      <span style="margin-left:auto;font-size:10px;opacity:.55;text-transform:uppercase;">${m.role}${m.pinHash?'':' · no pin yet'}</span>
-    </div>`).join('') || `<div class="profile-none">Add family members in Settings first.</div>`;
+      <span style="margin-left:auto;font-size:12px;opacity:.55;text-transform:uppercase;">${m.role==='parent'?'Adult':'Child'}</span>
+    </button>`).join('') || `<div class="profile-none">Add family members in Settings first.</div>`;
 
   const menu = ui.profileMenuOpen ? `
     <div class="profile-menu">
       ${items}
-      ${isLoggedIn()? `<div class="profile-menu-footer" onclick="logout()">Log out</div>` : ''}
+      ${isLoggedIn()? `<button class="profile-menu-footer" onclick="logout()">Lock this screen</button>` : ''}
     </div>` : '';
 
   return `
     <div class="profile-wrap">
-      <button class="profile-btn" onclick="toggleProfileMenu()">
+      <button class="profile-btn" onclick="toggleProfileMenu()" aria-label="Switch family member" aria-expanded="${!!ui.profileMenuOpen}">
         <span class="profile-avatar" style="background:${avatarBg}">${avatarText}</span>
-        <span class="pname">${btnLabel}</span>
+        <span class="pname"><span>${btnLabel}</span><small>Switch member</small></span>
         <span class="caret">${ui.profileMenuOpen?'▲':'▼'}</span>
       </button>
       ${menu}
@@ -3927,9 +4127,9 @@ function renderDayDrillModal(){
 
   let body;
   if(ui.dayDrillLoading){
-    body = `<p style="font-size:13px;color:#8a8468;">Loading...</p>`;
+    body = `<p style="font-size:13px;color:var(--text-dim);">Loading...</p>`;
   } else if(ui.dayDrillError){
-    body = `<p style="font-size:13px;color:#a5323a;">${escapeHtml(ui.dayDrillError)}</p>`;
+    body = `<p style="font-size:13px;color:var(--danger);">${escapeHtml(ui.dayDrillError)}</p>`;
   } else if(ui.dayDrillData){
     const apps = ui.dayDrillData.apps || [];
     const showCount = ui.dayDrillShowAll ? apps.length : 5;
@@ -3951,7 +4151,7 @@ function renderDayDrillModal(){
     }).join('<span style="color:#c9c2ab;">·</span>');
 
     const rows = shown.length===0
-      ? `<p style="font-size:13px;color:#8a8468;">No app usage recorded that day.</p>`
+      ? `<p style="font-size:13px;color:var(--text-dim);">No app usage recorded that day.</p>`
       : shown.map((a,i)=>{
           const pct = totalMinutes>0 ? Math.round((a.minutesUsed/totalMinutes)*100) : 0;
           const barPct = Math.round((a.minutesUsed/maxMinutes)*100);
@@ -3959,7 +4159,7 @@ function renderDayDrillModal(){
           return `<div class="approval-row" style="flex-direction:column;align-items:stretch;gap:6px;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8a8468;width:14px;flex:none;">${i+1}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);width:14px;flex:none;">${i+1}</span>
                 <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};flex:none;"></span>
                 <div style="min-width:0;">
                   <div class="trip-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.name)}</div>
@@ -3968,7 +4168,7 @@ function renderDayDrillModal(){
               </div>
               <div style="font-family:'Archivo Narrow',sans-serif;font-weight:700;flex:none;padding-left:10px;">${formatMinutesAsHM(a.minutesUsed)}</div>
             </div>
-            <div style="height:5px;background:#e3dcc6;border-radius:3px;overflow:hidden;">
+            <div style="height:5px;background:var(--ink-3);border-radius:3px;overflow:hidden;">
               <div style="height:100%;width:${barPct}%;background:${color};border-radius:3px;"></div>
             </div>
           </div>`;
@@ -3980,7 +4180,7 @@ function renderDayDrillModal(){
 
     body = `
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-        <p style="font-size:13px;color:#5c5847;margin:0;">Total tracked: <strong>${formatMinutesAsHM(totalMinutes)}</strong></p>
+        <p style="font-size:13px;color:var(--text-dim);margin:0;">Total tracked: <strong>${formatMinutesAsHM(totalMinutes)}</strong></p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">${catSummary}</div>
       </div>
       ${rows}
@@ -3992,7 +4192,7 @@ function renderDayDrillModal(){
   <div class="overlay" onclick="if(event.target===this) closeDayDrill()">
     <div class="modal" style="max-width:440px;">
       <h2 style="display:flex;align-items:center;gap:9px;">
-        <span class="profile-avatar" style="background:${ui.dayDrillMemberColor};width:28px;height:28px;font-size:11px;">${initials(ui.dayDrillMemberName||'')}</span>
+        <span class="profile-avatar" style="background:${ui.dayDrillMemberColor};width:28px;height:28px;font-size:13px;">${initials(ui.dayDrillMemberName||'')}</span>
         ${escapeHtml(ui.dayDrillMemberName||'')} — ${ui.dayDrillData ? formatDateNice(ui.dayDrillData.date) : ''}
       </h2>
       ${body}
@@ -4012,7 +4212,7 @@ function renderDeviceManagerModal(){
     <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
       <div class="modal" style="max-width:360px;">
         <h2>Registered devices</h2>
-        <p style="font-size:13px;color:#8a8468;">Loading…</p>
+        <p style="font-size:13px;color:var(--text-dim);">Loading…</p>
       </div>
     </div>`;
   }
@@ -4021,7 +4221,7 @@ function renderDeviceManagerModal(){
     <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
       <div class="modal" style="max-width:360px;">
         <h2>Registered devices</h2>
-        <p style="color:#a5323a;font-size:13px;font-weight:600;">${escapeHtml(ui.deviceManagerError)}</p>
+        <p style="color:var(--danger);font-size:13px;font-weight:600;">${escapeHtml(ui.deviceManagerError)}</p>
         <div class="modal-actions" style="margin-top:16px;">
           <div></div>
           <button class="btn primary" onclick="closeDeviceManager()">Close</button>
@@ -4039,7 +4239,7 @@ function renderDeviceManagerModal(){
         <div class="trip-title">${escapeHtml(d.label || d.hostname || 'Unnamed device')}</div>
         <div class="trip-meta">${m?escapeHtml(m.name):'Unknown member'} · Last sync: ${lastSync}</div>
       </div>
-      <button class="btn danger" style="padding:7px 12px;font-size:11.5px;" onclick="confirmRemoveDeviceByIndex(${idx})">Remove</button>
+      <button class="btn danger" style="padding:7px 12px;font-size:13px;" onclick="confirmRemoveDeviceByIndex(${idx})">Remove</button>
     </div>`;
   }).join('');
 
@@ -4047,8 +4247,8 @@ function renderDeviceManagerModal(){
   <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
     <div class="modal" style="max-width:440px;">
       <h2>Registered devices</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Removing a device deletes all of its usage history permanently.</p>
-      ${devices.length===0? '<p style="font-size:13px;color:#8a8468;">No devices paired yet.</p>' : rows}
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">Removing a device deletes all of its usage history permanently.</p>
+      ${devices.length===0? '<p style="font-size:13px;color:var(--text-dim);">No devices paired yet.</p>' : rows}
       <div class="modal-actions" style="margin-top:16px;">
         <div></div>
         <button class="btn primary" onclick="closeDeviceManager()">Done</button>
@@ -4139,9 +4339,9 @@ function renderSearchModal(){
     <div class="modal" style="max-width:420px;">
       <h2>Search</h2>
       <input type="text" id="f_search" value="${escapeHtml(ui.searchQuery)}" oninput="onSearchInput(this.value)" placeholder="Search activities and tasks..." autofocus
-        style="width:100%;padding:11px 12px;border-radius:8px;border:1px solid #c9c2ab;font-size:15px;margin-bottom:14px;">
-      ${!hasQuery? `<p style="font-size:13px;color:#8a8468;text-align:center;padding:20px 0;">Start typing to search by title, location, or notes.</p>` : ''}
-      ${noResults? `<p style="font-size:13px;color:#8a8468;text-align:center;padding:20px 0;">No matches for "${escapeHtml(ui.searchQuery)}".</p>` : ''}
+        style="width:100%;padding:11px 12px;border-radius:8px;border:1px solid var(--line);font-size:15px;margin-bottom:14px;">
+      ${!hasQuery? `<p style="font-size:13px;color:var(--text-dim);text-align:center;padding:20px 0;">Start typing to search by title, location, or notes.</p>` : ''}
+      ${noResults? `<p style="font-size:13px;color:var(--text-dim);text-align:center;padding:20px 0;">No matches for "${escapeHtml(ui.searchQuery)}".</p>` : ''}
       ${eventRows}
       ${choreRows}
       <div class="modal-actions" style="margin-top:16px;">
@@ -4236,21 +4436,21 @@ function renderLoginModal(){
     <div class="modal" style="max-width:340px;text-align:center;">
       <span class="profile-avatar" style="background:${m.color};width:52px;height:52px;font-size:18px;margin:0 auto 12px;">${initials(m.name)}</span>
       <h2 style="margin-bottom:4px;">${isCreate? 'Set a PIN':'Enter PIN'}</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 18px;">${isCreate? `Choose a 4-digit PIN for ${escapeHtml(m.name)}. You'll use this to log in from now on.` : `Logging in as ${escapeHtml(m.name)}`}</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 18px;">${isCreate? `Choose a 4-digit PIN for ${escapeHtml(m.name)}. You'll use this to log in from now on.` : `Logging in as ${escapeHtml(m.name)}`}</p>
 
       <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin_input"
         placeholder="••••" autocomplete="off" autofocus
         onkeydown="if(event.key==='Enter'){ ${isCreate? `const c=document.getElementById('pin_confirm'); if(c) c.focus();` : `submitLogin();`} }"
-        style="width:100%;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;">
+        style="width:100%;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border-radius:8px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;">
 
       ${isCreate? `
       <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin_confirm"
         placeholder="Confirm PIN" autocomplete="off"
         onkeydown="if(event.key==='Enter') submitLogin();"
-        style="width:100%;text-align:center;font-size:18px;letter-spacing:6px;padding:10px;border-radius:8px;border:1px solid #c9c2ab;font-family:'IBM Plex Mono',monospace;margin-top:10px;">
+        style="width:100%;text-align:center;font-size:18px;letter-spacing:6px;padding:10px;border-radius:8px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;margin-top:10px;">
       `:''}
 
-      ${ui.loginError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.loginError)}</div>`:''}
+      ${ui.loginError? `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.loginError)}</div>`:''}
 
       <div style="display:flex;gap:8px;margin-top:18px;">
         <button class="btn ghost" style="flex:1;" onclick="closeLogin()">Cancel</button>
@@ -4330,13 +4530,13 @@ function renderOnboarding(){
           <div class="flap">Track<span>line</span></div>
           <div class="sub">Family Tracker</div>
         </div>
-        <h2>Family created 🎉</h2>
+        <h2>Family created </h2>
         <p class="lead">Share this with the rest of your family so their own devices can join.</p>
-        <div style="background:#e3dcc6;border-radius:10px;padding:16px;margin-bottom:16px;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#6b6650;margin-bottom:4px;">Family ID</div>
+        <div style="background:var(--ink-3);border-radius:10px;padding:16px;margin-bottom:16px;">
+          <div style="font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-bottom:4px;">Family ID</div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;letter-spacing:.08em;color:var(--ink);">${escapeHtml(ui.justCreatedFamilyId)}</div>
         </div>
-        <p style="font-size:12.5px;color:#6b6650;margin-bottom:18px;">Each family member opens this same website, taps <strong>"Join an existing family,"</strong> enters this Family ID and the family password you just set, then picks their own name and sets their own PIN.</p>
+        <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:18px;">Each family member opens this same website, taps <strong>"Join an existing family,"</strong> enters this Family ID and the family password you just set, then picks their own name and sets their own PIN.</p>
         <button class="btn primary" style="width:100%;padding:13px;" onclick="continueAfterFamilyCreated()">Continue — set my PIN</button>
       </div>
     </div>`;
@@ -4363,7 +4563,7 @@ function renderOnboarding(){
           <label>Family password</label>
           <input type="password" id="jf_password" placeholder="Family password">
         </div>
-        ${ui.joinError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.joinError)}</div>`:''}
+        ${ui.joinError? `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.joinError)}</div>`:''}
         <button class="btn primary" style="width:100%;padding:13px;" onclick="submitJoinFamily()">Join family</button>
         <button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="cancelJoinFamily()">← Back</button>
       </div>
@@ -4401,16 +4601,16 @@ function renderOnboarding(){
       <div class="field">
         <label>Family password</label>
         <input type="password" id="ob_familyPassword" placeholder="For other family members to join with">
-        <p style="font-size:11.5px;color:#8a8468;margin:6px 0 0;">You'll get a Family ID after creating this — other family members use that ID plus this password to join from their own device.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">You'll get a Family ID after creating this — other family members use that ID plus this password to join from their own device.</p>
       </div>
-      ${ui.onboardingError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.onboardingError)}</div>`:''}
+      ${ui.onboardingError? `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.onboardingError)}</div>`:''}
       <button class="btn primary" style="width:100%;padding:13px;" onclick="submitOnboarding()">Create my family</button>
 
       <div class="onboard-divider">or</div>
       <button class="btn ghost" style="width:100%;padding:11px;" onclick="openJoinFamily()">Join an existing family</button>
       <button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="loadExampleData()">Just show me an example first</button>
       ${hasSnapshotToReturnTo ? `<button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="cancelNewFamilySetup()">← Back to my existing family</button>` : ''}
-      <p style="font-size:11.5px;color:#8a8468;text-align:center;margin:14px 0 0;">Email/phone are stored so this is ready for notifications later — this app can't send real emails or texts yet.</p>
+      <p style="font-size:13px;color:var(--text-dim);text-align:center;margin:14px 0 0;">Email/phone are stored so this is ready for notifications later — this app can't send real emails or texts yet.</p>
     </div>
   </div>`;
 }
@@ -4582,6 +4782,32 @@ function renderDashboard(){
   </div>`;
 }
 
+function enhancePresentation(root){
+  // Presentation-only semantics; existing click handlers and form IDs survive.
+  root.querySelectorAll('.field').forEach(field=>{
+    const label=field.querySelector('label'),control=field.querySelector('input,select,textarea');
+    if(label&&control?.id) label.htmlFor=control.id;
+  });
+  root.querySelectorAll('button[title]').forEach(button=>{if(!button.hasAttribute('aria-label')) button.setAttribute('aria-label',button.title);});
+  root.querySelectorAll('[onclick]').forEach(element=>{
+    if(element.matches('button,a,input,select,textarea,summary,.col-body')) return;
+    element.setAttribute('role','button');element.tabIndex=0;
+    element.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();element.click();}});
+  });
+  root.querySelectorAll('.modal').forEach((modal,index)=>{
+    modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+    const title=modal.querySelector('h2');if(title){title.id=title.id||'ui-dialog-title-'+index;modal.setAttribute('aria-labelledby',title.id);}
+    modal.addEventListener('keydown',event=>{
+      if(event.key!=='Tab') return;
+      const items=Array.from(modal.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')).filter(el=>el.getClientRects().length);
+      if(!items.length) return;
+      const first=items[0],last=items[items.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    });
+  });
+}
+
 function render(){
   // Every render() call fully replaces root.innerHTML — including <main>,
   // the app's one scroll container — so a brand-new <main> always starts
@@ -4591,11 +4817,20 @@ function render(){
   // restoring scroll position around the render, rather than inside it,
   // means every current AND future early-return branch in _renderInner
   // is covered automatically, with zero changes needed to any of them.
+  const focusedId=document.activeElement?.id;
   const prevMain = document.querySelector('main');
   const prevScrollTop = prevMain ? prevMain.scrollTop : 0;
   _renderInner();
   const newMain = document.querySelector('main');
   if(newMain) newMain.scrollTop = prevScrollTop;
+  enhancePresentation(document.getElementById('root'));
+  const restoredFocus=focusedId&&document.getElementById(focusedId);
+  if(restoredFocus) restoredFocus.focus({preventScroll:true});
+  else {
+    const dialogs=document.querySelectorAll('.modal');
+    const dialog=dialogs[dialogs.length-1];
+    dialog?.querySelector('input:not(:disabled),select:not(:disabled),button:not(:disabled)')?.focus({preventScroll:true});
+  }
 }
 function _renderInner(){
   if(!tracklineAuth.ready || !tracklineAuth.user || !tracklineAuth.membership){ tracklineAuth.renderGate(); return; }
@@ -4620,7 +4855,7 @@ function _renderInner(){
           <div class="sub">Family Tracker · Display</div>
         </div>
         <div class="header-right">
-          <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${ui.dayMode?'🌙':'☀️'}</button>
+          <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${uiIcon(ui.dayMode?'moon':'sun')}</button>
           ${renderProfileDropdown()}
         </div>
       </header>
@@ -4643,7 +4878,7 @@ function _renderInner(){
           <div class="sub">Family Tracker</div>
         </div>
         <div class="header-right">
-          <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${ui.dayMode?'🌙':'☀️'}</button>
+          <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${uiIcon(ui.dayMode?'moon':'sun')}</button>
           ${renderProfileDropdown()}
         </div>
       </header>
@@ -4669,22 +4904,14 @@ function _renderInner(){
         <div class="sub">Family Tracker</div>
       </div>
       <div class="header-right">
-        <nav class="tabs">
-          <button class="${ui.tab==='board'?'active':''}" onclick="setTab('board')">Week Board</button>
-          ${isParentLoggedIn() ? `<button class="${ui.tab==='parent'?'active':''}" onclick="setTab('parent')">Parent View</button>` : ''}
-          <button class="${ui.tab==='chores'?'active':''}" onclick="setTab('chores')">Tasks</button>
-          <button class="${ui.tab==='shopping'?'active':''}" onclick="setTab('shopping')">Shopping</button>
-          <button class="${ui.tab==='kid'?'active':''}" onclick="setTab('kid')">Kid View</button>
-          <button class="${ui.tab==='screentime'?'active':''}" onclick="setTab('screentime')">Screen Time</button>
-          <button class="${ui.tab==='study'?'active':''}" onclick="setTab('study')">Study</button>
-          <button class="${ui.tab==='settings'?'active':''}" onclick="setTab('settings')">Settings${(isParentLoggedIn() && totalPendingApprovals()>0) ? ` <span class="nav-badge">${totalPendingApprovals()}</span>` : ''}</button>
-        </nav>
-        <button class="search-btn" onclick="openSearch()" title="Search activities and tasks">🔍</button>
-        <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${ui.dayMode?'🌙':'☀️'}</button>
+        ${renderAppNavigation()}
+        <button class="search-btn" onclick="openSearch()" aria-label="Search activities and tasks" title="Search activities and tasks">${uiIcon('search')}</button>
+        <button class="search-btn" onclick="toggleDayMode()" title="${ui.dayMode?'Switch to night mode':'Switch to day mode'}">${uiIcon(ui.dayMode?'moon':'sun')}</button>
         ${renderProfileDropdown()}
       </div>
     </header>
-    <main>
+    <main id="main-content">
+      ${renderPageHeading()}
       ${ui.tab==='board'? renderBoard() : ''}
       ${ui.tab==='parent'? renderParentView() : ''}
       ${ui.tab==='chores'? renderChores() : ''}
@@ -4912,7 +5139,7 @@ function renderRescheduleModal(){
   <div class="overlay" onclick="if(event.target===this) closeReschedule()">
     <div class="modal" style="max-width:360px;">
       <h2>Reschedule this occurrence</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 16px;">Moves just ${formatDateNice(originalDate)}'s "${escapeHtml(ev.title)}" — the rest of the series is unaffected.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 16px;">Moves just ${formatDateNice(originalDate)}'s "${escapeHtml(ev.title)}" — the rest of the series is unaffected.</p>
       <div class="field">
         <label>New date</label>
         <input type="date" id="f_resched_date" value="${originalDate}">
@@ -5242,14 +5469,14 @@ function renderLibraryPickerModal(){
   <div class="overlay" onclick="if(event.target===this) closeLibraryPicker()">
     <div class="modal" style="max-width:460px;">
       <h2>Add from your item list</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">Tap any item to add it straight to your Quick List — already-added items are checked off. Don't see what you need? Type it below.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">Tap any item to add it straight to your Quick List — already-added items are checked off. Don't see what you need? Type it below.</p>
       <div class="shop-add-bar" style="position:static;background:none;border:none;padding:0;margin-bottom:16px;">
         <input type="text" id="newLibraryPickerItem" placeholder="Type a new item..." onkeydown="if(event.key==='Enter') addShoppingItemFromPicker()">
         <button class="btn primary" onclick="addShoppingItemFromPicker()">Add</button>
       </div>
       <div style="max-height:300px;overflow-y:auto;">
         ${library.length===0
-          ? `<p style="font-size:13px;color:#8a8468;">No saved items yet — anything you add (here or on a shopping trip) gets saved for next time.</p>`
+          ? `<p style="font-size:13px;color:var(--text-dim);">No saved items yet — anything you add (here or on a shopping trip) gets saved for next time.</p>`
           : chips}
       </div>
       <div class="modal-actions" style="margin-top:16px;">
@@ -5606,9 +5833,9 @@ function renderTaskLibraryModal(){
   <div class="overlay" onclick="if(event.target===this) closeTaskLibraryModal()">
     <div class="modal" style="max-width:460px;">
       <h2>Task list</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">New titles typed while adding a task get added here automatically too.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">New titles typed while adding a task get added here automatically too.</p>
       <div class="chore-lib-chips">
-        ${(state.choreLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved task names yet.</span>' :
+        ${(state.choreLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:var(--text-dim);">No saved task names yet.</span>' :
           state.choreLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeChoreLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
       </div>
       <div class="add-member" style="margin-top:12px;">
@@ -5654,9 +5881,9 @@ function renderActivityLibraryModal(){
   <div class="overlay" onclick="if(event.target===this) closeActivityLibraryModal()">
     <div class="modal" style="max-width:460px;">
       <h2>Activity list</h2>
-      <p style="font-size:13px;color:#5c5847;margin:0 0 14px;">New titles typed while adding an activity get added here automatically too.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">New titles typed while adding an activity get added here automatically too.</p>
       <div class="chore-lib-chips">
-        ${(state.activityLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:#8a8468;">No saved activity names yet.</span>' :
+        ${(state.activityLibrary||[]).length===0 ? '<span style="font-size:12.5px;color:var(--text-dim);">No saved activity names yet.</span>' :
           state.activityLibrary.map((t,i)=>`<span class="chore-lib-chip">${escapeHtml(t)}<button onclick="removeActivityLibraryItem(${i})" title="Remove">✕</button></span>`).join('')}
       </div>
       <div class="add-member" style="margin-top:12px;">
@@ -5803,16 +6030,16 @@ function renderCSVImportModal(){
   const errorRows = invalid.map(function(r,i){
     return '<div class="approval-row" style="flex-direction:column;align-items:stretch;">'
       + '<div class="trip-title">Row '+(i+1)+': '+escapeHtml(r.row.title||r.row.member_name||'(unnamed)')+'</div>'
-      + '<div class="trip-meta" style="color:#a5323a;">'+r.errors.map(escapeHtml).join(' · ')+'</div>'
+      + '<div class="trip-meta" style="color:var(--danger);">'+r.errors.map(escapeHtml).join(' · ')+'</div>'
       + '</div>';
   }).join('');
 
   return '<div class="overlay" onclick="if(event.target===this) closeCSVImport()">'
     + '<div class="modal" style="max-width:460px;">'
     + '<h2>Import preview</h2>'
-    + '<p style="font-size:13px;color:#5c5847;margin:0 0 14px;">'
-    + '<strong style="color:#3d7a4f;">'+valid.length+' '+typeLabel+' ready to import</strong>'
-    + (invalid.length ? ' · <strong style="color:#a5323a;">'+invalid.length+' with errors (will be skipped)</strong>' : '')
+    + '<p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">'
+    + '<strong style="color:var(--success);">'+valid.length+' '+typeLabel+' ready to import</strong>'
+    + (invalid.length ? ' · <strong style="color:var(--danger);">'+invalid.length+' with errors (will be skipped)</strong>' : '')
     + '</p>'
     + (invalid.length ? '<div style="max-height:220px;overflow-y:auto;margin-bottom:14px;">'+errorRows+'</div>' : '')
     + '<div class="modal-actions" style="margin-top:6px;">'
@@ -5828,9 +6055,9 @@ function renderExportModal(){
   <div class="overlay" onclick="if(event.target===this) closeExportModal()">
     <div class="modal" style="max-width:360px;">
       <h2>Confirm export</h2>
-      <p style="font-size:13.5px;color:#5c5847;margin:0 0 16px;">Enter your family password to export a backup. This is verified on the server — PIN and password hashes are never included in the download.</p>
-      <input type="password" id="f_export_password" placeholder="Family password" style="width:100%;padding:11px;border-radius:8px;border:1px solid #c9c2ab;font-size:15px;">
-      ${ui.exportError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.exportError)}</div>`:''}
+      <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 16px;">Enter your family password to export a backup. This is verified on the server — PIN and password hashes are never included in the download.</p>
+      <input type="password" id="f_export_password" placeholder="Family password" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);font-size:15px;">
+      ${ui.exportError? `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.exportError)}</div>`:''}
       <div class="modal-actions" style="margin-top:16px;">
         <div></div>
         <div style="display:flex;gap:8px;">
