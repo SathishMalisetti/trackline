@@ -1,10 +1,17 @@
 const fetch = require('node-fetch');
+const { readSession, assertOrigin } = require('./family-session');
 
 function response(status, error) {
   return { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify({ error }) };
 }
 
 async function authenticate(req) {
+  if (req.headers && req.headers['x-trackline-session'] === 'family') {
+    if (req.method !== 'GET') assertOrigin(req);
+    const session = await readSession(req);
+    if (!session) throw Object.assign(new Error('Sign in to your family.'), { status: 401 });
+    return session;
+  }
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -50,7 +57,7 @@ function protect(handler, options = {}) {
       const profileIds = [body.kidId, query.kidId, body.memberId, query.memberId].filter(Boolean);
       if (new Set(profileIds).size > 1) throw Object.assign(new Error('Conflicting profile IDs.'), { status: 400 });
       const familyId = body.familyId || query.familyId;
-      if (!options.global) {
+      if (!options.global && !(options.familyEntry && auth.familySession)) {
         const membership = auth.memberships.find(m => m.family_id === familyId);
         if (!membership) throw Object.assign(new Error('You do not have access to this family.'), { status: 403 });
         req.membership = membership;
@@ -80,6 +87,9 @@ function protect(handler, options = {}) {
           if (!(await chores.json()).length) throw Object.assign(new Error('You can only complete your own tasks.'), { status: 403 });
           if (req.method === 'POST') req.body.loggedBy = membership.member_id;
         }
+      }
+      if (options.familyEntry && auth.familySession) {
+        if (familyId && familyId !== auth.family.id) throw Object.assign(new Error('You do not have access to this family.'), { status: 403 });
       }
       await handler(context, req);
       if (options.sanitize && req.membership.role === 'kid' && context.res && context.res.status === 200) {
