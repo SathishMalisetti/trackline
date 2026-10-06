@@ -22,7 +22,7 @@ window.tracklineAuth = {
     const { data, error } = await this.client.auth.getSession();
     if (error || !data.session) { this.clear(); throw new Error('Sign in required.'); }
     const headers = new Headers(options.headers || {});
-    headers.set('Authorization', `Bearer ${data.session.access_token}`);
+    headers.set('X-Trackline-Authorization', `Bearer ${data.session.access_token}`);
     const response = await fetch(url, { ...options, headers, cache: 'no-store' });
     if (response.status === 401) { await this.signOut(); throw new Error('Your session has expired.'); }
     return response;
