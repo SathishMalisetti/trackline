@@ -19,7 +19,11 @@ async function authenticate(req) {
   const result = await fetch(`${url}/auth/v1/user`, { headers: { apikey: key, Authorization: authorization }, timeout: 10000 });
   if (!result.ok) throw Object.assign(new Error('Your session has expired. Sign in again.'), { status: result.status >= 500 ? 503 : 401 });
   const user = await result.json();
-  if (!user.id || !user.email_confirmed_at || user.is_anonymous) throw Object.assign(new Error('A verified account is required.'), { status: 403 });
+  if (!user.id || !user.email || user.is_anonymous) throw Object.assign(new Error('An email account is required.'), { status: 403 });
+  // Email confirmation can be enabled at launch independently of password sign-in.
+  if (process.env.REQUIRE_EMAIL_VERIFICATION === 'true' && !user.email_confirmed_at) {
+    throw Object.assign(new Error('Confirm your email before continuing.'), { status: 403 });
+  }
   const memberships = await fetch(`${url}/rest/v1/family_auth_memberships?user_id=eq.${encodeURIComponent(user.id)}&select=family_id,member_id,role`, {
     headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }, timeout: 10000,
   });
