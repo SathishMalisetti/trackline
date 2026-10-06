@@ -20,7 +20,7 @@ def sign_in(backend_url, email, password):
     if response.status_code != 200:
         raise ValueError('Account sign-in failed. Check your email/password and confirm your email.')
     token = response.json()['access_token']
-    return {'Authorization': f'Bearer {token}'}
+    return {'X-Trackline-Authorization': f'Bearer {token}'}
 
 
 def verify_parent(backend_url, email, password, family_id):
