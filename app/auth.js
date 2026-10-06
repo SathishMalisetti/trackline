@@ -70,7 +70,8 @@ window.tracklineAuth = {
     document.getElementById('account-bar').hidden = true;
     const esc = value => String(value || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
     if (this.user && this.mode !== 'reset') {
-      root.innerHTML = `<main style="max-width:440px;margin:60px auto;padding:24px"><h1>Family access required</h1><p>Your account is signed in. A parent or administrator needs to link it to your family before you can view Trackline.</p><p>${esc(this.message)}</p><button onclick="tracklineAuth.loadAccount()">Check access again</button> <button onclick="tracklineAuth.signOut()">Sign out</button></main>`;
+      root.innerHTML = `<main style="max-width:440px;margin:60px auto;padding:24px;background:#eee9dd;border-radius:12px;color:#181c2a"><h1>Set up your family</h1><p>Starting a new family? Create it here and you will be its first parent.</p><form id="family-form"><label>Family name<input id="family-name" required maxlength="80" style="display:block;width:100%;margin:8px 0 16px"></label><label>Your name<input id="parent-name" autocomplete="name" required maxlength="80" style="display:block;width:100%;margin:8px 0 16px"></label><p role="status">${esc(this.message)}</p><button type="submit">Create family</button></form><p>Already part of a family? Ask a parent or administrator to link your account.</p><button onclick="tracklineAuth.loadAccount()">Check access again</button> <button onclick="tracklineAuth.signOut()">Sign out</button></main>`;
+      document.getElementById('family-form').onsubmit = event => { event.preventDefault(); this.createFamily(); };
       return;
     }
     root.innerHTML = `<main style="max-width:440px;margin:60px auto;padding:24px;background:#eee9dd;border-radius:12px;color:#181c2a"><h1>Trackline</h1><h2>${this.mode === 'reset' ? 'Set a new password' : 'Sign in to your family'}</h2><form id="account-form"><label>Email<input id="account-email" type="email" autocomplete="email" required style="display:block;width:100%;margin:8px 0 16px"></label><label>Password<input id="account-password" type="password" autocomplete="${this.mode === 'signin' ? 'current-password' : 'new-password'}" minlength="8" required style="display:block;width:100%;margin:8px 0 16px"></label><p role="status">${esc(this.message)}</p><button type="submit">${this.mode === 'signup' ? 'Create account' : this.mode === 'reset' ? 'Save password' : 'Sign in'}</button></form><p><button id="account-toggle">${this.mode === 'signup' ? 'Already have an account?' : 'Create an account'}</button> <button id="account-recover">Forgot password?</button></p></main>`;
@@ -78,6 +79,26 @@ window.tracklineAuth = {
     document.getElementById('account-toggle').onclick = () => { this.mode = this.mode === 'signup' ? 'signin' : 'signup'; this.message = ''; this.renderGate(); };
     document.getElementById('account-recover').onclick = () => this.recover();
     if (this.mode === 'reset') document.getElementById('account-email').required = false;
+  },
+  async createFamily() {
+    if (this.creatingFamily) return;
+    this.creatingFamily = true;
+    const button = document.querySelector('#family-form button');
+    button.disabled = true;
+    try {
+      const response = await this.fetch('/api/create-family', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ familyName: document.getElementById('family-name').value.trim(), parentName: document.getElementById('parent-name').value.trim() }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not create your family. Please try again.');
+      this.message = '';
+      localStorage.setItem('trackline-family-id', result.family_id);
+      await this.loadAccount();
+    } catch (error) {
+      const status = document.querySelector('#family-form [role="status"]');
+      if (status) status.textContent = error.message;
+    } finally { this.creatingFamily = false; button.disabled = false; }
   },
   async submit() {
     const email = document.getElementById('account-email').value.trim();
