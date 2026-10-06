@@ -680,6 +680,32 @@
     .profile-menu{top:132px;}
     .brand .sub{display:block;}
   }
+
+  /* Give the schedule the available viewport, rather than a tall title stack. */
+  .calendar-main .page-heading{margin-bottom:12px;max-width:none;}
+  .calendar-main .page-heading h1{font-size:28px;margin:0;}
+  .calendar-main .page-heading p{display:none;}
+  .calendar-toolbar,.calendar-selectors{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+  .calendar-toolbar .shop-mode-toggle,.calendar-toolbar .week-nav,
+  .calendar-selectors .day-row,.calendar-selectors .filter-chips{margin:0;}
+  .calendar-selectors .day-row{padding-bottom:0;max-width:100%;}
+  .calendar-selectors .day-pill{padding:6px 12px;min-height:48px;}
+  .calendar-main .board-wrap{overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;}
+  .calendar-main .columns{overflow-x:visible;}
+  .calendar-main .time-axis,.calendar-main .col{align-self:flex-start;}
+  .calendar-main .col-head{height:38px;box-sizing:border-box;}
+  .calendar-main .time-axis .tick:last-child{transform:translateY(-14px);}
+  @media(min-width:901px){
+    body:has(.calendar-main) header.board{min-height:60px;padding-top:8px;padding-bottom:8px;}
+    main.calendar-main{padding-top:12px;padding-bottom:16px;}
+  }
+  @media(max-width:900px){
+    .calendar-main .board-wrap{overflow-x:auto;}
+    .calendar-main .columns{min-width:max-content;}
+    .calendar-main .col{min-width:150px;}
+    .calendar-toolbar,.calendar-selectors{gap:8px;}
+  }
+
 </style>
 </head>
 <body>
@@ -1177,9 +1203,9 @@ function validateActivityImportRow(row, members){
 }
 
 const DAY_START = 6*60;      // 6:00am
-const DAY_END = 21*60+30;    // 9:30pm
+const DAY_END = 24*60;       // Calendar presentation includes the full evening
 const RANGE = DAY_END - DAY_START;
-const PX_PER_MIN = 0.85;
+let PX_PER_MIN = 0.85;      // Shared by grid, blocks and click-to-add coordinates
 
 const DEFAULT_MEMBERS = [
   {id:'dad',  name:'Dad',  role:'parent', color:'#4C8577', pinHash:null, email:'', phone:''},
@@ -2209,11 +2235,9 @@ function renderBoard(){
   }).join('');
 
   return `
-    ${renderBoardViewToggle()}
-    ${renderWeekNav()}
-    ${renderDayRow()}
-    ${filterChips}
-    <div class="board-wrap">
+    <div class="calendar-toolbar">${renderBoardViewToggle()}${renderWeekNav()}</div>
+    <div class="calendar-selectors">${renderDayRow()}${filterChips}</div>
+    <div class="board-wrap" tabindex="0" aria-label="Family schedule. Scroll for earlier or later hours.">
       ${renderTimeAxis()}
       <div class="columns">${cols || '<div style="padding:40px;text-align:center;color:var(--text-dim);">All family members are hidden — tap a name above to show their column.</div>'}</div>
     </div>
@@ -4817,12 +4841,15 @@ function render(){
   // restoring scroll position around the render, rather than inside it,
   // means every current AND future early-return branch in _renderInner
   // is covered automatically, with zero changes needed to any of them.
+  const previousBoard=document.querySelector('.calendar-main .board-wrap');
+  const boardScroll=previousBoard ? previousBoard.scrollTop : null;
   const focusedId=document.activeElement?.id;
   const prevMain = document.querySelector('main');
   const prevScrollTop = prevMain ? prevMain.scrollTop : 0;
   _renderInner();
   const newMain = document.querySelector('main');
   if(newMain) newMain.scrollTop = prevScrollTop;
+  fitCalendarViewport(boardScroll);
   enhancePresentation(document.getElementById('root'));
   const restoredFocus=focusedId&&document.getElementById(focusedId);
   if(restoredFocus) restoredFocus.focus({preventScroll:true});
@@ -4832,6 +4859,32 @@ function render(){
     dialog?.querySelector('input:not(:disabled),select:not(:disabled),button:not(:disabled)')?.focus({preventScroll:true});
   }
 }
+// Presentation only: use one scale for labels, blocks and pointer coordinates.
+function fitCalendarViewport(previousScroll){
+  let board=document.querySelector('.calendar-main .board-wrap');
+  if(!board) return;
+  const mobile=window.innerWidth<=900;
+  const available=Math.max(240,window.innerHeight-(board.getBoundingClientRect().top+(board.closest('main')?.scrollTop||0))-(mobile?148:20));
+  const gridSpace=Math.max(200,available-52);
+  const fullDay=gridSpace>=RANGE*0.5;
+  const scale=Math.max(0.5,Math.min(0.85,gridSpace/(fullDay?RANGE:14*60)));
+  if(Math.abs(scale-PX_PER_MIN)>0.001){
+    PX_PER_MIN=scale;
+    _renderInner();
+    board=document.querySelector('.calendar-main .board-wrap');
+    if(!board) return;
+  }
+  board.style.height=Math.min(available,RANGE*PX_PER_MIN+52)+'px';
+  board.scrollTop=previousScroll===null?(fullDay?0:(8*60-DAY_START)*PX_PER_MIN):previousScroll;
+}
+let calendarResizeFrame;
+window.addEventListener('resize',()=>{
+  cancelAnimationFrame(calendarResizeFrame);
+  calendarResizeFrame=requestAnimationFrame(()=>{
+    const board=document.querySelector('.calendar-main .board-wrap');
+    if(board) render();
+  });
+});
 function _renderInner(){
   if(!tracklineAuth.ready || !tracklineAuth.user || !tracklineAuth.membership){ tracklineAuth.renderGate(); return; }
   if(!ui.authenticated){ tracklineAuth.renderPinGate(); return; }
@@ -4910,7 +4963,7 @@ function _renderInner(){
         ${renderProfileDropdown()}
       </div>
     </header>
-    <main id="main-content">
+    <main class="${ui.tab==='board'?'calendar-main':''}" id="main-content">
       ${renderPageHeading()}
       ${ui.tab==='board'? renderBoard() : ''}
       ${ui.tab==='parent'? renderParentView() : ''}
