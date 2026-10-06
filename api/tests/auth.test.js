@@ -16,6 +16,29 @@ const { protect } = require('../shared/auth');
 const user = { id: 'user-1', email: 'parent@example.com', email_confirmed_at: '2026-01-01' };
 const member = { family_id: 'FAMILY1', member_id: 'kid-1', role: 'kid' };
 const req = () => ({ method: 'GET', headers: { authorization: 'Bearer valid-token' }, query: { familyId: 'FAMILY1' } });
+const createFamily = require('../create-family');
+test('family creation uses verified account identity and ignores submitted IDs and roles', async () => {
+  calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [] }, { status: 200, body: { family_id: 'NEW', role: 'parent' } }];
+  const context = {};
+  await createFamily(context, { ...req(), query: {}, method: 'POST', body: { familyName: ' New family ', parentName: ' Parent ', userId: 'other', familyId: 'VICTIM', role: 'admin' } });
+  assert.equal(context.res.status, 200);
+  assert.deepEqual(JSON.parse(calls[2][1].body), { p_user_id: user.id, p_email: user.email, p_family_name: 'New family', p_parent_name: 'Parent' });
+  assert.equal(calls[2][1].headers.Authorization, 'Bearer server-only');
+});
+test('invalid family names never call the creation RPC', async () => {
+  for (const familyName of ['', ' '.repeat(5), 'x'.repeat(81), 12]) {
+    calls = []; responses = [{ status: 200, body: user }, { status: 200, body: [] }];
+    const context = {};
+    await createFamily(context, { ...req(), method: 'POST', body: { familyName, parentName: 'Parent' } });
+    assert.equal(context.res.status, 400); assert.equal(calls.length, 2);
+  }
+});
+test('family creation rejects unverified accounts', async () => {
+  calls = []; responses = [{ status: 200, body: { ...user, email_confirmed_at: null } }];
+  const context = {};
+  await createFamily(context, { ...req(), method: 'POST', body: { familyName: 'Family', parentName: 'Parent' } });
+  assert.equal(context.res.status, 403); assert.equal(calls.length, 1);
+});
 async function run(request, options = {}, rows = [member], authUser = user, payload = { ok: true }) {
   calls = []; responses = [{ status: 200, body: authUser }, { status: 200, body: rows }];
   let handled = false;

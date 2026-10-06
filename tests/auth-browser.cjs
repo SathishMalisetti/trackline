@@ -11,13 +11,16 @@ const family = {
   events: [], chores: [], choreLogs: [], shoppingList: [], shoppingTrips: [], topicProgress: [], choreLibrary: [], activityLibrary: [], shoppingItemLibrary: [],
 };
 const apiCalls = [];
+let newFamilyCreated = false;
 const server = http.createServer((req, res) => {
   if (req.url.startsWith('/api/')) {
     apiCalls.push({ url: req.url, authorization: req.headers['x-trackline-authorization'] });
     res.setHeader('Content-Type', 'application/json');
     if (req.url === '/api/auth-config') return res.end(JSON.stringify({ url: 'https://test.supabase.co', publishableKey: 'sb_publishable_test' }));
     if (!req.headers['x-trackline-authorization']) { res.statusCode = 401; return res.end('{}'); }
+    if (req.url === '/api/create-family') { newFamilyCreated = true; return res.end(JSON.stringify({ family_id: 'FAMILY1' })); }
     if (req.url === '/api/auth-me') {
+      if (req.headers['x-trackline-authorization'].includes('newtoken') && !newFamilyCreated) return res.end(JSON.stringify({ email: 'new@example.com', memberships: [] }));
       const isKid = req.headers['x-trackline-authorization'].includes('kidtoken');
       return res.end(JSON.stringify({ email: isKid ? 'kid@example.com' : 'parent@example.com', memberships: [{ family_id: 'FAMILY1', member_id: isKid ? 'kid-1' : 'parent-1', role: isKid ? 'kid' : 'parent' }] }));
     }
@@ -43,7 +46,7 @@ const server = http.createServer((req, res) => {
       const body = route.request().postDataJSON() || {};
       if (url.includes('/signup')) return route.fulfill({ json: { user: { id: 'u1', email: body.email }, session: null } });
       if (url.includes('/token')) return route.fulfill({ json: {
-        access_token: body.email.startsWith('kid') ? 'kidtoken' : 'parenttoken', refresh_token: 'refresh',
+        access_token: body.email.startsWith('kid') ? 'kidtoken' : body.email.startsWith('new') ? 'newtoken' : 'parenttoken', refresh_token: 'refresh',
         token_type: 'bearer', expires_in: 3600, user: { id: 'u1', email: body.email, email_confirmed_at: '2026-01-01' },
       } });
       if (url.includes('/logout')) return route.fulfill({ status: 204 });
@@ -80,6 +83,17 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.locator('#pin_input').count(), 0);
     assert.equal(await page.evaluate(() => ui.dayDrillData), null);
     assert.equal(await page.evaluate(() => ui.deviceManagerDevices), null);
+    await page.getByRole('button', { name: 'Sign out of account' }).click();
+    await page.locator('#account-form').waitFor();
+    await page.locator('#account-email').fill('new@example.com');
+    await page.locator('#account-password').fill('test-password');
+    await page.locator('#account-form button').click();
+    await page.getByRole('heading', { name: 'Set up your family' }).waitFor();
+    await page.locator('#family-name').fill('New Family');
+    await page.locator('#parent-name').fill('New Parent');
+    await page.getByRole('button', { name: 'Create family', exact: true }).click();
+    await page.getByRole('button', { name: 'Parent View', exact: true }).waitFor();
+    assert.ok(apiCalls.find(c => c.url === '/api/create-family' && c.authorization === 'Bearer newtoken'));
     assert.deepEqual(errors, []);
     console.log('Browser checks passed: signed-out gate, confirmation, parent login, bearer requests, logout cleanup, child restrictions.');
     await context.close();
