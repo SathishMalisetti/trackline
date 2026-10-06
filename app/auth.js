@@ -47,6 +47,10 @@ window.tracklineAuth = {
       localStorage.setItem('trackline-family-id', this.membership.family_id);
       // Never display a cached family's data while account authorization is checked.
       localStorage.removeItem('trackline-data');
+      const pinStatus = await this.fetch(`/api/profile-pin?familyId=${encodeURIComponent(this.membership.family_id)}`);
+      if (!pinStatus.ok) throw new Error('Could not check your PIN. Please try again.');
+      this.hasPin = (await pinStatus.json()).hasPin;
+      if (revision !== (this.revision || 0)) return;
       await loadData();
     } catch (error) { this.membership = null; this.message = error.message; this.renderGate(); }
     finally { this.loading = false; }
@@ -64,6 +68,43 @@ window.tracklineAuth = {
   async signOut() {
     if (this.client) await this.client.auth.signOut({ scope: 'local' });
     this.mode = 'signin'; this.clear();
+  },
+  lock() {
+    if (!this.membership) return;
+    this.revision = (this.revision || 0) + 1;
+    ui = JSON.parse(JSON.stringify(this.initialUI));
+    this.message = '';
+    this.renderPinGate();
+  },
+  renderPinGate() {
+    const root = document.getElementById('root');
+    document.getElementById('account-bar').hidden = true;
+    const esc = value => String(value || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+    root.innerHTML = `<main style="max-width:400px;margin:60px auto;padding:24px;background:#eee9dd;border-radius:12px;color:#181c2a"><h1>${this.hasPin ? 'Enter your PIN' : 'Set up your PIN'}</h1><p>${this.hasPin ? 'Unlock Trackline with your 4-digit PIN.' : 'Choose a 4-digit PIN to unlock Trackline on this device.'}</p><form id="profile-pin-form"><label>PIN<input id="profile-pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" style="display:block;width:100%;margin:8px 0 16px"></label>${this.hasPin ? '' : '<label>Confirm PIN<input id="profile-pin-confirm" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" style="display:block;width:100%;margin:8px 0 16px"></label>'}<p role="status">${esc(this.message)}</p><button type="submit">${this.hasPin ? 'Unlock' : 'Save PIN & continue'}</button></form><p><button onclick="tracklineAuth.loadAccount()">Check again</button> <button onclick="tracklineAuth.signOut()">Sign out of account</button></p></main>`;
+    document.getElementById('profile-pin-form').onsubmit = event => { event.preventDefault(); this.submitPin(); };
+  },
+  async submitPin() {
+    if (this.submittingPin) return;
+    const pin = document.getElementById('profile-pin').value;
+    const confirmation = document.getElementById('profile-pin-confirm');
+    const status = document.querySelector('#profile-pin-form [role="status"]');
+    if (confirmation && confirmation.value !== pin) { status.textContent = 'PINs do not match. Try again.'; return; }
+    const revision = this.revision || 0;
+    const button = document.querySelector('#profile-pin-form button');
+    this.submittingPin = true; button.disabled = true;
+    try {
+      const response = await this.fetch('/api/profile-pin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ familyId: this.membership.family_id, pin }) });
+      const result = await response.json();
+      if (!response.ok) throw Object.assign(new Error(result.error || 'Could not unlock Trackline.'), { status: response.status });
+      if (revision !== (this.revision || 0)) return;
+      this.hasPin = true; this.message = ''; ui.authenticated = true;
+      await loadData();
+    } catch (error) {
+      if (revision === (this.revision || 0)) {
+        status.textContent = error.message;
+        if (error.status === 409) await this.loadAccount();
+      }
+    } finally { this.submittingPin = false; button.disabled = false; }
   },
   renderGate() {
     const root = document.getElementById('root');
