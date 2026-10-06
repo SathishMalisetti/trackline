@@ -1,0 +1,48 @@
+name: Build Trackline Windows installer
+on:
+  push:
+    branches: [fix/activitywatch-recovery]
+    paths:
+      - 'backend-v33/laptop-agent/**'
+      - '.github/workflows/build-laptop-agent.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  installer:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: backend-v33/laptop-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build dependencies
+        run: python -m pip install pyinstaller==6.16.0 requests==2.32.5 tzlocal==5.3.1 tzdata==2025.2
+      - name: Check recovery with mocked local API and process launcher
+        run: python -m unittest discover -s tests -v
+      - name: Build executables without console windows
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onedir --windowed --distpath package --name TracklineAgent trackline_agent.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m PyInstaller --noconfirm --clean --onedir --windowed --distpath package --name TracklineSetup trackline_setup_gui.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m PyInstaller --noconfirm --clean --onedir --windowed --distpath package --icon trackline_icon.ico --name TracklineConfigManager trackline_config_manager.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile installer from freshly built executables
+        shell: pwsh
+        run: |
+          Copy-Item TracklineAgentSetup.iss,trackline_icon.ico package/
+          $compiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $compiler)) { throw 'Inno Setup compiler is missing from this runner.' }
+          & $compiler package/TracklineAgentSetup.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-FileHash package/installer_output/TracklineAgentSetup.exe -Algorithm SHA256 | Format-List | Out-File package/installer_output/SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TracklineAgentSetup-1.1.0
+          path: backend-v33/laptop-agent/package/installer_output/*
+          if-no-files-found: error
