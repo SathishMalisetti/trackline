@@ -2,7 +2,7 @@
   "name": "trackline-checks",
   "private": true,
   "scripts": {
-    "test:browser": "node tests/auth-browser.cjs",
+    "test:browser": "node tests/auth-browser.cjs && node tests/family-browser.cjs",
     "test:sql": "node tests/auth-sql.cjs"
   },
   "devDependencies": {

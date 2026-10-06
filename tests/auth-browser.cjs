@@ -17,6 +17,7 @@ const server = http.createServer((req, res) => {
   if (req.url.startsWith('/api/')) {
     apiCalls.push({ url: req.url, authorization: req.headers['x-trackline-authorization'] });
     res.setHeader('Content-Type', 'application/json');
+    if (req.url === '/api/family-session') return res.end(JSON.stringify({ signedIn: false }));
     if (req.url === '/api/auth-config') return res.end(JSON.stringify({ url: 'https://test.supabase.co', publishableKey: 'sb_publishable_test' }));
     if (!req.headers['x-trackline-authorization']) { res.statusCode = 401; return res.end('{}'); }
     if (req.url.startsWith('/api/profile-pin')) {
@@ -72,9 +73,10 @@ const server = http.createServer((req, res) => {
     }
     const origin = `http://127.0.0.1:${server.address().port}`;
     await page.goto(origin);
+    await page.getByRole('button', { name: 'Use email instead', exact: true }).click();
     await page.locator('#account-form').waitFor();
     assert.equal(await page.getByText('Test Family', { exact: true }).count(), 0);
-    assert.equal(apiCalls.filter(c => !c.authorization && c.url !== '/api/auth-config').length, 0);
+    assert.equal(apiCalls.filter(c => !c.authorization && !['/api/auth-config','/api/family-session'].includes(c.url)).length, 0);
     await page.locator('#account-toggle').click();
     await page.locator('#account-email').fill('new@example.com');
     await page.locator('#account-password').fill('test-password');
@@ -99,6 +101,7 @@ const server = http.createServer((req, res) => {
     await page.getByRole('button', { name: 'Parent View', exact: true }).waitFor();
     await page.evaluate(() => { ui.dayDrillData = { privateParentData: true }; ui.deviceManagerDevices = [{ privateParentData: true }]; });
     await page.getByRole('button', { name: 'Sign out of account' }).click();
+    await page.getByRole('button', { name: 'Use email instead', exact: true }).click();
     await page.locator('#account-form').waitFor();
     assert.equal(await page.evaluate(() => localStorage.getItem('trackline-data')), null);
     await page.locator('#account-email').fill('kid@example.com');
@@ -112,6 +115,7 @@ const server = http.createServer((req, res) => {
     assert.equal(await page.evaluate(() => ui.dayDrillData), null);
     assert.equal(await page.evaluate(() => ui.deviceManagerDevices), null);
     await page.getByRole('button', { name: 'Sign out of account' }).click();
+    await page.getByRole('button', { name: 'Use email instead', exact: true }).click();
     await page.locator('#account-form').waitFor();
     await page.locator('#account-email').fill('new@example.com');
     await page.locator('#account-password').fill('test-password');
