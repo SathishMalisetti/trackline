@@ -71,7 +71,7 @@
   .brand .flap span{color:var(--amber);}
   .brand .sub{
     font-family:'IBM Plex Mono',monospace;
-    font-size:11px;
+    font-size:13px;
     color:var(--text-dim);
     letter-spacing:0.08em;
     text-transform:uppercase;
@@ -94,7 +94,7 @@
   nav.tabs button:hover{color:var(--text-on-ink);border-color:var(--text-dim);}
   nav.tabs button.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
   .nav-badge{
-    display:inline-block;background:#D6484E;color:#fff;font-size:10px;font-weight:800;
+    display:inline-block;background:#D6484E;color:#fff;font-size:12px;font-weight:800;
     border-radius:9px;padding:1px 6px;margin-left:2px;vertical-align:middle;
   }
 
@@ -110,7 +110,7 @@
   .search-result:hover{background:var(--ink-3);}
   .search-result .dot{width:10px;height:10px;border-radius:50%;flex:none;}
   .search-result .title{font-weight:700;font-size:14px;}
-  .search-result .meta{font-size:11.5px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
+  .search-result .meta{font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
   .filter-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
   .filter-chip{
     display:flex;align-items:center;gap:6px;
@@ -127,7 +127,7 @@
   .month-header{background:var(--ink-2);}
   .month-daylabel{
     padding:8px 4px;text-align:center;
-    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.03em;
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.03em;
     color:var(--text-dim);border-bottom:1px solid var(--line);
   }
   .month-cell{
@@ -141,13 +141,13 @@
   .month-daynum{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-on-ink);margin-bottom:6px;}
   .month-dots{display:flex;flex-wrap:wrap;gap:3px;}
   .month-dot{width:7px;height:7px;border-radius:50%;flex:none;}
-  .month-more{font-size:9px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
+  .month-more{font-size:12px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;}
   .month-ticks{position:absolute;bottom:5px;right:6px;display:flex;gap:4px;align-items:center;}
-  .month-task-tick{font-size:10px;color:var(--amber);}
-  .month-trip-tick{font-size:9px;}
+  .month-task-tick{font-size:12px;color:var(--amber);}
+  .month-trip-tick{font-size:12px;}
   @media(max-width:640px){
     .month-cell{min-height:52px;padding:4px;}
-    .month-daynum{font-size:10.5px;margin-bottom:3px;}
+    .month-daynum{font-size:12px;margin-bottom:3px;}
   }
 
   .profile-wrap{position:relative;}
@@ -159,7 +159,7 @@
   .profile-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:12px;color:#151726;flex:none;}
   .profile-btn .pname{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:13px;letter-spacing:.02em;text-transform:uppercase;}
-  .profile-btn .caret{font-size:10px;color:var(--text-dim);}
+  .profile-btn .caret{font-size:12px;color:var(--text-dim);}
   .profile-menu{
     position:absolute;top:calc(100% + 8px);right:0;min-width:190px;
     background:var(--paper);color:var(--ink);border-radius:10px;
@@ -179,10 +179,10 @@
   .onboard-brand{text-align:center;margin-bottom:22px;}
   .onboard-brand .flap{font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);}
   .onboard-brand .flap span{color:#B8791F;}
-  .onboard-brand .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+  .onboard-brand .sub{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
   .onboard-card h2{font-family:'Archivo Narrow',sans-serif;font-size:19px;text-transform:uppercase;letter-spacing:.02em;text-align:center;margin:0 0 6px;}
   .onboard-card .lead{font-size:13px;color:var(--text-dim);text-align:center;margin:0 0 20px;}
-  .onboard-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+  .onboard-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:var(--text-dim);font-size:13px;text-transform:uppercase;letter-spacing:.05em;}
   .onboard-divider::before,.onboard-divider::after{content:'';flex:1;height:1px;background:var(--ink-3);}
 
   /* PRE-LOGIN DASHBOARD */
@@ -192,7 +192,7 @@
   .dash-stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
   .dash-stat{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:20px 26px;min-width:130px;}
   .dash-stat .num{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:var(--amber);}
-  .dash-stat .label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-top:4px;}
+  .dash-stat .label{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-top:4px;}
   .dash-cta{background:var(--amber);color:var(--ink);border:none;font-family:'Archivo Narrow',sans-serif;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:14px 28px;border-radius:30px;font-size:14px;cursor:pointer;}
 
   main{padding:18px 20px 60px;flex:1;overflow-y:auto;}
@@ -220,7 +220,7 @@
     min-width:64px;
   }
   .day-pill .dname{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;}
-  .day-pill .dnum{font-size:11px;opacity:.75;}
+  .day-pill .dnum{font-size:13px;opacity:.75;}
   .day-pill.today{border-color:var(--amber);}
   .day-pill.active{background:var(--amber);color:var(--ink);border-color:var(--amber);}
   .day-pill.today .dname::after{content:" •";color:var(--amber);}
@@ -232,7 +232,7 @@
   .time-axis{width:56px;flex:none;border-right:1px solid var(--line);}
   .time-axis .tick{
     position:absolute;left:0;right:0;
-    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);
     padding-left:6px;transform:translateY(-6px);
   }
   .columns{display:flex;flex:1;overflow-x:auto;}
@@ -259,7 +259,7 @@
     z-index:1;
   }
   .block .t{font-weight:700;font-size:12.5px;line-height:1.2;color:#151726;}
-  .block .m{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#151726;opacity:.75;margin-top:2px;}
+  .block .m{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#151726;opacity:.75;margin-top:2px;}
   .block.transit{
     background:repeating-linear-gradient(135deg, var(--transit), var(--transit) 6px, #6f6a5c 6px, #6f6a5c 12px);
     color:#fff;border-color:#5c5748;
@@ -305,7 +305,7 @@
   .modal{background:var(--paper);color:var(--ink);width:100%;max-width:440px;border-radius:14px;padding:22px;max-height:88vh;overflow-y:auto;}
   .modal h2{font-family:'Archivo Narrow',sans-serif;font-size:20px;letter-spacing:.02em;margin:0 0 14px;text-transform:uppercase;}
   .field{margin-bottom:14px;}
-  .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:5px;}
+  .field label{display:block;font-family:'IBM Plex Mono',monospace;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);margin-bottom:5px;}
   .field input[type=text],.field input[type=time],.field input[type=number],.field select{
     width:100%;padding:10px 11px;border-radius:7px;border:1px solid var(--line);background:#fff;
     font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);
@@ -321,8 +321,8 @@
     border:none;border-radius:8px;padding:11px 18px;font-size:13.5px;cursor:pointer;
   }
   .btn.primary{background:var(--ink);color:var(--paper);}
-  .btn.ghost{background:transparent;color:#8a5a3a;border:1px solid #8a5a3a;}
-  .btn.danger{background:transparent;color:#a5323a;font-size:12px;padding:8px 12px;}
+  .btn.ghost{background:transparent;color:var(--text-dim);border:1px solid #8a5a3a;}
+  .btn.danger{background:transparent;color:var(--danger);font-size:12px;padding:8px 12px;}
 
   /* KID VIEW */
   .kid-select{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
@@ -350,10 +350,10 @@
   .chore-row:last-child{border-bottom:none;}
   .chore-info{flex:1;cursor:pointer;}
   .chore-title{font-weight:700;font-size:14.5px;}
-  .chore-freq{font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
-  .chore-done-badge{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#3d7a4f;background:#dcecdf;border-radius:20px;padding:6px 12px;cursor:pointer;white-space:nowrap;}
+  .chore-freq{font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .chore-done-badge{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--success);background:var(--success-bg);border-radius:20px;padding:6px 12px;cursor:pointer;white-space:nowrap;}
   .chore-pending-btn{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:12px;letter-spacing:.03em;text-transform:uppercase;background:var(--ink);color:var(--paper);border:none;border-radius:20px;padding:9px 16px;cursor:pointer;white-space:nowrap;}
-  .chore-locked-btn{font-size:11.5px;color:var(--text-dim);white-space:nowrap;}
+  .chore-locked-btn{font-size:13px;color:var(--text-dim);white-space:nowrap;}
   .chore-empty-day{text-align:center;color:var(--text-dim);padding:40px 0;font-size:14px;}
   .shop-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px dashed var(--line);}
   .shop-row:last-child{border-bottom:none;}
@@ -362,8 +362,8 @@
   .shop-row-checked .shop-check-label span{text-decoration:line-through;color:var(--text-dim);font-weight:400;}
   .shop-row-selected{background:rgba(232,163,61,.15);border-radius:6px;padding-left:6px;margin-left:-6px;}
   .shop-select-check{width:19px;height:19px;accent-color:var(--amber);flex:none;}
-  .shop-remove{background:none;border:none;color:#a5323a;cursor:pointer;font-size:16px;padding:4px 8px;}
-  .shop-divider{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);padding:14px 0 6px;border-top:1px solid var(--line);margin-top:6px;}
+  .shop-remove{background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;padding:4px 8px;}
+  .shop-divider{font-family:'IBM Plex Mono',monospace;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);padding:14px 0 6px;border-top:1px solid var(--line);margin-top:6px;}
   .shop-add-bar{position:fixed;left:0;right:0;bottom:0;background:var(--ink-2);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;z-index:15;}
   .shop-add-bar input{flex:1;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--chrome);color:var(--text-on-ink);font-size:15px;}
   .shop-add-bar input::placeholder{color:var(--text-dim);}
@@ -379,10 +379,10 @@
   .trip-row:last-child{border-bottom:none;}
   .trip-row:hover{background:var(--ink-3);}
   .trip-title{font-weight:700;font-size:14.5px;}
-  .trip-meta{font-size:11.5px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+  .trip-meta{font-size:13px;color:var(--text-dim);font-family:'IBM Plex Mono',monospace;margin-top:2px;}
   .trip-chevron{font-size:20px;color:var(--text-dim);}
-  .trip-done-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#dcecdf;color:#3d7a4f;border-radius:10px;padding:2px 8px;}
-  .trip-pending-badge{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:#f3e6c6;color:#8a6a1f;border-radius:10px;padding:2px 8px;}
+  .trip-done-badge{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--success-bg);color:var(--success);border-radius:10px;padding:2px 8px;}
+  .trip-pending-badge{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;background:var(--warning-bg);color:#8a6a1f;border-radius:10px;padding:2px 8px;}
 
   /* PARENT VIEW — per-person tiles */
   .person-tiles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;padding-bottom:40px;}
@@ -393,7 +393,7 @@
   .person-tile-attention{box-shadow:0 0 0 1px #D6484E, 0 2px 10px rgba(214,72,78,.25);}
   .tile-header{display:flex;align-items:center;gap:10px;}
   .tile-name{font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:16px;color:var(--text-on-ink);}
-  .tile-role{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-family:'IBM Plex Mono',monospace;}
+  .tile-role{font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-family:'IBM Plex Mono',monospace;}
   .tile-section{display:flex;flex-direction:column;gap:6px;}
   .tile-section-head{
     display:flex;justify-content:space-between;align-items:center;
@@ -405,7 +405,7 @@
   .tile-progress-fill{height:100%;border-radius:3px;}
   .tile-empty{font-size:12.5px;color:var(--text-dim);font-style:italic;}
   .tile-sched-row{display:flex;gap:8px;font-size:13px;color:var(--text-on-ink);align-items:baseline;}
-  .tile-sched-time{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--amber);flex:none;min-width:80px;}
+  .tile-sched-time{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--amber);flex:none;min-width:80px;}
   .tile-sched-title{flex:1;}
   .tile-task-row{
     display:flex;justify-content:space-between;align-items:center;gap:8px;
@@ -414,44 +414,44 @@
   .tile-task-done{color:#7fbf8c;cursor:default;}
   .tile-task-overdue{color:#e08a8f;}
   .tile-task-mark{
-    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.02em;
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.02em;
     background:var(--amber);color:var(--ink);padding:3px 8px;border-radius:10px;flex:none;
   }
   .screentime-bars{display:flex;gap:6px;align-items:flex-end;height:70px;}
   .screentime-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end;}
   .screentime-bar-track{width:100%;flex:1;display:flex;align-items:flex-end;}
   .screentime-bar-fill{width:100%;border-radius:3px 3px 0 0;min-height:2px;background:var(--amber);}
-  .screentime-bar-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--text-dim);}
+  .screentime-bar-label{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);}
   .approval-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);}
   .approval-row:last-child{border-bottom:none;}
   .trip-item-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--line);}
   .trip-item-row:last-child{border-bottom:none;}
   .trip-item-name{flex:1;font-weight:600;font-size:14.5px;}
   .trip-item-status-btn{
-    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;
+    font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:13px;letter-spacing:.02em;text-transform:uppercase;
     background:var(--ink-3);border:1px solid var(--line);color:var(--text-dim);padding:7px 13px;border-radius:16px;cursor:pointer;white-space:nowrap;
   }
-  .trip-item-bought .trip-item-status-btn{background:#dcecdf;border-color:#a8d3af;color:#3d7a4f;}
+  .trip-item-bought .trip-item-status-btn{background:var(--success-bg);border-color:#a8d3af;color:var(--success);}
   .trip-item-bought .trip-item-name{text-decoration:line-through;color:var(--text-dim);}
-  .trip-item-unavailable .trip-item-status-btn{background:#f3d9d9;border-color:#e0a8a8;color:#a5323a;}
-  .trip-item-unavailable .trip-item-name{color:#a5323a;}
-  .trip-item-remove{background:none;border:none;color:#a5323a;cursor:pointer;font-size:15px;padding:4px 6px;}
+  .trip-item-unavailable .trip-item-status-btn{background:var(--danger-bg);border-color:#e0a8a8;color:var(--danger);}
+  .trip-item-unavailable .trip-item-name{color:var(--danger);}
+  .trip-item-remove{background:none;border:none;color:var(--danger);cursor:pointer;font-size:15px;padding:4px 6px;}
   .quick-add-row{margin-top:16px;padding-bottom:80px;}
-  .quick-add-label{font-size:11.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-bottom:8px;}
+  .quick-add-label{font-size:13px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-bottom:8px;}
   .quick-add-chip{
     display:inline-block;margin:0 6px 6px 0;font-size:12.5px;font-weight:600;
     background:#fff;border:1px solid var(--line);color:var(--text-dim);padding:6px 12px;border-radius:16px;cursor:pointer;
   }
   .quick-add-chip:hover{background:var(--ink-3);}
-  .quick-add-chip-added{background:#dcecdf !important;border-color:#a8d3af !important;color:#3d7a4f !important;cursor:default !important;opacity:.85;}
+  .quick-add-chip-added{background:var(--success-bg) !important;border-color:#a8d3af !important;color:var(--success) !important;cursor:default !important;opacity:.85;}
   .days-picker{display:flex;gap:6px;flex-wrap:wrap;}
-  .days-picker label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--text-dim);cursor:pointer;}
+  .days-picker label{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--text-dim);cursor:pointer;}
   .days-picker input{width:16px;height:16px;}
   .trip-quicklist-picker{display:flex;flex-wrap:wrap;gap:8px 14px;max-height:140px;overflow-y:auto;padding:4px 0;}
   .trip-quicklist-check{display:flex;align-items:center;gap:6px;font-size:13.5px;color:var(--text-dim);cursor:pointer;}
   .trip-quicklist-check input{width:16px;height:16px;}
   .copybar{margin-top:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-  .copied{font-size:12.5px;color:#3d7a4f;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  .copied{font-size:12.5px;color:var(--success);font-weight:600;font-family:'IBM Plex Mono',monospace;}
   .hint{font-size:12.5px;color:var(--text-dim);margin-top:10px;line-height:1.5;}
 
   /* SETTINGS */
@@ -470,8 +470,8 @@
   .member-row select{padding:9px 8px;border-radius:7px;border:1px solid var(--line);font-size:13px;}
   .chore-lib-chips{display:flex;flex-wrap:wrap;gap:8px;}
   .chore-lib-chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink-3);border-radius:16px;padding:6px 8px 6px 12px;font-size:12.5px;font-weight:600;color:var(--text-dim);}
-  .chore-lib-chip button{background:none;border:none;color:#a5323a;cursor:pointer;font-size:13px;padding:2px;line-height:1;}
-  .member-row button{background:none;border:none;color:#a5323a;cursor:pointer;font-size:18px;padding:4px;}
+  .chore-lib-chip button{background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;padding:2px;line-height:1;}
+  .member-row button{background:none;border:none;color:var(--danger);cursor:pointer;font-size:18px;padding:4px;}
   .add-member{display:flex;gap:8px;margin-top:10px;}
   .add-member input{flex:1;padding:9px 10px;border-radius:7px;border:1px solid var(--line);}
 
@@ -492,7 +492,7 @@
       flex:none;
       width:100%;
       padding:9px 4px;
-      font-size:11px;
+      font-size:13px;
       white-space:normal;
       line-height:1.25;
       text-align:center;
@@ -647,6 +647,39 @@
   }
   @media(max-width:380px){.brand .sub{display:none;}.profile-btn .pname{max-width:64px;}.header-right{gap:2px;}}
 
+
+  input:not([type=color]):not([type=checkbox]):not([type=radio]),select,textarea{background:var(--field-bg)!important;color:var(--ink)!important;border-color:var(--line)!important;}
+  .checkline,.shop-check-label,.days-picker label{min-height:44px;}
+  .profile-item .dot{width:12px;height:12px;}
+  .kid-big h2{font-size:28px;text-transform:none;letter-spacing:0;}
+  .chore-group-head .name{font-size:18px;}
+  .chore-row,.shop-row,.approval-row{gap:16px;}
+  .tile-task-done{color:var(--success);}.tile-task-overdue{color:var(--danger);}
+  .tile-section-head{font-weight:600;}.tile-section{gap:10px;}
+  .person-tile-attention{border-color:var(--danger);box-shadow:none;}
+  .kid-loc,.kid-big .kd,.trip-meta,.search-result .meta{color:var(--text-dim);}
+  .chore-lib-chip,.quick-add-chip,.trip-item-status-btn{background:var(--ink-3);color:var(--ink);border-color:var(--line);}
+  .chore-freq,.tile-empty,.trip-meta{font-family:'Inter',sans-serif;}
+  .settings-card h3{font-size:20px;margin-bottom:20px;}
+  .chore-group,.settings-card{overflow-wrap:anywhere;}
+  @media(min-width:1100px){body:has(.desktop-nav) .shop-add-bar{left:240px;padding-left:32px;padding-right:32px;}}
+  @media(min-width:700px) and (max-width:1099px){body:has(.desktop-nav) .shop-add-bar{left:200px;}}
+  @media(max-width:699px){.chore-row,.approval-row{flex-wrap:wrap;}.chore-info{min-width:140px;}.settings-grid{display:flex;flex-direction:column;}.settings-card{width:100%;}.nav-more-panel .nav-caption{font-size:13px;}}
+
+  .profile-btn .pname{font-family:'Inter',sans-serif;text-transform:none;letter-spacing:0;}
+  .search-result:hover,.trip-row:hover{background:var(--ink-3);}
+  .overlay input:disabled,.overlay select:disabled{opacity:.55;}
+  @media(max-width:699px){
+    header.board{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;gap:8px 10px;}
+    .header-right{display:contents;}
+    .header-right .search-btn{width:44px;}
+    .header-right .profile-wrap{grid-column:1/-1;width:100%;}
+    .header-right .profile-btn{width:100%;padding:6px 12px;}
+    .profile-btn .pname{max-width:none;}
+    .profile-btn .caret{margin-left:auto;}
+    .profile-menu{top:132px;}
+    .brand .sub{display:block;}
+  }
 </style>
 </head>
 <body>
@@ -2018,7 +2051,7 @@ function renderMonthGrid(){
         <div class="month-dots">${dotsHtml}</div>
         <div class="month-ticks">
           ${hasTasks? '<span class="month-task-tick" title="Tasks due">✓</span>' : ''}
-          ${hasTrips? '<span class="month-trip-tick" title="Shopping trip">🛒</span>' : ''}
+          ${hasTrips? '<span class="month-trip-tick" title="Shopping trip">Shopping</span>' : ''}
         </div>
       </div>`;
     }).join('');
@@ -2137,7 +2170,7 @@ function renderBoard(){
       if(it.kind==='transit'){
         const cls = it._conflict ? 'block transit conflict' : 'block transit';
         return `<div class="${cls}" style="${posStyle}" onclick="openEdit('${it.sourceId}','${dateISO}')">
-          <div class="t">${it._conflict?'⚠ ':''}🚗 ${escapeHtml(it.label)}</div>
+          <div class="t">${it._conflict?'⚠ ':''}Travel · ${escapeHtml(it.label)}</div>
           <div class="m">${minToShort(it.start)}–${minToShort(it.end)}</div>
         </div>`;
       }
@@ -2151,7 +2184,7 @@ function renderBoard(){
       if(it.kind==='trip'){
         const cls = it._conflict ? 'block trip-block conflict' : 'block trip-block';
         return `<div class="${cls}" style="${posStyle}background:${it.color};" onclick="jumpToTripFromElsewhere('${it.id}')">
-          <div class="t">${it._conflict?'⚠ ':''}🛒 ${escapeHtml(it.title)}</div>
+          <div class="t">${it._conflict?'⚠ ':''}Shopping · ${escapeHtml(it.title)}</div>
           <div class="m">${minToShort(it.start)}</div>
         </div>`;
       }
@@ -2378,14 +2411,14 @@ function renderTripModal(){
         <label>Who's going</label>
         <select id="f_trip_member">${memberOptions}</select>
       </div>
-      <p style="font-size:11.5px;color:var(--text-dim);margin:-8px 0 14px;">Set a time and this trip shows up on the Week Board calendar too, alongside activities and tasks — not just here.</p>
+      <p style="font-size:13px;color:var(--text-dim);margin:-8px 0 14px;">Set a time and this trip shows up on the Week Board calendar too, alongside activities and tasks — not just here.</p>
       <div class="field">
         <label>Link to an existing task (optional)</label>
         <select id="f_trip_chore">
           <option value="">— None —</option>
           ${choreOptions}
         </select>
-        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Linking just shows on the trip that it's tied to that task — marking the task done and completing the trip stay independent.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Linking just shows on the trip that it's tied to that task — marking the task done and completing the trip stay independent.</p>
       </div>
       ${quickListPicker}
       ${!isEdit ? `
@@ -2468,7 +2501,7 @@ function renderParentView(){
       : scheduleItems.map(it=>`
         <div class="tile-sched-row">
           <span class="tile-sched-time">${minToShort(it.start)}–${minToShort(it.end)}</span>
-          <span class="tile-sched-title">${it.kind==='transit'?'🚗 ':''}${escapeHtml(it.title)}${it.location?` · ${escapeHtml(it.location)}`:''}</span>
+          <span class="tile-sched-title">${it.kind==='transit'?'Travel · ':''}${escapeHtml(it.title)}${it.location?` · ${escapeHtml(it.location)}`:''}</span>
         </div>`).join('');
 
     // tasks due today for this person, with a quick-complete button right on the tile
@@ -2539,7 +2572,7 @@ function renderParentView(){
           const items = t.items||[];
           const bought = items.filter(i=>i.status==='bought').length;
           return `<div class="tile-sched-row" style="cursor:pointer;" onclick="jumpToTripFromElsewhere('${t.id}')">
-            <span class="tile-sched-time">🛒</span>
+            <span class="tile-sched-time">Shopping</span>
             <span class="tile-sched-title">${escapeHtml(t.name)} · ${bought}/${items.length} bought</span>
           </div>`;
         }).join('')}
@@ -2599,7 +2632,7 @@ function renderKidView(){
   if(kid){
     const evs = eventsForDateMember(dateISO, kid.id).slice().sort((a,b)=>a.start-b.start);
     if(evs.length===0){
-      items = `<div class="kid-empty">Nothing scheduled for ${formatDateNice(dateISO)}. Free day 🎉</div>`;
+      items = `<div class="kid-empty">Nothing scheduled for ${formatDateNice(dateISO)}. Free day </div>`;
       plain = kid.name + ' schedule — ' + formatDateNice(dateISO) + '\nNothing scheduled. Free day!';
     } else {
       items = evs.map(e=>`
@@ -2767,7 +2800,7 @@ function renderOverdueBanner(kid){
   return `<div style="background:rgba(214,72,78,.12);border:1px solid #D6484E;border-radius:8px;padding:12px 14px;margin-bottom:14px;">
     <div style="font-weight:700;font-size:13px;color:#D6484E;margin-bottom:6px;">⚠ ${overdue.length} study ${overdue.length===1?'task':'tasks'} from earlier still pending</div>
     ${overdue.map(o=>`<div style="font-size:13px;padding:4px 0;cursor:pointer;" onclick="jumpToStudyTopic('${kid.id}','${o.topicId}')">
-      ${escapeHtml(o.subjectName)}: ${escapeHtml(o.topicName)} ${o.date?`<span style="color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:11px;">(assigned ${escapeHtml(o.date)})</span>`:''}
+      ${escapeHtml(o.subjectName)}: ${escapeHtml(o.topicName)} ${o.date?`<span style="color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:13px;">(assigned ${escapeHtml(o.date)})</span>`:''}
     </div>`).join('')}
   </div>`;
 }
@@ -2799,7 +2832,7 @@ function renderStudyAssignmentsPanel(kid){
         const todayISOval = todayISO();
         const isToday = day.date === todayISOval;
         return `<div style="margin-bottom:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;${isToday?'border-color:var(--amber);':''}">
-          <div style="background:var(--ink-2);padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:${isToday?'var(--amber)':'var(--text-dim)'};text-transform:uppercase;letter-spacing:.04em;">
+          <div style="background:var(--ink-2);padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:${isToday?'var(--amber)':'var(--text-dim)'};text-transform:uppercase;letter-spacing:.04em;">
             ${day.dayLabel} · ${escapeHtml(day.date)}${isToday?' · Today':''}
           </div>
           ${day.items.map(it=>{
@@ -2833,7 +2866,7 @@ function renderStudySubjectsAndTopics(kid){
     return `<div style="margin-bottom:22px;">
       <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
         ${escapeHtml(subj.name)}
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:var(--text-dim);text-transform:none;letter-spacing:0;">${completedCount}/${topics.length} complete</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--text-dim);text-transform:none;letter-spacing:0;">${completedCount}/${topics.length} complete</span>
       </div>
       <div>
         ${topics.map(t=>{
@@ -2861,7 +2894,7 @@ function renderStudyTopicDetail(kid){
   return `
     <button class="btn ghost" style="margin-bottom:14px;" onclick="ui.studyView='topics';ui.studySelectedTopicId=null;render();">← Back to topics</button>
     <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:20px;margin-bottom:4px;">${escapeHtml(t.name)}</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:16px;">${escapeHtml(t.vcaaCode||'')}</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);margin-bottom:16px;">${escapeHtml(t.vcaaCode||'')}</div>
     ${prog && prog.examScore!=null ? `<div style="margin-bottom:14px;font-size:13px;color:var(--text-dim);">Last exam score: <strong style="color:var(--text-on-ink);">${prog.examScore}%</strong> (attempt ${prog.attemptCount})</div>` : ''}
     <div style="background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:18px;line-height:1.6;font-size:14.5px;">
       ${escapeHtml(t.studyContent||'Study content not available.')}
@@ -2876,7 +2909,7 @@ function renderStudyExamView(){
   const answeredCount = Object.keys(attempt.answers).length;
   return `
     <div style="font-family:'Archivo Narrow',sans-serif;font-weight:800;font-size:18px;margin-bottom:4px;">Exam</div>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:18px;">${answeredCount}/${attempt.questions.length} answered</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text-dim);margin-bottom:18px;">${answeredCount}/${attempt.questions.length} answered</div>
     ${attempt.questions.map((q,i)=>`
       <div style="margin-bottom:18px;">
         <div style="font-weight:600;font-size:14px;margin-bottom:8px;">${i+1}. ${escapeHtml(q.question)}</div>
@@ -3016,8 +3049,8 @@ function renderPendingApprovals(){
         <div class="trip-meta">${m?escapeHtml(m.name):''} · ${frequencyLabel(c)}</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingChore('${c.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingChore('${c.id}')">Approve</button>
+        <button class="btn ghost" style="padding:7px 12px;font-size:13px;" onclick="rejectPendingChore('${c.id}')">Reject</button>
+        <button class="btn primary" style="padding:7px 12px;font-size:13px;" onclick="approvePendingChore('${c.id}')">Approve</button>
       </div>
     </div>`;
   }).join('');
@@ -3030,8 +3063,8 @@ function renderPendingApprovals(){
         <div class="trip-meta">${m?escapeHtml(m.name):''}</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingShopItem('${i.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingShopItem('${i.id}')">Approve</button>
+        <button class="btn ghost" style="padding:7px 12px;font-size:13px;" onclick="rejectPendingShopItem('${i.id}')">Reject</button>
+        <button class="btn primary" style="padding:7px 12px;font-size:13px;" onclick="approvePendingShopItem('${i.id}')">Approve</button>
       </div>
     </div>`;
   }).join('');
@@ -3044,8 +3077,8 @@ function renderPendingApprovals(){
         <div class="trip-meta">${formatDateNice(t.date)} · ${m?escapeHtml(m.name):''} · ${(t.items||[]).length} item${(t.items||[]).length===1?'':'s'}</div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn ghost" style="padding:7px 12px;font-size:11.5px;" onclick="rejectPendingTrip('${t.id}')">Reject</button>
-        <button class="btn primary" style="padding:7px 12px;font-size:11.5px;" onclick="approvePendingTrip('${t.id}')">Approve</button>
+        <button class="btn ghost" style="padding:7px 12px;font-size:13px;" onclick="rejectPendingTrip('${t.id}')">Reject</button>
+        <button class="btn primary" style="padding:7px 12px;font-size:13px;" onclick="approvePendingTrip('${t.id}')">Approve</button>
       </div>
     </div>`;
   }).join('');
@@ -3062,7 +3095,7 @@ function renderSettings(){
   if(!isParentLoggedIn()){
     return `
       <div class="settings-card" style="text-align:center;max-width:560px;">
-        <h3>🔒 Parent login required</h3>
+        <h3>Parent access required</h3>
         <p style="font-size:13.5px;color:var(--text-dim);">Log in as a parent (top right) to manage family members, colors, and data.</p>
       </div>`;
   }
@@ -3071,13 +3104,13 @@ function renderSettings(){
 
   const memberRows = state.members.map(m=>`
     <div class="member-row">
-      <input type="color" value="${m.color}" onchange="updateMember('${m.id}','color',this.value)">
-      <input type="text" value="${escapeHtml(m.name)}" onchange="updateMember('${m.id}','name',this.value)" placeholder="Name">
-      <select onchange="updateMember('${m.id}','role',this.value)">
+      <input aria-label="Colour for ${escapeHtml(m.name)}" type="color" value="${m.color}" onchange="updateMember('${m.id}','color',this.value)">
+      <input aria-label="Member name" type="text" value="${escapeHtml(m.name)}" onchange="updateMember('${m.id}','name',this.value)" placeholder="Name">
+      <select aria-label="Member role" onchange="updateMember('${m.id}','role',this.value)">
         <option value="parent" ${m.role==='parent'?'selected':''}>Parent</option>
         <option value="kid" ${m.role==='kid'?'selected':''}>Kid</option>
       </select>
-      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:11px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text-dim);">${m.pinHash?'Reset PIN':'No PIN'}</button>
+      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:13px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text-dim);">${m.pinHash?'Reset PIN':'No PIN'}</button>
       <button onclick="removeMember('${m.id}')" title="Remove">✕</button>
     </div>
     <div class="member-contact-row">
@@ -3106,7 +3139,7 @@ function renderSettings(){
       <button class="btn ghost" style="margin-top:8px;font-size:12px;padding:7px 12px;" onclick="saveYearLevelAndGenerate('${m.id}')" ${ui.yearLevelSaving===m.id?'disabled':''}>
         ${ui.yearLevelSaving===m.id ? 'Saving & generating…' : 'Save & generate schedule'}
       </button>
-      <div style="font-size:11.5px;color:var(--text-dim);margin-top:4px;">Clears any existing schedule for this kid and generates a fresh one for the current year.</div>
+      <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">Clears any existing schedule for this kid and generates a fresh one for the current year.</div>
     </div>` : ''}`).join('');
 
   return `
@@ -3126,7 +3159,7 @@ function renderSettings(){
           <input type="password" id="fam_newPassword" placeholder="${fam.passwordHash? 'Set a new family password':'No password set yet — set one'}" style="flex:1;">
           <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="changeFamilyPassword()">${fam.passwordHash?'Change':'Set'}</button>
         </div>
-        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Family members use the Family ID above plus this password to join from their own device, then pick their own name and set their own PIN.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Family members use the Family ID above plus this password to join from their own device, then pick their own name and set their own PIN.</p>
       </div>
       <div class="field">
         <label>Family name</label>
@@ -3184,7 +3217,7 @@ function renderSettings(){
       <h3>Notifications</h3>
       <p style="font-size:13px;color:var(--text-dim);margin-top:0;">A browser notification before upcoming tasks and activities. Only fires while this tab is open (even in the background) — not if the browser itself is fully closed. Applies to this device, not synced with the family.</p>
       ${(() => { const np = getNotifyPrefs(); return np.enabled ? `
-        <p style="font-size:12.5px;color:#3d7a4f;font-weight:600;margin-bottom:10px;">✓ Enabled on this device</p>
+        <p style="font-size:12.5px;color:var(--success);font-weight:600;margin-bottom:10px;">✓ Enabled on this device</p>
         <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
           <label style="font-size:13px;display:flex;align-items:center;gap:6px;">First reminder <input type="number" min="0" value="${np.firstReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid var(--line);" onchange="setNotifyReminderMinutes('firstReminder', this.value)"> min before</label>
           <label style="font-size:13px;display:flex;align-items:center;gap:6px;">Second reminder <input type="number" min="0" value="${np.secondReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid var(--line);" onchange="setNotifyReminderMinutes('secondReminder', this.value)"> min before</label>
@@ -3278,7 +3311,7 @@ function renderModal(){
         <label>Activity color</label>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="f_color" value="${color}" style="width:44px;height:38px;border:none;border-radius:8px;padding:0;background:none;cursor:pointer;" ${dis}>
-          ${readOnly?'':`<button type="button" class="btn ghost" style="padding:8px 12px;font-size:11.5px;" onclick="resetColorToMember()">Use member's color</button>`}
+          ${readOnly?'':`<button type="button" class="btn ghost" style="padding:8px 12px;font-size:13px;" onclick="resetColorToMember()">Use member's color</button>`}
         </div>
       </div>
 
@@ -3296,8 +3329,8 @@ function renderModal(){
         <div class="field">
           <label>Days of week</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:11.5px;" onclick="setActivityDayPreset([0,1,2,3,4])" ${dis}>Every weekday (Mon–Fri)</button>
-            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:11.5px;" onclick="setActivityDayPreset([0,1,2,3,4,5,6])" ${dis}>Every day</button>
+            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:13px;" onclick="setActivityDayPreset([0,1,2,3,4])" ${dis}>Every weekday (Mon–Fri)</button>
+            <button type="button" class="btn ghost" style="padding:6px 10px;font-size:13px;" onclick="setActivityDayPreset([0,1,2,3,4,5,6])" ${dis}>Every day</button>
           </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
             ${DAYS.map((d,i)=>`
@@ -3435,7 +3468,7 @@ function renderChoreModal(){
         <div class="days-picker">${daysPicker}</div>
       </div>
       <div id="choreFortnightAnchorField" class="field" style="${frequency==='fortnightly'?'':'display:none'}">
-        <p style="font-size:11.5px;color:var(--text-dim);margin:0 0 6px;">Uses the "Starts on" date below to work out the every-2-weeks pattern.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:0 0 6px;">Uses the "Starts on" date below to work out the every-2-weeks pattern.</p>
       </div>
       <div id="choreMonthlyFields" class="field" style="${frequency==='monthly'?'':'display:none'}">
         <label>Day of month</label>
@@ -3444,7 +3477,7 @@ function renderChoreModal(){
       <div id="choreStartDateField" class="field" style="${showStartDate?'':'display:none'}">
         <label>Starts on</label>
         <input type="date" id="f_chore_startDate" value="${startDateClamped}" min="${today}" ${dis}>
-        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Won't show as due on any date before this — new tasks can't retroactively apply to past days.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Won't show as due on any date before this — new tasks can't retroactively apply to past days.</p>
       </div>
       <div id="choreDueDateField" class="field" style="${showDueDate?'':'display:none'}">
         <label>Date</label>
@@ -3453,12 +3486,12 @@ function renderChoreModal(){
       <div class="field">
         <label>Due time (optional)</label>
         <input type="time" id="f_chore_dueTime" value="${dueTime}" ${dis}>
-        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Leave blank for "anytime today" — set a time if it needs doing by a specific point in the day.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Leave blank for "anytime today" — set a time if it needs doing by a specific point in the day.</p>
       </div>
       <div class="field">
         <label>Points (optional)</label>
         <input type="number" id="f_chore_points" value="${points}" min="0" max="100" step="1" ${dis}>
-        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">Earned each time this is marked done. Set to 0 for no points.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Earned each time this is marked done. Set to 0 for no points.</p>
       </div>
 
       <div class="modal-actions">
@@ -3535,7 +3568,7 @@ function renderProfileDropdown(){
     <button type="button" class="profile-item ${m.id===ui.profileId?'current':''}" onclick="openLogin('${m.id}')">
       <span class="dot" style="background:${m.color}"></span>
       <span>${escapeHtml(m.name)}</span>
-      <span style="margin-left:auto;font-size:10px;opacity:.55;text-transform:uppercase;">${m.role==='parent'?'Adult':'Child'}</span>
+      <span style="margin-left:auto;font-size:12px;opacity:.55;text-transform:uppercase;">${m.role==='parent'?'Adult':'Child'}</span>
     </button>`).join('') || `<div class="profile-none">Add family members in Settings first.</div>`;
 
   const menu = ui.profileMenuOpen ? `
@@ -4096,7 +4129,7 @@ function renderDayDrillModal(){
   if(ui.dayDrillLoading){
     body = `<p style="font-size:13px;color:var(--text-dim);">Loading...</p>`;
   } else if(ui.dayDrillError){
-    body = `<p style="font-size:13px;color:#a5323a;">${escapeHtml(ui.dayDrillError)}</p>`;
+    body = `<p style="font-size:13px;color:var(--danger);">${escapeHtml(ui.dayDrillError)}</p>`;
   } else if(ui.dayDrillData){
     const apps = ui.dayDrillData.apps || [];
     const showCount = ui.dayDrillShowAll ? apps.length : 5;
@@ -4159,7 +4192,7 @@ function renderDayDrillModal(){
   <div class="overlay" onclick="if(event.target===this) closeDayDrill()">
     <div class="modal" style="max-width:440px;">
       <h2 style="display:flex;align-items:center;gap:9px;">
-        <span class="profile-avatar" style="background:${ui.dayDrillMemberColor};width:28px;height:28px;font-size:11px;">${initials(ui.dayDrillMemberName||'')}</span>
+        <span class="profile-avatar" style="background:${ui.dayDrillMemberColor};width:28px;height:28px;font-size:13px;">${initials(ui.dayDrillMemberName||'')}</span>
         ${escapeHtml(ui.dayDrillMemberName||'')} — ${ui.dayDrillData ? formatDateNice(ui.dayDrillData.date) : ''}
       </h2>
       ${body}
@@ -4188,7 +4221,7 @@ function renderDeviceManagerModal(){
     <div class="overlay" onclick="if(event.target===this) closeDeviceManager()">
       <div class="modal" style="max-width:360px;">
         <h2>Registered devices</h2>
-        <p style="color:#a5323a;font-size:13px;font-weight:600;">${escapeHtml(ui.deviceManagerError)}</p>
+        <p style="color:var(--danger);font-size:13px;font-weight:600;">${escapeHtml(ui.deviceManagerError)}</p>
         <div class="modal-actions" style="margin-top:16px;">
           <div></div>
           <button class="btn primary" onclick="closeDeviceManager()">Close</button>
@@ -4206,7 +4239,7 @@ function renderDeviceManagerModal(){
         <div class="trip-title">${escapeHtml(d.label || d.hostname || 'Unnamed device')}</div>
         <div class="trip-meta">${m?escapeHtml(m.name):'Unknown member'} · Last sync: ${lastSync}</div>
       </div>
-      <button class="btn danger" style="padding:7px 12px;font-size:11.5px;" onclick="confirmRemoveDeviceByIndex(${idx})">Remove</button>
+      <button class="btn danger" style="padding:7px 12px;font-size:13px;" onclick="confirmRemoveDeviceByIndex(${idx})">Remove</button>
     </div>`;
   }).join('');
 
@@ -4417,7 +4450,7 @@ function renderLoginModal(){
         style="width:100%;text-align:center;font-size:18px;letter-spacing:6px;padding:10px;border-radius:8px;border:1px solid var(--line);font-family:'IBM Plex Mono',monospace;margin-top:10px;">
       `:''}
 
-      ${ui.loginError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.loginError)}</div>`:''}
+      ${ui.loginError? `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.loginError)}</div>`:''}
 
       <div style="display:flex;gap:8px;margin-top:18px;">
         <button class="btn ghost" style="flex:1;" onclick="closeLogin()">Cancel</button>
@@ -4497,10 +4530,10 @@ function renderOnboarding(){
           <div class="flap">Track<span>line</span></div>
           <div class="sub">Family Tracker</div>
         </div>
-        <h2>Family created 🎉</h2>
+        <h2>Family created </h2>
         <p class="lead">Share this with the rest of your family so their own devices can join.</p>
         <div style="background:var(--ink-3);border-radius:10px;padding:16px;margin-bottom:16px;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-bottom:4px;">Family ID</div>
+          <div style="font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);margin-bottom:4px;">Family ID</div>
           <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;letter-spacing:.08em;color:var(--ink);">${escapeHtml(ui.justCreatedFamilyId)}</div>
         </div>
         <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:18px;">Each family member opens this same website, taps <strong>"Join an existing family,"</strong> enters this Family ID and the family password you just set, then picks their own name and sets their own PIN.</p>
@@ -4530,7 +4563,7 @@ function renderOnboarding(){
           <label>Family password</label>
           <input type="password" id="jf_password" placeholder="Family password">
         </div>
-        ${ui.joinError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.joinError)}</div>`:''}
+        ${ui.joinError? `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.joinError)}</div>`:''}
         <button class="btn primary" style="width:100%;padding:13px;" onclick="submitJoinFamily()">Join family</button>
         <button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="cancelJoinFamily()">← Back</button>
       </div>
@@ -4568,16 +4601,16 @@ function renderOnboarding(){
       <div class="field">
         <label>Family password</label>
         <input type="password" id="ob_familyPassword" placeholder="For other family members to join with">
-        <p style="font-size:11.5px;color:var(--text-dim);margin:6px 0 0;">You'll get a Family ID after creating this — other family members use that ID plus this password to join from their own device.</p>
+        <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">You'll get a Family ID after creating this — other family members use that ID plus this password to join from their own device.</p>
       </div>
-      ${ui.onboardingError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.onboardingError)}</div>`:''}
+      ${ui.onboardingError? `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-bottom:10px;">${escapeHtml(ui.onboardingError)}</div>`:''}
       <button class="btn primary" style="width:100%;padding:13px;" onclick="submitOnboarding()">Create my family</button>
 
       <div class="onboard-divider">or</div>
       <button class="btn ghost" style="width:100%;padding:11px;" onclick="openJoinFamily()">Join an existing family</button>
       <button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="loadExampleData()">Just show me an example first</button>
       ${hasSnapshotToReturnTo ? `<button class="btn ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="cancelNewFamilySetup()">← Back to my existing family</button>` : ''}
-      <p style="font-size:11.5px;color:var(--text-dim);text-align:center;margin:14px 0 0;">Email/phone are stored so this is ready for notifications later — this app can't send real emails or texts yet.</p>
+      <p style="font-size:13px;color:var(--text-dim);text-align:center;margin:14px 0 0;">Email/phone are stored so this is ready for notifications later — this app can't send real emails or texts yet.</p>
     </div>
   </div>`;
 }
@@ -4749,6 +4782,32 @@ function renderDashboard(){
   </div>`;
 }
 
+function enhancePresentation(root){
+  // Presentation-only semantics; existing click handlers and form IDs survive.
+  root.querySelectorAll('.field').forEach(field=>{
+    const label=field.querySelector('label'),control=field.querySelector('input,select,textarea');
+    if(label&&control?.id) label.htmlFor=control.id;
+  });
+  root.querySelectorAll('button[title]').forEach(button=>{if(!button.hasAttribute('aria-label')) button.setAttribute('aria-label',button.title);});
+  root.querySelectorAll('[onclick]').forEach(element=>{
+    if(element.matches('button,a,input,select,textarea,summary,.col-body')) return;
+    element.setAttribute('role','button');element.tabIndex=0;
+    element.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();element.click();}});
+  });
+  root.querySelectorAll('.modal').forEach((modal,index)=>{
+    modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');
+    const title=modal.querySelector('h2');if(title){title.id=title.id||'ui-dialog-title-'+index;modal.setAttribute('aria-labelledby',title.id);}
+    modal.addEventListener('keydown',event=>{
+      if(event.key!=='Tab') return;
+      const items=Array.from(modal.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')).filter(el=>el.getClientRects().length);
+      if(!items.length) return;
+      const first=items[0],last=items[items.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    });
+  });
+}
+
 function render(){
   // Every render() call fully replaces root.innerHTML — including <main>,
   // the app's one scroll container — so a brand-new <main> always starts
@@ -4758,11 +4817,20 @@ function render(){
   // restoring scroll position around the render, rather than inside it,
   // means every current AND future early-return branch in _renderInner
   // is covered automatically, with zero changes needed to any of them.
+  const focusedId=document.activeElement?.id;
   const prevMain = document.querySelector('main');
   const prevScrollTop = prevMain ? prevMain.scrollTop : 0;
   _renderInner();
   const newMain = document.querySelector('main');
   if(newMain) newMain.scrollTop = prevScrollTop;
+  enhancePresentation(document.getElementById('root'));
+  const restoredFocus=focusedId&&document.getElementById(focusedId);
+  if(restoredFocus) restoredFocus.focus({preventScroll:true});
+  else {
+    const dialogs=document.querySelectorAll('.modal');
+    const dialog=dialogs[dialogs.length-1];
+    dialog?.querySelector('input:not(:disabled),select:not(:disabled),button:not(:disabled)')?.focus({preventScroll:true});
+  }
 }
 function _renderInner(){
   if(!tracklineAuth.ready || !tracklineAuth.user || !tracklineAuth.membership){ tracklineAuth.renderGate(); return; }
@@ -5962,7 +6030,7 @@ function renderCSVImportModal(){
   const errorRows = invalid.map(function(r,i){
     return '<div class="approval-row" style="flex-direction:column;align-items:stretch;">'
       + '<div class="trip-title">Row '+(i+1)+': '+escapeHtml(r.row.title||r.row.member_name||'(unnamed)')+'</div>'
-      + '<div class="trip-meta" style="color:#a5323a;">'+r.errors.map(escapeHtml).join(' · ')+'</div>'
+      + '<div class="trip-meta" style="color:var(--danger);">'+r.errors.map(escapeHtml).join(' · ')+'</div>'
       + '</div>';
   }).join('');
 
@@ -5970,8 +6038,8 @@ function renderCSVImportModal(){
     + '<div class="modal" style="max-width:460px;">'
     + '<h2>Import preview</h2>'
     + '<p style="font-size:13px;color:var(--text-dim);margin:0 0 14px;">'
-    + '<strong style="color:#3d7a4f;">'+valid.length+' '+typeLabel+' ready to import</strong>'
-    + (invalid.length ? ' · <strong style="color:#a5323a;">'+invalid.length+' with errors (will be skipped)</strong>' : '')
+    + '<strong style="color:var(--success);">'+valid.length+' '+typeLabel+' ready to import</strong>'
+    + (invalid.length ? ' · <strong style="color:var(--danger);">'+invalid.length+' with errors (will be skipped)</strong>' : '')
     + '</p>'
     + (invalid.length ? '<div style="max-height:220px;overflow-y:auto;margin-bottom:14px;">'+errorRows+'</div>' : '')
     + '<div class="modal-actions" style="margin-top:6px;">'
@@ -5989,7 +6057,7 @@ function renderExportModal(){
       <h2>Confirm export</h2>
       <p style="font-size:13.5px;color:var(--text-dim);margin:0 0 16px;">Enter your family password to export a backup. This is verified on the server — PIN and password hashes are never included in the download.</p>
       <input type="password" id="f_export_password" placeholder="Family password" style="width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);font-size:15px;">
-      ${ui.exportError? `<div style="color:#a5323a;font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.exportError)}</div>`:''}
+      ${ui.exportError? `<div style="color:var(--danger);font-size:13px;font-weight:600;margin-top:10px;">${escapeHtml(ui.exportError)}</div>`:''}
       <div class="modal-actions" style="margin-top:16px;">
         <div></div>
         <div style="display:flex;gap:8px;">
