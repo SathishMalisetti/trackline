@@ -17,8 +17,8 @@ class RecoveryTests(unittest.TestCase):
         with patch.object(recovery.sys, 'platform', 'win32'), patch.object(recovery, 'api_ready', side_effect=[False, False, True]), patch.object(recovery, 'qt_running', return_value=False), patch.object(recovery, 'installed_executable', return_value=Path('C:/ActivityWatch/aw-qt.exe')), patch.object(recovery.subprocess, 'Popen') as launch, patch.object(recovery.time, 'sleep'):
             recovery.ensure_activitywatch()
             launch.assert_called_once()
-            self.assertEqual(launch.call_args.args[0], ['C:/ActivityWatch/aw-qt.exe'])
-            self.assertEqual(launch.call_args.kwargs['cwd'], 'C:/ActivityWatch')
+            self.assertEqual(launch.call_args.args[0], [str(Path('C:/ActivityWatch/aw-qt.exe'))])
+            self.assertEqual(launch.call_args.kwargs['cwd'], str(Path('C:/ActivityWatch')))
 
     def test_existing_qt_does_not_duplicate(self):
         with patch.object(recovery.sys, 'platform', 'win32'), patch.object(recovery, 'api_ready', side_effect=[False, True]), patch.object(recovery, 'qt_running', return_value=True), patch.object(recovery.subprocess, 'Popen') as launch:
