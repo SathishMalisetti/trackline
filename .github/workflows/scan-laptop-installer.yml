@@ -1,0 +1,47 @@
+name: Scan Trackline installer artifact
+on:
+  push:
+    branches: [fix/installer-security]
+    paths: ['.github/workflows/scan-laptop-installer.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  scan:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: TracklineAgentSetup-1.1.0
+          run-id: 37454312104
+          github-token: ${{ github.token }}
+          path: installer
+      - name: Verify identity and scan without executing installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Start-Transcript -Path scan-report.txt
+          try {
+            $installer = (Resolve-Path installer/TracklineAgentSetup.exe).Path
+            $hash = (Get-FileHash $installer -Algorithm SHA256).Hash
+            if ($hash -ne '1902068B49A58F0E1686AD4351A9A00CD47E4C141236FCA52A23D17400620C85') { throw 'Installer hash mismatch.' }
+            Get-FileHash $installer -Algorithm SHA256 | Format-List
+            Get-AuthenticodeSignature $installer | Format-List Status,StatusMessage,SignerCertificate
+            $status = Get-MpComputerStatus
+            $status | Format-List AMServiceEnabled,AntivirusEnabled,AntivirusSignatureVersion,AntivirusSignatureLastUpdated
+            if (!$status.AMServiceEnabled -or !$status.AntivirusEnabled) { throw 'Defender is unavailable; no clean scan verdict can be issued.' }
+            Update-MpSignature
+            Start-MpScan -ScanType CustomScan -ScanPath $installer
+            $detections = @(Get-MpThreatDetection | Where-Object { ($_.Resources -join ' ') -like '*TracklineAgentSetup.exe*' })
+            if ($detections.Count -gt 0) { $detections | Format-List; throw 'Defender reported a detection for this installer.' }
+            Write-Output 'Defender scan completed with no detection for this installer. This does not establish a Chrome Safe Browsing verdict.'
+          } finally {
+            Stop-Transcript
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: installer-security-report
+          path: scan-report.txt
+          if-no-files-found: error
