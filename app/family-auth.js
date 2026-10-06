@@ -154,7 +154,7 @@
   };
   auth.lock = async function() {
     if (this.sessionMode !== 'family') return emailLock();
-    this.revision = (this.revision || 0) + 1; ui = JSON.parse(JSON.stringify(this.initialUI));
+    this.clear();
     this.message = ''; await this.loadAccount();
   };
   auth.signOut = async function() {

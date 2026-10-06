@@ -91,6 +91,25 @@ module.exports = async function (context, req) {
         return;
       }
 
+      // The legacy read RPC omits these persisted fields. Read them explicitly
+      // so refresh cannot reset permissions/year level to frontend defaults.
+      const memberRes = await fetch(`${SUPABASE_URL}/rest/v1/members?family_id=eq.${encodeURIComponent(familyId)}&select=id,year_level,can_add_tasks,can_add_shopping`, {headers:supabaseHeaders()});
+      const choreRes = await fetch(`${SUPABASE_URL}/rest/v1/chores?family_id=eq.${encodeURIComponent(familyId)}&select=id,pending_approval,icon`, {headers:supabaseHeaders()});
+      const progressRes = await fetch(`${SUPABASE_URL}/rest/v1/topic_progress?family_id=eq.${encodeURIComponent(familyId)}&select=*`, {headers:supabaseHeaders()});
+      if(!memberRes.ok || !choreRes.ok || !progressRes.ok){
+        context.res = jsonRes(502, {error:'Could not load saved family settings and study progress. Please retry.'}); return;
+      }
+      const memberFields = new Map((await memberRes.json()).map(m=>[m.id,m]));
+      (data.members||[]).forEach(member=>{
+        const saved=memberFields.get(member.id);
+        if(saved) Object.assign(member,{yearLevel:saved.year_level,canAddTasks:saved.can_add_tasks,canAddShopping:saved.can_add_shopping});
+      });
+      const choreFields = new Map((await choreRes.json()).map(c=>[c.id,c]));
+      (data.chores||[]).forEach(chore=>{
+        const saved=choreFields.get(chore.id);
+        if(saved) Object.assign(chore,{pendingApproval:saved.pending_approval,icon:saved.icon});
+      });
+      data.topicProgress = (await progressRes.json()).map(p=>({id:p.id,kidId:p.member_id,topicId:p.topic_id,status:p.status,examScore:p.exam_score,attemptCount:p.attempt_count,studyCompletedAt:p.study_completed_at,examCompletedAt:p.exam_completed_at,updatedAt:p.updated_at}));
       data.choreLogs = await fetchChoreLogsForFamily(familyId);
       data.shoppingTrips = await fetchTripsForFamily(familyId);
       context.res = jsonRes(200, data);
