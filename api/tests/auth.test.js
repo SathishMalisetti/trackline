@@ -67,11 +67,11 @@ test('invalid family names never call the creation RPC', async () => {
     assert.equal(context.res.status, 400); assert.equal(calls.length, 2);
   }
 });
-test('family creation rejects unverified accounts', async () => {
-  calls = []; responses = [{ status: 200, body: { ...user, email_confirmed_at: null } }];
+test('family creation accepts a valid unconfirmed email session during testing', async () => {
+  calls = []; responses = [{ status: 200, body: { ...user, email_confirmed_at: null } }, { status: 200, body: [] }, { status: 200, body: { family_id: 'NEW', role: 'parent' } }];
   const context = {};
   await createFamily(context, { ...req(), method: 'POST', body: { familyName: 'Family', parentName: 'Parent' } });
-  assert.equal(context.res.status, 403); assert.equal(calls.length, 1);
+  assert.equal(context.res.status, 200); assert.equal(calls.length, 3);
 });
 async function run(request, options = {}, rows = [member], authUser = user, payload = { ok: true }) {
   calls = []; responses = [{ status: 200, body: authUser }, { status: 200, body: rows }];
@@ -116,9 +116,15 @@ test('verified parent can perform parent actions', async () => {
   assert.equal(calls[0][1].headers.Authorization, 'Bearer valid-token');
   assert.equal(calls[1][1].headers.Authorization, 'Bearer server-only');
 });
-test('unverified and anonymous accounts are rejected', async () => {
-  assert.equal((await run(req(), {}, [member], { ...user, email_confirmed_at: null })).context.res.status, 403);
+test('email confirmation is optional but anonymous accounts remain rejected', async () => {
+  assert.equal((await run(req(), {}, [member], { ...user, email_confirmed_at: null })).context.res.status, 200);
   assert.equal((await run(req(), {}, [member], { ...user, is_anonymous: true })).context.res.status, 403);
+  assert.equal((await run(req(), {}, [member], { ...user, email: null })).context.res.status, 403);
+});
+test('launch setting restores required email confirmation', async () => {
+  process.env.REQUIRE_EMAIL_VERIFICATION = 'true';
+  try { assert.equal((await run(req(), {}, [member], { ...user, email_confirmed_at: null })).context.res.status, 403); }
+  finally { delete process.env.REQUIRE_EMAIL_VERIFICATION; }
 });
 test('child responses omit password and PIN hashes and other usage', async () => {
   const result = await run(req(), { sanitize: true }, [member], user, {
