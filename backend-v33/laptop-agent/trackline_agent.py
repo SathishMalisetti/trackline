@@ -41,6 +41,7 @@ import sys
 import time
 import getpass
 import hashlib
+from upload_schedule import upload_allowed
 import argparse
 import platform
 import subprocess
@@ -803,11 +804,20 @@ def full_uninstall():
 # Main sync cycle
 # ---------------------------------------------------------------------------
 
-def sync_once():
+def sync_once(scheduled=False):
     cfg = load_config()
     if not cfg:
         print("Not paired yet. Run with --pair first.")
         sys.exit(1)
+
+    if scheduled:
+        try:
+            if not upload_allowed(cfg):
+                print("Outside automatic upload window; skipping this cycle.")
+                return "skipped"
+        except ValueError as exc:
+            write_status("failed", f"Invalid upload window: {exc}")
+            return "failed"
 
     # Verify locally-known pairing health BEFORE attempting a real sync —
     # if the last attempt found this device was revoked, don't keep
@@ -842,7 +852,7 @@ def run_loop():
     print(f"Running — syncing every {cfg.get('sync_interval_minutes', 30)} minutes. Ctrl+C to stop.")
     while True:
         try:
-            result = sync_once()
+            result = sync_once(scheduled=True)
             if result == "revoked":
                 print("Stopping — this device's pairing has been revoked. Re-pair to resume.")
                 break
@@ -860,6 +870,7 @@ if __name__ == "__main__":
     parser.add_argument("--uninstall", action="store_true", help="Delete this device's data from Trackline and remove local config (asks for confirmation)")
     parser.add_argument("--full-uninstall", action="store_true", help="Same as --uninstall but non-interactive — this is what Windows' Add/Remove Programs calls, not meant to be run manually")
     parser.add_argument("--sync-once", action="store_true", help="Run a single sync cycle and exit")
+    parser.add_argument("--manual-sync", action="store_true", help="Sync now regardless of the automatic upload window")
     parser.add_argument("--run", action="store_true", help="Run continuously, syncing on the configured interval")
     parser.add_argument("--backfill", action="store_true", help="One-time import of existing local ActivityWatch history — not run automatically, invoke manually using the already-saved config")
     parser.add_argument("--sync-date", metavar="YYYY-MM-DD", help="Manually sync one specific past date, e.g. a day the laptop was on but the agent failed to sync")
@@ -876,6 +887,9 @@ if __name__ == "__main__":
         elif args.full_uninstall:
             full_uninstall()
         elif args.sync_once:
+            if sync_once(scheduled=True) == "failed":
+                sys.exit(1)
+        elif args.manual_sync:
             if sync_once() == "failed":
                 sys.exit(1)
         elif args.run:

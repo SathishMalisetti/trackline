@@ -30,3 +30,19 @@ py -3.12 build_installer.py --inno-compiler "D:\Tools\Inno Setup 6\ISCC.exe"
 ```
 
 Building locally does not sign the installer or establish that it is safe. The earlier Chrome dangerous-download verdict is still unresolved; Windows or antivirus software may also flag the local build. Keep protections enabled and review any detection rather than automatically overriding it.
+
+## Automatic upload window
+
+In Config Manager → Settings, enable the daily upload window, enter 24-hour
+start/end times (for example `16:00`–`22:00`), and Apply with your existing
+parent password. The laptop's local clock is used. Start is inclusive and
+end exclusive; `22:00`–`04:00` is an overnight window. Disable it for all-day
+uploads. Existing installs default to all-day uploads.
+
+The scheduled task retains its interval but the agent skips querying and
+uploading outside the window. It does not stop ActivityWatch recording,
+and it does not restrict the reported usage to those hours. Sync now,
+missing-day uploads, and explicit backfill bypass the window. There is no
+extra final upload at the end boundary. If the laptop is off during the
+entire window, automatic upload waits for a later allowed run; the
+existing missing-day tool remains available for historical dates.

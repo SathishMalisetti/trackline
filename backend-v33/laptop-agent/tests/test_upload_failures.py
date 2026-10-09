@@ -61,6 +61,24 @@ class UploadFailureTests(unittest.TestCase):
             s['push_snapshot'].assert_called_once()
             self.assertEqual(len(list(root.glob('*.json'))), 2)
 
+    def test_scheduled_outside_window_skips_all_work(self):
+        s = functions()
+        s.update(load_config=Mock(return_value=CFG), upload_allowed=Mock(return_value=False),
+                 read_status=Mock(), build_snapshot=Mock(), retry_unsent=Mock())
+        self.assertEqual(s['sync_once'](scheduled=True), 'skipped')
+        for name in ('read_status', 'build_snapshot', 'retry_unsent'):
+            s[name].assert_not_called()
+
+    def test_manual_sync_bypasses_window(self):
+        s = functions()
+        s.update(load_config=Mock(return_value=CFG), upload_allowed=Mock(return_value=False),
+                 read_status=Mock(return_value=None), retry_unsent=Mock(return_value=None),
+                 build_snapshot=Mock(return_value=SNAPSHOT), write_audit_file=Mock(return_value=Path('audit.json')),
+                 push_snapshot=Mock(return_value='ok'))
+        self.assertEqual(s['sync_once'](), 'ok')
+        s['upload_allowed'].assert_not_called()
+        s['push_snapshot'].assert_called_once()
+
     def test_offline_backlog_still_saves_current_snapshot(self):
         s = functions()
         s.update(load_config=Mock(return_value=CFG), read_status=Mock(return_value=None),
