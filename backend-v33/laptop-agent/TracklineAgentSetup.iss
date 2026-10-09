@@ -28,7 +28,7 @@
 ; ============================================================================
 
 #define MyAppName "Trackline Agent"
-#define MyAppVersion "1.1.1"
+#define MyAppVersion "1.1.2"
 #define MyAppPublisher "Trackline"
 #define MyConfigManagerExe "TracklineConfigManager.exe"
 

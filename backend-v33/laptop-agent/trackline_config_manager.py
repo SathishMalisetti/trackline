@@ -11,6 +11,7 @@ Does not re-pair or uninstall — for those, use TracklineSetup or the
 agent's own CLI flags directly.
 """
 
+from upload_schedule import validate_window
 import json
 import os
 import sys
@@ -239,6 +240,20 @@ def set_sync_interval(minutes):
     except Exception as e:
         return False, f"Interval saved, but could not update the scheduled task: {e}"
 
+def set_upload_window(enabled, start, end):
+    cfg = read_config()
+    if not cfg:
+        return False, "Pair this device first."
+    if enabled:
+        try:
+            validate_window(start, end)
+        except ValueError as exc:
+            return False, str(exc)
+    cfg["upload_window"] = {"enabled": bool(enabled), "start": start, "end": end}
+    write_config(cfg)
+    return True, "Upload window saved. Automatic uploads use the laptop local clock; manual uploads remain available."
+
+
 def sync_now():
     """Triggers an immediate sync. Returns (ok, message). Runs
     synchronously with a generous timeout — a real sync (querying
@@ -250,7 +265,7 @@ def sync_now():
     if not agent_path:
         return False, "Could not find the Trackline agent to run it — re-pairing (via TracklineSetup) will fix this."
     try:
-        result = subprocess.run([agent_path, "--sync-once"], capture_output=True, text=True, timeout=60)
+        result = subprocess.run([agent_path, "--manual-sync"], capture_output=True, text=True, timeout=60)
         if result.returncode == 0:
             return True, "Sync completed."
         return False, f"Sync did not complete cleanly: {result.stdout or result.stderr}"
@@ -398,7 +413,7 @@ def run_gui():
 
     root = tk.Tk()
     root.title("Trackline — Device status")
-    window_width, window_height = 460, 560
+    window_width, window_height = 500, 680
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
     x = (screen_width // 2) - (window_width // 2)
@@ -421,6 +436,9 @@ def run_gui():
     notebook.add(settings_tab, text="Settings")
 
     interval_var = tk.StringVar()
+    window_enabled = tk.BooleanVar()
+    window_start = tk.StringVar()
+    window_end = tk.StringVar()
     threshold_var = tk.StringVar()
     sync_date_var = tk.StringVar()
     button_row = ttk.Frame(outer)
@@ -534,6 +552,19 @@ def run_gui():
         ttk.Button(interval_row, text="Apply", command=apply_interval).pack(side="left")
 
         cfg = read_config() or {}
+        window = cfg.get("upload_window") or {}
+        window_enabled.set(bool(window.get("enabled", False)))
+        window_start.set(window.get("start", "16:00"))
+        window_end.set(window.get("end", "22:00"))
+        ttk.Checkbutton(settings_tab, text="Limit automatic uploads to a daily window", variable=window_enabled).pack(anchor="w")
+        window_row = ttk.Frame(settings_tab)
+        window_row.pack(fill="x", pady=(4,4))
+        ttk.Label(window_row, text="From").pack(side="left")
+        ttk.Entry(window_row, textvariable=window_start, width=6).pack(side="left", padx=6)
+        ttk.Label(window_row, text="to").pack(side="left")
+        ttk.Entry(window_row, textvariable=window_end, width=6).pack(side="left", padx=6)
+        ttk.Button(window_row, text="Apply", command=apply_window).pack(side="left")
+        ttk.Label(settings_tab, text="24-hour laptop local time. End exclusive. Overnight supported.\nThe task keeps its interval; uploads outside this window are skipped.\nSync now and missing-day uploads are always available.", foreground="#5c5847").pack(anchor="w", pady=(0,10))
         threshold_row = ttk.Frame(settings_tab)
         threshold_row.pack(fill="x", pady=(0,10))
         ttk.Label(threshold_row, text="Short-app rollup", width=16, foreground="#5c5847").pack(side="left")
@@ -574,6 +605,20 @@ def run_gui():
         ok, msg = set_sync_interval(minutes)
         action_label.config(text=msg, foreground="#3d7a4f" if ok else "#a5323a")
         render()
+
+    def apply_window():
+        start, end = window_start.get().strip(), window_end.get().strip()
+        if window_enabled.get():
+            try:
+                validate_window(start, end)
+            except ValueError as exc:
+                action_label.config(text=str(exc), foreground="#a5323a")
+                return
+        if not prompt_password_and_verify():
+            return
+        ok, msg = set_upload_window(window_enabled.get(), start, end)
+        render()
+        action_label.config(text=msg, foreground="#3d7a4f" if ok else "#a5323a")
 
     def apply_threshold():
         if not prompt_password_and_verify():

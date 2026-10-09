@@ -45,7 +45,7 @@ def main():
     if sys.version_info[:2] != (3, 12):
         raise RuntimeError('Use Python 3.12: py -3.12 build_installer.py')
     compiler = find_compiler(args.inno_compiler)
-    for name in ('trackline_agent.py', 'activitywatch_recovery.py', 'account_auth.py',
+    for name in ('trackline_agent.py', 'activitywatch_recovery.py', 'upload_schedule.py', 'account_auth.py',
                  'trackline_setup_gui.py', 'trackline_config_manager.py',
                  'trackline_icon.ico', 'TracklineAgentSetup.iss'):
         if not (ROOT / name).is_file():
