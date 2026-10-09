@@ -522,16 +522,25 @@ def read_status():
         return None
 
 def push_snapshot(cfg, snapshot, audit_path):
-    resp = requests.post(
-        f"{cfg['backend_url']}/api/device-usage-ingest",
-        json={
-            "deviceId": cfg["device_id"],
-            "deviceToken": cfg["device_token"],
-            "date": snapshot["date"],
-            "hours": snapshot["hours"],
-        },
-        timeout=15,
-    )
+    try:
+        resp = requests.post(
+            f"{cfg['backend_url']}/api/device-usage-ingest",
+            json={
+                "deviceId": cfg["device_id"],
+                "deviceToken": cfg["device_token"],
+                "date": snapshot["date"],
+                "hours": snapshot["hours"],
+            },
+            timeout=15,
+        )
+    except requests.RequestException as exc:
+        # The audit file already exists: keep it queued, without a GUI traceback.
+        # Avoid logging credentials, request bodies or sensitive response details.
+        detail = (f"Upload connection failed ({type(exc).__name__}). "
+                  "Saved locally; will retry on the next scheduled sync.")
+        print(detail)
+        write_status("failed", detail)
+        return "failed"
     if resp.status_code == 200:
         mark_sent(audit_path)
         print(f"Synced OK: {resp.json()}")
@@ -552,8 +561,8 @@ def push_snapshot(cfg, snapshot, audit_path):
 
 def retry_unsent(cfg):
     """Any file still sitting outside tracker/sent/ is naturally the retry
-    queue. Stops immediately if a revocation is detected — no point
-    pushing the rest of the backlog against a device that's been removed."""
+    queue. Stops on the first failure or revocation so an offline laptop
+    does not spend one network timeout on every queued file."""
     if not TRACKER_DIR.exists():
         return "ok"
     for path in TRACKER_DIR.rglob("*.json"):
@@ -562,8 +571,8 @@ def retry_unsent(cfg):
         with open(path) as f:
             snapshot = json.load(f)
         result = push_snapshot(cfg, snapshot, path)
-        if result == "revoked":
-            return "revoked"
+        if result in ("revoked", "failed"):
+            return result
     return "ok"
 
 
@@ -819,7 +828,9 @@ def sync_once():
         return "revoked"
 
     snapshot = build_snapshot(cfg, tz)
-    audit_path = write_audit_file(snapshot)  # written BEFORE any network call
+    audit_path = write_audit_file(snapshot)  # capture this cycle even if backlog upload failed
+    if retry_result == "failed":
+        return "failed"
     return push_snapshot(cfg, snapshot, audit_path)
 
 def run_loop():
@@ -865,11 +876,13 @@ if __name__ == "__main__":
         elif args.full_uninstall:
             full_uninstall()
         elif args.sync_once:
-            sync_once()
+            if sync_once() == "failed":
+                sys.exit(1)
         elif args.run:
             run_loop()
         elif args.sync_date:
-            sync_date(args.sync_date)
+            if sync_date(args.sync_date) == "failed":
+                sys.exit(1)
         elif args.backfill:
             cfg = load_config()
             if not cfg:

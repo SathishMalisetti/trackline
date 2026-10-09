@@ -1,7 +1,7 @@
 name: Build Trackline Windows installer
 on:
   push:
-    branches: [main, fix/activitywatch-recovery, build/local-windows-installer]
+    branches: [main, fix/activitywatch-recovery, build/local-windows-installer, fix/agent-upload-timeouts]
     paths:
       - 'backend-v33/laptop-agent/**'
       - '.github/workflows/build-laptop-agent.yml'
@@ -23,6 +23,6 @@ jobs:
         run: python build_installer.py
       - uses: actions/upload-artifact@v4
         with:
-          name: TracklineAgentSetup-1.1.0
+          name: TracklineAgentSetup-1.1.1
           path: backend-v33/laptop-agent/local-build/package/installer_output/*
           if-no-files-found: error
