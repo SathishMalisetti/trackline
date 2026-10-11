@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "test:browser": "node tests/auth-browser.cjs && node tests/family-browser.cjs",
-    "test:sql": "node tests/auth-sql.cjs"
+    "test:sql": "node tests/auth-sql.cjs",
+    "test:entry": "node tests/family-entry-state.cjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.3.14",

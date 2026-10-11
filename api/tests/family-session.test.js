@@ -91,3 +91,16 @@ test('profile lists omit PIN hashes and locking clears server-side profile acces
   assert.deepEqual(JSON.parse(calls[2][1].body), { member_id: null, pin_version: null });
   assert.equal(JSON.parse(response.body).members[0].canSetPin, true);
 });
+
+test('complete creation separates hashed family and parent credentials and establishes a PIN',async()=>{
+  const body={action:'register-v2',username:'New_User',familyName:'Family',parentName:'Parent',password:'family-password',parentPassword:'parent-password',pin:'1234'};
+  const response=await runEntry({...request(),method:'POST',body},[{status:200,familyId:'NEW',memberId:'p1'}]);
+  assert.equal(response.status,200);
+  const payload=JSON.parse(calls[0][1].body);
+  assert.ok(calls[0][0].endsWith('/rpc/register_family_with_parent'));
+  assert.match(payload.p_parent_hash,/^scrypt:/);assert.match(payload.p_pin_hash,/^scrypt:/);
+  assert.notEqual(payload.p_parent_hash,payload.p_family_hash);
+  assert.equal(payload.p_family_legacy,legacyHash('family-password'));
+  const invalid=await runEntry({...request(),method:'POST',body:{...body,parentPassword:body.password}});
+  assert.equal(invalid.status,400);assert.equal(calls.length,0);
+});
