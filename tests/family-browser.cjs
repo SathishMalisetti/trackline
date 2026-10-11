@@ -25,11 +25,11 @@ const server = http.createServer(async (req, res) => {
   if (req.url === '/api/family-session') {
     if (req.method === 'DELETE') { sessions.delete(token); res.setHeader('Set-Cookie',cookie('')); return reply(200,{ok:true}); }
     if (req.method === 'POST' && body.action === 'setup' && session?.bootstrap) { session.setupCompleted=true; return reply(200,{ok:true}); }
-    if (req.method === 'POST' && ['register','login'].includes(body.action)) {
+    if (req.method === 'POST' && ['register-v2','login'].includes(body.action)) {
       if (body.action === 'login' && (!registered || !['qa_user','FAMILYQA'].includes(body.identity) || body.password !== 'family-password')) return reply(403,{error:'Incorrect family ID, username or password.'});
       registered = true; const next=`${sessions.size+1}`.padStart(64,'a');
-      session = { memberId:null, bootstrap:body.action==='register' }; sessions.set(next,session); res.setHeader('Set-Cookie',cookie(next));
-      return reply(200,{familyId:'FAMILYQA',memberId:body.action==='register'?'p1':null});
+      session = { memberId:body.action==='register-v2'?'p1':null, bootstrap:false }; if(body.action==='register-v2')pins.set('p1',body.pin); sessions.set(next,session); res.setHeader('Set-Cookie',cookie(next));
+      return reply(200,{familyId:'FAMILYQA',memberId:body.action==='register-v2'?'p1':null});
     }
     if (!session) return reply(200,{signedIn:false});
     if (body.action === 'lock') session.memberId=null;
@@ -63,18 +63,15 @@ const server = http.createServer(async (req, res) => {
     assert.equal(await page.locator('input[type="email"]').count(),0);
     await page.locator('#entry-username').fill('qa_user');
     await page.locator('#entry-family-name').fill('QA Family');
+    await page.locator('#entry-parent-name').fill('QA Parent');
+    await page.locator('#entry-parent-password').fill('parent-password');
     await page.locator('#entry-password').fill('family-password');
+    await page.locator('#entry-pin').fill('1234');await page.locator('#entry-pin-confirm').fill('1234');
     await page.getByRole('button',{name:'Create family',exact:true}).click();
-    await page.locator('#initial-family-setup').waitFor();
-    await page.locator('#setup-parent-name').fill('QA Parent');
-    await page.getByRole('button',{name:'Continue to PIN setup',exact:true}).click();
-    await page.getByRole('heading',{name:'Set up your PIN',exact:true}).waitFor();
-    assert.equal(await page.getByRole('button',{name:'Parent View',exact:true}).count(),0);
-    await page.locator('#profile-pin').fill('1234');await page.locator('#profile-pin-confirm').fill('1234');
-    await page.getByRole('button',{name:'Save PIN & continue',exact:true}).click();
     await page.getByRole('button',{name:'Parent View',exact:true}).waitFor();
+    await page.evaluate(()=>{ui.alertModal=null;render();});
     assert.equal(await page.evaluate(()=>document.cookie), '');
-    await page.reload();await page.getByRole('heading',{name:'Enter your PIN',exact:true}).waitFor();
+    await page.reload();await page.getByRole('heading',{name:'Choose your profile',exact:true}).waitFor();
     assert.equal(await page.locator('#family-entry-form').count(),0);assert.equal(await page.locator('#account-form').count(),0);
     await page.locator('#profile-pin').fill('9999');await page.getByRole('button',{name:'Unlock',exact:true}).click();
     await page.getByText('Incorrect PIN.',{exact:true}).waitFor();
@@ -89,13 +86,27 @@ const server = http.createServer(async (req, res) => {
     await page.getByRole('button',{name:'Sign out of account',exact:true}).waitFor();
     assert.equal(await page.getByRole('button',{name:'Parent View',exact:true}).count(),0);
     await page.getByRole('button',{name:'Sign out of account',exact:true}).click();
-    await page.getByRole('button',{name:'Join family',exact:true}).click();
+    await page.getByRole('button',{name:'Access existing family',exact:true}).click();
     await page.locator('#family-entry-form').waitFor();
     await page.locator('#entry-identity').fill('FAMILYQA');await page.locator('#entry-password').fill('wrong');
-    await page.getByRole('button',{name:'Join family',exact:true}).click();
+    await page.getByRole('button',{name:'Continue',exact:true}).click();
     await page.getByText('Incorrect family ID, username or password.',{exact:true}).waitFor();
-    await page.locator('#entry-password').fill('family-password');await page.getByRole('button',{name:'Join family',exact:true}).click();
-    await page.getByRole('heading',{name:'Enter your PIN',exact:true}).waitFor();
+    await page.locator('#entry-password').fill('family-password');await page.getByRole('button',{name:'Continue',exact:true}).click();
+    await page.getByRole('heading',{name:'Choose your profile',exact:true}).waitFor();
+    await page.evaluate(()=>tracklineAuth.confirmHome());
+    await page.locator('#continue-family-entry').waitFor();
+    await page.locator('#demo-family-entry').click();
+    await page.locator('.demo-banner').waitFor();
+    await page.evaluate(()=>tracklineAuth.confirmHome());
+    await page.locator('#continue-family-entry').waitFor();
+    await page.setViewportSize({width:1440,height:960});
+    await page.screenshot({path:'/tmp/trackline-entry-desktop.png'});
+    await page.setViewportSize({width:390,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await page.screenshot({path:'/tmp/trackline-entry-mobile.png'});
+    await page.locator('#create-family-entry').click();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    await page.screenshot({path:'/tmp/trackline-create-mobile.png'});
     assert.equal(emailCalls,0); assert.deepEqual(errors,[]);
     await context.close();console.log('Family browser checks passed: username registration without email, PIN setup, remembered session, wrong PIN, lock, child role, logout, and family-ID/password login.');
   } finally { await browser.close(); server.close(); }

@@ -708,6 +708,47 @@
     .calendar-toolbar,.calendar-selectors{gap:8px;}
   }
 
+
+  /* Public entry screens: C layout with the approved warm A palette. */
+  html:has(.entry-shell),body:has(.entry-shell){height:auto;overflow:auto;}
+  #root:has(.entry-shell){height:auto;min-height:100dvh;overflow:visible;display:block;max-width:none;}
+  .entry-shell{--entry-sage:#8da18b;--entry-surface:var(--ink-2);color:var(--text-on-ink);max-width:1200px;margin:auto;min-height:100dvh;padding:0 32px 32px;}
+  body.day-mode .entry-shell{--entry-surface:#fffcf5;--entry-sage:#82987b;}
+  .entry-header{display:flex;align-items:center;justify-content:space-between;padding:28px 0;border-bottom:1px solid var(--line);gap:16px;}
+  .entry-brand{border:0;background:none;color:inherit;font-family:'Inter',sans-serif;font-size:28px;font-weight:750;letter-spacing:-.04em;padding:8px 0;min-height:44px;cursor:pointer;}
+  .entry-layout{display:grid;grid-template-columns:1.15fr 1fr;gap:56px;align-items:center;padding:64px 0 32px;}
+  .entry-intro h1{font-family:'Inter',sans-serif;font-size:clamp(36px,4vw,54px);line-height:1.13;letter-spacing:-.045em;margin:0 0 20px;text-transform:none;}
+  .entry-intro>p{color:var(--text-dim);font-size:19px;line-height:1.5;}
+  .entry-art{width:100%;max-width:500px;height:auto;margin-top:34px;color:var(--entry-sage);font:16px 'Inter',sans-serif;}
+  .entry-panel{background:var(--entry-surface);border:1px solid var(--line);border-radius:18px;padding:32px;min-width:0;}
+  .entry-panel h2{font-family:'Inter',sans-serif;font-size:27px;letter-spacing:-.03em;margin:0 0 12px;text-transform:none;}
+  .entry-description{font-size:15px;line-height:1.5;color:var(--text-dim);margin:0 0 24px;}
+  .entry-action{display:flex;width:100%;justify-content:center;align-items:center;gap:12px;min-height:52px;margin:12px 0;font-size:15px;border-radius:10px;padding:12px 16px;text-transform:none;letter-spacing:0;white-space:normal;}
+  .entry-action>span:last-child{margin-left:auto;}
+  .entry-link{background:none;border:0;color:var(--entry-sage);font:600 14px 'Inter',sans-serif;padding:10px 0;min-height:44px;cursor:pointer;text-align:left;}
+  body.day-mode .entry-link{color:#3c624c;}
+  .entry-link:hover{text-decoration:underline;}
+  .entry-back{margin-bottom:16px;}
+  .entry-demo{border-top:1px solid var(--line);padding-top:16px;margin-top:22px;}
+  .entry-email{margin:12px 0 0;text-align:center;}
+  .entry-family-label{color:var(--text-dim);font-size:13px;margin:0 0 10px;}
+  .entry-field{display:block;font-size:14px;font-weight:600;margin:0 0 16px;}
+  .entry-field input,.entry-field select{display:block;width:100%;min-height:48px;margin-top:8px;background:var(--ink-3);color:var(--text-on-ink);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:16px;box-sizing:border-box;}
+  .entry-field small{display:block;margin-top:6px;color:var(--text-dim);font-size:12px;font-weight:400;line-height:1.5;}
+  .entry-status{color:var(--danger);font-size:14px;line-height:1.5;overflow-wrap:anywhere;}
+  .entry-status:empty{display:none;}
+  .entry-fields{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;}
+  .entry-fields .entry-field:nth-child(3),.entry-fields .entry-field:nth-child(4),.entry-fields .entry-field:nth-child(5){grid-column:1/-1;}
+  .entry-layout-form{align-items:start;padding-top:40px;}
+  .entry-layout-form .entry-intro{position:sticky;top:32px;}
+  .entry-shell button:focus-visible,.entry-field input:focus-visible,.entry-field select:focus-visible{outline:3px solid var(--amber);outline-offset:3px;}
+  .entry-shell button:disabled{opacity:.6;cursor:wait;}
+  .setup-member-row{display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;}
+  .setup-member-row input{min-width:100px;flex:1;}
+  .demo-banner{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);background:var(--ink-2);padding:12px 16px;border-radius:10px;margin-bottom:16px;color:var(--text-on-ink);font-size:14px;}
+  @media(max-width:850px){.entry-layout{gap:28px;}.entry-panel{padding:24px;}.entry-shell{padding:0 24px 24px;}}
+  @media(max-width:699px){.entry-shell{padding:0 20px 28px;}.entry-header{padding:16px 0;}.entry-brand{font-size:24px;}.entry-layout{grid-template-columns:1fr;padding:28px 0 0;gap:24px;}.entry-intro h1{font-size:34px;margin-bottom:12px;}.entry-intro>p{font-size:16px;margin:0;}.entry-art{display:block;max-width:340px;margin:16px auto 0;}.entry-panel{padding:22px;}.entry-panel h2{font-size:24px;}.entry-layout-form .entry-intro{display:none;}.entry-fields{grid-template-columns:1fr;}.entry-fields .entry-field{grid-column:auto!important;}.entry-home-confirm{width:calc(100% - 32px);}.entry-layout-form .entry-panel{border-radius:14px;}}
+
 </style>
 </head>
 <body>
@@ -943,6 +984,7 @@ async function storageGet(key){
   } catch(e){ return null; }
 }
 async function storageSet(key, value){
+  if(tracklineAuth.demo) return {key, value};
   if(hasClaudeStorage){
     try{ return await window.storage.set(key, value); } catch(e){ return null; }
   }
@@ -1653,7 +1695,7 @@ let state = {
 };
 let ui = {
   tab: 'board',
-  dayMode: (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('trackline-day-mode')==='1'),
+  dayMode: (typeof window !== 'undefined' && window.localStorage && window.localStorage.getItem('trackline-day-mode')!=='0'),
   weekStart: toISODate(mondayOf(todayISO())),
   selectedOffset: dowMonIndexed(todayISO()),
   modalOpen: false,
@@ -1819,6 +1861,7 @@ async function loadData(options = {}){
   render();
 }
 async function saveData(){
+  if(tracklineAuth.demo) return; // Demo changes stay in memory, never family storage.
   if(tracklineAuth.membership && tracklineAuth.membership.role==='kid'){
     // Child completion and exam submissions use their scoped endpoints.
     // A child account cannot replace the family's complete state.
@@ -3137,6 +3180,7 @@ function renderSettings(){
         <option value="kid" ${m.role==='kid'?'selected':''}>Kid</option>
       </select>
       <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:13px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text-dim);">${m.pinHash?'Reset PIN':'No PIN'}</button>
+      ${m.role==='parent'?`<button class="btn ghost" onclick="openParentPassword('${m.id}')">Set parent password</button>`:''}
       <button onclick="removeMember('${m.id}')" title="Remove">✕</button>
     </div>
     <div class="member-contact-row">
@@ -3575,8 +3619,8 @@ function renderAppNavigation(){
   const routes=[['parent','Family overview','home'],['board','Calendar','calendar'],['chores','Tasks','tasks'],['shopping','Shopping','shopping'],['kid',parent?'Children':'Today','people'],['study','Study','study'],['screentime','Screen time','screen'],['settings','Settings','settings']].filter(([id])=>id!=='parent'||parent);
   const button=([id,label,icon],mobile=false)=>`<button type="button" class="${ui.tab===id?'active':''}" ${ui.tab===id?'aria-current="page"':''} onclick="setTab('${id}')">${uiIcon(icon)}<span>${mobile&&(id==='parent'||id==='kid')?'Today':label}</span>${id==='settings'&&parent&&totalPendingApprovals()>0?`<span class="nav-badge" aria-label="Pending approvals">${totalPendingApprovals()}</span>`:''}</button>`;
   const primary=parent?['parent','board','chores']:['kid','chores','study'];
-  return `<nav class="tabs desktop-nav" aria-label="Main navigation"><p class="nav-caption">Your family</p>${routes.map(r=>button(r)).join('')}<div class="nav-footer"><button onclick="tracklineAuth.lock()">${uiIcon('people')}<span>Switch member</span></button><button onclick="tracklineAuth.signOut()">${uiIcon('lock')}<span>Sign out</span></button></div></nav>
-    <nav class="tabs mobile-nav" aria-label="Main navigation">${primary.map(id=>button(routes.find(r=>r[0]===id),true)).join('')}<details class="nav-more"><summary class="${primary.includes(ui.tab)?'':'active'}">${uiIcon('more')}<span>More</span></summary><div class="nav-more-panel"><p class="nav-caption">More for your family</p>${routes.filter(r=>!primary.includes(r[0])).map(r=>button(r)).join('')}<button onclick="tracklineAuth.lock()">${uiIcon('people')}<span>Switch member</span></button><button onclick="tracklineAuth.signOut()">${uiIcon('lock')}<span>Sign out</span></button></div></details></nav>`;
+  return `<nav class="tabs desktop-nav" aria-label="Main navigation"><p class="nav-caption">Your family</p>${routes.map(r=>button(r)).join('')}<div class="nav-footer"><button onclick="tracklineAuth.goHome()">${uiIcon('home')}<span>Home</span></button><button onclick="tracklineAuth.lock()">${uiIcon('people')}<span>Switch member</span></button><button onclick="tracklineAuth.signOut()">${uiIcon('lock')}<span>Sign out</span></button></div></nav>
+    <nav class="tabs mobile-nav" aria-label="Main navigation">${primary.map(id=>button(routes.find(r=>r[0]===id),true)).join('')}<details class="nav-more"><summary class="${primary.includes(ui.tab)?'':'active'}">${uiIcon('more')}<span>More</span></summary><div class="nav-more-panel"><p class="nav-caption">More for your family</p><button onclick="tracklineAuth.goHome()">${uiIcon('home')}<span>Home</span></button>${routes.filter(r=>!primary.includes(r[0])).map(r=>button(r)).join('')}<button onclick="tracklineAuth.lock()">${uiIcon('people')}<span>Switch member</span></button><button onclick="tracklineAuth.signOut()">${uiIcon('lock')}<span>Sign out</span></button></div></details></nav>`;
 }
 async function refreshCurrentPage(){
   if(ui.pageRefreshing) return;
@@ -4782,7 +4826,7 @@ function submitOnboarding(){
 }
 
 function loadExampleData(){
-  doLoadExampleData();
+  tracklineAuth.openDemo();
 }
 function doLoadExampleData(){
   state.family = {id:genFamilyId(), name:'Example Family', primaryHolderName:'', primaryHolderEmail:'', primaryHolderPhone:'', passwordHash: simpleHash('demo1234'), isExample:true};
@@ -4921,6 +4965,7 @@ window.addEventListener('resize',()=>{
   });
 });
 function _renderInner(){
+  if(tracklineAuth.homeVisible){tracklineAuth.renderGate();return;}
   if(!tracklineAuth.ready || !tracklineAuth.user || !tracklineAuth.membership){ tracklineAuth.renderGate(); return; }
   if(!ui.authenticated){ tracklineAuth.renderPinGate(); return; }
   const root = document.getElementById('root');
@@ -4953,6 +4998,7 @@ function _renderInner(){
       ${renderLoginModal()}
       ${renderConfirmModal()}
       ${renderAlertModal()}
+    ${renderParentPasswordModal()}
       ${renderDayDrillModal()}
     `;
     return;
@@ -4976,6 +5022,7 @@ function _renderInner(){
       ${renderLoginModal()}
     ${renderConfirmModal()}
     ${renderAlertModal()}
+    ${renderParentPasswordModal()}
     ${renderToast()}
     ${renderTaskLibraryModal()}
     ${renderActivityLibraryModal()}
@@ -4999,6 +5046,7 @@ function _renderInner(){
       </div>
     </header>
     <main class="${ui.tab==='board'?'calendar-main':''}" id="main-content">
+      ${tracklineAuth.demo?'<div class="demo-banner"><span><strong>Demo mode</strong> · Changes stay on this screen and are not saved.</span><button class="btn ghost" onclick="tracklineAuth.goHome()">Back to home</button></div>':''}
       ${renderPageHeading()}
       ${ui.tab==='board'? renderBoard() : ''}
       ${ui.tab==='parent'? renderParentView() : ''}
@@ -5049,6 +5097,7 @@ function setKid(id){ ui.kidId=id; ui.copiedFlash=false; render(); }
 
 function toggleProfileMenu(){ ui.profileMenuOpen = !ui.profileMenuOpen; render(); }
 function openLogin(id){
+  if(tracklineAuth.demo){tracklineAuth.selectDemoMember(id);return;}
   if(!tracklineAuth.membership) return;
   if(tracklineAuth.sessionMode==='family'){ tracklineAuth.selectedMemberId = id; tracklineAuth.lock(); return; }
   if(id !== tracklineAuth.membership.member_id){ showAlert('Use Join family with the family ID and password to switch members on this screen.'); return; }
@@ -6034,6 +6083,31 @@ function removeMember(id){
     render();
   }, {danger:true});
 }
+function openParentPassword(id){
+  if(!isParentLoggedIn()) return;
+  if(tracklineAuth.demo){showAlert('Parent passwords are not configured in demo mode.');return;}
+  ui.parentPasswordMemberId=id;ui.parentPasswordError='';render();
+}
+function renderParentPasswordModal(){
+  const member=memberById(ui.parentPasswordMemberId);
+  if(!member || !isParentLoggedIn()) return '';
+  return `<div class="overlay"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="parent-secret-title"><h2 id="parent-secret-title">Parent password for ${escapeHtml(member.name)}</h2><p>Use a personal password different from the shared family password. This is an alternative to this parent's PIN.</p><form onsubmit="event.preventDefault();saveParentPassword()"><label class="entry-field" for="new-parent-password">New password<input id="new-parent-password" type="password" minlength="8" maxlength="128" required autocomplete="new-password"></label><label class="entry-field" for="confirm-parent-password">Confirm password<input id="confirm-parent-password" type="password" minlength="8" maxlength="128" required autocomplete="new-password"></label><p role="status" style="color:var(--danger)">${escapeHtml(ui.parentPasswordError)}</p><div class="modal-actions"><button type="button" class="btn ghost" onclick="ui.parentPasswordMemberId=null;render()" ${ui.parentPasswordSaving?'disabled':''}>Cancel</button><button type="submit" class="btn primary" ${ui.parentPasswordSaving?'disabled':''}>${ui.parentPasswordSaving?'Saving…':'Save password'}</button></div></form></div></div>`;
+}
+async function saveParentPassword(){
+  if(!isParentLoggedIn() || ui.parentPasswordSaving) return;
+  const password=document.getElementById('new-parent-password').value;
+  if(password!==document.getElementById('confirm-parent-password').value){ui.parentPasswordError='Passwords do not match.';render();return;}
+  const memberId=ui.parentPasswordMemberId, revision=tracklineAuth.revision||0;
+  ui.parentPasswordSaving=true;ui.parentPasswordError='';render();
+  try{
+    const response=await tracklineAuth.fetch('/api/parent-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'set',familyId:state.family.id,memberId,password})});
+    const result=await response.json();if(!response.ok)throw new Error(result.error||'Could not save the parent password.');
+    if(revision!==(tracklineAuth.revision||0))return;
+    ui.parentPasswordMemberId=null;showAlert('Parent password saved. Your PIN remains unchanged.');
+  }catch(error){if(revision===(tracklineAuth.revision||0)){ui.parentPasswordError=error.message;render();}}
+  finally{ui.parentPasswordSaving=false;render();}
+}
+
 function resetMemberPin(id){
   if(!isParentLoggedIn()) return;
   const m = memberById(id);
