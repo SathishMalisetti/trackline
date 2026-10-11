@@ -601,7 +601,9 @@
   .nav-caption{margin:0 12px 10px;font-size:12px;font-weight:600;color:var(--text-dim);}
   .nav-footer{margin-top:auto;padding-top:24px;border-top:1px solid var(--line);display:grid;gap:4px;}
   nav.tabs.mobile-nav{display:none;}
-  .page-heading{margin-bottom:28px;max-width:760px;}
+  .page-heading{margin-bottom:28px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+  .page-heading-copy{min-width:0;}
+  .page-refresh{flex:none;min-height:44px;}
   .page-heading h1{font-family:'Archivo Narrow',sans-serif;font-size:38px;letter-spacing:-.02em;margin:4px 0 8px;text-transform:none;}
   .page-heading p{margin:0;color:var(--text-dim);font-size:15px;}
   .page-heading .page-eyebrow{font-size:13px;font-weight:600;}
@@ -1753,7 +1755,7 @@ function isLoggedIn(){ return !!tracklineAuth.user && !!tracklineAuth.membership
 function currentMember(){ return ui.profileId ? memberById(ui.profileId) : null; }
 function isParentLoggedIn(){ const m = currentMember(); return isLoggedIn() && m && m.role==='parent' && tracklineAuth.membership.role==='parent'; }
 
-async function loadData(){
+async function loadData(options = {}){
   const accountRevision = tracklineAuth.revision || 0;
   try{
     const r = await storageGet('trackline-data');
@@ -1812,7 +1814,7 @@ async function loadData(){
   const access = tracklineAuth.membership;
   if(access){
     const member = memberById(access.member_id);
-    if(member){ member.role = access.role; ui.profileId = member.id; ui.kidId = access.role==='kid' ? member.id : ui.kidId; ui.tab = access.role==='parent' ? 'parent' : 'kid'; }
+    if(member){ member.role = access.role; ui.profileId = member.id; ui.kidId = access.role==='kid' ? member.id : ui.kidId; if(!options.preserveView) ui.tab = access.role==='parent' ? 'parent' : 'kid'; }
   }
   render();
 }
@@ -2974,7 +2976,7 @@ function renderScreenTime(){
   return `
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
       <p style="font-size:13px;color:var(--text-dim);margin:0;max-width:480px;">Laptop usage, reported automatically every 30 minutes once device tracking is connected.${isDemo?'':' <span style="opacity:.8;">Mobile tracking is under construction.</span>'}</p>
-      <button class="btn ghost" onclick="refreshDeviceUsage()">Refresh</button>
+
     </div>
     ${noDataAtAll ? `<div class="chore-empty-day">No usage data yet — this will populate automatically once device tracking is connected.${isParent?' <a href="#" onclick="setTab(\'settings\');return false;" style="color:var(--amber);font-weight:600;">Set up a device in Settings →</a>':''}</div>` : ''}
     <div class="person-tiles-grid">${cards}</div>
@@ -3576,10 +3578,43 @@ function renderAppNavigation(){
   return `<nav class="tabs desktop-nav" aria-label="Main navigation"><p class="nav-caption">Your family</p>${routes.map(r=>button(r)).join('')}<div class="nav-footer"><button onclick="tracklineAuth.lock()">${uiIcon('people')}<span>Switch member</span></button><button onclick="tracklineAuth.signOut()">${uiIcon('lock')}<span>Sign out</span></button></div></nav>
     <nav class="tabs mobile-nav" aria-label="Main navigation">${primary.map(id=>button(routes.find(r=>r[0]===id),true)).join('')}<details class="nav-more"><summary class="${primary.includes(ui.tab)?'':'active'}">${uiIcon('more')}<span>More</span></summary><div class="nav-more-panel"><p class="nav-caption">More for your family</p>${routes.filter(r=>!primary.includes(r[0])).map(r=>button(r)).join('')}<button onclick="tracklineAuth.lock()">${uiIcon('people')}<span>Switch member</span></button><button onclick="tracklineAuth.signOut()">${uiIcon('lock')}<span>Sign out</span></button></div></details></nav>`;
 }
+async function refreshCurrentPage(){
+  if(ui.pageRefreshing) return;
+  const revision = tracklineAuth.revision || 0;
+  const tab = ui.tab;
+  ui.pageRefreshing = true;
+  render();
+  try{
+    if(tab === 'screentime'){
+      ui.deviceUsageData = null;
+      await fetchDeviceUsage();
+    } else {
+      if(!state.family?.isExample) await loadData({preserveView:true});
+      if(revision !== (tracklineAuth.revision || 0)) return;
+      if(['study','parent','kid'].includes(tab)){
+        // Keep in-flight assignment reads intact; invalidate settled caches only.
+        Object.keys(ui.studyWeekCache).forEach(key=>{
+          if(!ui.studyWeekLoading[key]) delete ui.studyWeekCache[key];
+        });
+        ui.studyOverdueByKid = {};
+        if(tab === 'study'){
+          await fetchStudyTopics();
+          if(revision !== (tracklineAuth.revision || 0)) return;
+          await fetchStudyAssignments(ui.kidId, ui.studyWeekOffset);
+        }
+      }
+    }
+  } catch(e){
+    if(revision === (tracklineAuth.revision || 0)) showAlert('Could not refresh this page. Please try again.');
+  } finally {
+    ui.pageRefreshing = false;
+    render();
+  }
+}
 function renderPageHeading(){
   const labels={parent:['Family overview','A clear picture of everyone’s day.'],board:['Family calendar','Plan activities, travel and time together.'],chores:['Tasks','Small steps that keep family life moving.'],shopping:['Shopping','Shared lists and trips, in one place.'],kid:['Today','Your schedule, tasks and study for the day.'],study:['Study','Your weekly sessions and saved progress.'],screentime:['Screen time','Understand your family’s device activity.'],settings:['Family settings','Members, permissions and family preferences.']};
   const item=labels[ui.tab]||labels.kid;
-  return `<div class="page-heading"><p class="page-eyebrow">${escapeHtml(state.family?.name||'Your family')}</p><h1>${item[0]}</h1><p>${item[1]}</p></div>`;
+  return `<div class="page-heading"><div class="page-heading-copy"><h1>${item[0]}</h1><p>${item[1]}</p></div><button type="button" class="btn ghost page-refresh" onclick="refreshCurrentPage()" aria-label="Refresh ${item[0]}" aria-busy="${!!ui.pageRefreshing}" ${ui.pageRefreshing?'disabled':''}>${ui.pageRefreshing?'Refreshing…':'Refresh'}</button></div>`;
 }
 
 function renderProfileDropdown(){
