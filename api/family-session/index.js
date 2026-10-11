@@ -27,13 +27,16 @@ module.exports = async (context, req) => {
       const members = await service(`members?family_id=eq.${encodeURIComponent(auth.family.id)}&select=id,name,role,pin_hash`);
       context.res = json(200, { signedIn: true, familyId: auth.family.id, familyName: auth.family.name,
         needsSetup: !!auth.familySession.bootstrap_member_id && !auth.familySession.setup_completed,
-        members: members.map(member => ({ id: member.id, name: member.name, role: member.role, hasPin: !!member.pin_hash, canSetPin: true })) }); return;
+        members: members.map(member => ({ id: member.id, name: member.name, role: member.role, hasPin: !!member.pin_hash, canSetPin: member.role !== 'parent' || !!member.pin_hash || auth.familySession.bootstrap_member_id === member.id })) }); return;
     }
-    const { action, identity, password, username, familyName, parentName } = req.body || {};
+    const { action, identity, password, username, familyName, parentName, parentPassword, pin } = req.body || {};
     if (typeof password !== 'string' || password.length < 1 || password.length > 128) throw Object.assign(new Error('Enter a family password.'), { status: 400 });
     const token = newToken();
     let result;
-    if (action === 'register') {
+    if (action === 'register-v2') {
+      if (typeof username !== 'string' || !/^[a-z][a-z0-9_-]{2,31}$/i.test(username) || typeof familyName !== 'string' || !familyName.trim() || familyName.trim().length > 80 || typeof parentName !== 'string' || !parentName.trim() || parentName.trim().length > 80 || password.length < 8 || typeof parentPassword !== 'string' || parentPassword.length < 8 || parentPassword.length > 128 || parentPassword === password || typeof pin !== 'string' || !/^\d{4}$/.test(pin)) throw Object.assign(new Error('Enter all family and parent details, different passwords of at least 8 characters, and a 4-digit PIN.'), {status:400});
+      result = await service('rpc/register_family_with_parent', {method:'POST',body:JSON.stringify({p_username:username.toLowerCase(),p_family_name:familyName.trim(),p_parent_name:parentName.trim(),p_family_hash:await hashSecret(password),p_family_legacy:legacyHash(password),p_parent_hash:await hashSecret(parentPassword),p_pin_hash:await hashSecret(pin),p_token_hash:digest(token)})});
+    } else if (action === 'register') {
       if (typeof username !== 'string' || !/^[a-z][a-z0-9_-]{2,31}$/i.test(username) || password.length < 8
         || typeof familyName !== 'string' || familyName.trim().length < 1 || familyName.trim().length > 80) {
         throw Object.assign(new Error('Enter a family name, username (3–32 letters, numbers, _ or -), and a password of at least 8 characters.'), { status: 400 });
