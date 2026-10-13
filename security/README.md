@@ -6,10 +6,10 @@ The demonstration family's local behavior is retained.
 
 ## Deployment
 
-Coordinate the database SQL and application deployment. The application needs
-the new shopping and credential RPCs; the database no longer accepts credential
-changes through the general family save. Do not leave the old application
-running against the credential-hardening SQL as an intermediate release.
+Apply the additive SQL functions before deploying the application. The existing
+family save RPC remains available to the old server during rollout; the new
+server exclusively uses save_family_data_secure. The hardened RPC rejects
+foreign-family records and ignores browser-supplied credential hashes.
 
 Run these reviewed SQL files in order, then deploy the application:
 
@@ -17,7 +17,7 @@ Run these reviewed SQL files in order, then deploy the application:
 2. security/family-credentials.sql
 3. security/family-isolation.sql
 
-These replace functions and permissions; they do not remove family records,
+These add protected functions and harden permissions; they do not remove family records,
 change existing credentials, or reset profiles. Existing weak credentials are
 upgraded on successful verification by the existing authentication endpoints.
 New family-password changes use salted scrypt. Credential hashes stay on the

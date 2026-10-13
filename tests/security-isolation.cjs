@@ -7,7 +7,7 @@ const fs = require('node:fs'), path = require('node:path'), assert = require('no
     await db.exec(fs.readFileSync(path.join(__dirname,'security-fixture.sql'),'utf8'));
     for (const file of ['family-isolation.sql','shopping-isolation.sql','family-credentials.sql'])
       await db.exec(fs.readFileSync(path.join(__dirname,'../security',file),'utf8'));
-    const save = (data)=>db.query('select public.save_family_data($1,$2)', ['familyA',data]);
+    const save = (data)=>db.query('select public.save_family_data_secure($1,$2)', ['familyA',data]);
     const baseline={family:{id:'familyA',name:'A'},members:[{id:'parentA',name:'Parent',role:'parent',color:'#ffffff'}],events:[],chores:[],shoppingList:[]};
     await save(baseline);
     await db.exec("insert into families(id,name) values ('familyB','B'); insert into members(id,family_id,name) values ('parentB','familyB','Other parent'); insert into events(id,family_id,title) values ('eventB','familyB','School'); insert into chores(id,family_id,title) values ('choreB','familyB','Swimming'); insert into quick_list_items(id,family_id,name) values ('itemB','familyB','Bread');");

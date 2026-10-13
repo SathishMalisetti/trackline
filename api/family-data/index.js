@@ -129,7 +129,7 @@ module.exports = async function (context, req) {
       }
       const { choreLogs, shoppingTrips, ...rest } = data;
 
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/save_family_data`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/save_family_data_secure`, {
         method: 'POST',
         headers: supabaseHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ p_family_id: familyId, p_data: rest }),

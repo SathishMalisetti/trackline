@@ -16,3 +16,5 @@ grant execute on function public.set_family_password_secure(text,text,text,text)
 revoke create on schema public from public,anon,authenticated;
 alter function public.get_family_data(text) set search_path = public, pg_temp;
 alter function public.family_id() set search_path = '';
+
+alter function public.save_family_data(text,jsonb) set search_path = public, pg_temp;

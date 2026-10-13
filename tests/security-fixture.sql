@@ -10,3 +10,5 @@ alter table families add column login_password_hash text, add column login_passw
 create table family_device_sessions(token_hash text primary key,family_id text,password_version text);
 create function public.get_family_data(text) returns jsonb language sql as $$select '{}'::jsonb$$;
 create function public.family_id() returns text language sql as $$select null::text$$;
+
+create function public.save_family_data(text,jsonb) returns void language sql as $$select$$;

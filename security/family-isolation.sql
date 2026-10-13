@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.save_family_data(p_family_id text, p_data jsonb)
+CREATE OR REPLACE FUNCTION public.save_family_data_secure(p_family_id text, p_data jsonb)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -165,6 +165,6 @@ begin
 end;
 $function$;
 
-revoke all on function public.save_family_data(text,jsonb) from public, anon, authenticated;
-grant execute on function public.save_family_data(text,jsonb) to service_role;
+revoke all on function public.save_family_data_secure(text,jsonb) from public, anon, authenticated;
+grant execute on function public.save_family_data_secure(text,jsonb) to service_role;
 
