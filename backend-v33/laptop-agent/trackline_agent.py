@@ -45,7 +45,7 @@ from upload_schedule import upload_allowed
 import argparse
 import platform
 import subprocess
-from account_auth import verify_parent
+from account_auth import family_post
 from activitywatch_recovery import ensure_activitywatch, ActivityWatchUnavailable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -595,9 +595,6 @@ def simple_hash(s):
 def pair(backend_url):
     print("=== Pair this laptop with a Trackline family ===")
     family_id = input("Family ID: ").strip().upper()
-    account_email = input("Parent account email: ").strip()
-    account_password = getpass.getpass("Parent account password: ")
-    account_headers = verify_parent(backend_url, account_email, account_password, family_id)
     family_password = getpass.getpass("Family password: ")
     password_hash = simple_hash(family_password)
 
@@ -607,9 +604,9 @@ def pair(backend_url):
     member_id = None
     member_name = None
     try:
-        lookup_resp = requests.post(f"{backend_url}/api/family-members", headers=account_headers, json={
+        lookup_resp = family_post(backend_url, family_id, family_password, "family-members", {
             "familyId": family_id, "passwordHash": password_hash,
-        }, timeout=15)
+        })
         if lookup_resp.status_code == 200:
             members = lookup_resp.json().get("members", [])
             if members:
@@ -631,13 +628,13 @@ def pair(backend_url):
     label = input(f"Device label (e.g. 'Mia's Laptop') [{os.environ.get('COMPUTERNAME', 'this-laptop')}]: ").strip() \
         or os.environ.get("COMPUTERNAME", "this-laptop")
 
-    resp = requests.post(f"{backend_url}/api/device-pair", headers=account_headers, json={
+    resp = family_post(backend_url, family_id, family_password, "device-pair", {
         "familyId": family_id,
         "passwordHash": password_hash,
         "memberId": member_id,
         "hostname": os.environ.get("COMPUTERNAME", label),
         "label": label,
-    }, timeout=15)
+    })
 
     if resp.status_code != 200:
         print(f"Pairing failed: {resp.text}")
@@ -645,7 +642,6 @@ def pair(backend_url):
 
     result = resp.json()
     cfg = {
-        "account_email": account_email,
         "family_id": family_id,
         "member_id": member_id,
         "member_name": member_name,  # may be None if looked-up name wasn't available — Config Manager falls back to showing the ID
