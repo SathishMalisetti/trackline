@@ -27,9 +27,9 @@ Add-Type -AssemblyName System.Security
 $paths=ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{paths}')))
 $cert=New-SelfSignedCertificate -Subject 'CN=Trackline Test Only' -CertStoreLocation 'Cert:\\CurrentUser\\My' -KeyUsage DigitalSignature
 try {{
-$content=New-Object System.Security.Cryptography.Pkcs.ContentInfo -ArgumentList (,[IO.File]::ReadAllBytes($paths[0]))
-$cms=New-Object System.Security.Cryptography.Pkcs.SignedCms -ArgumentList $content,$true
-$signer=New-Object System.Security.Cryptography.Pkcs.CmsSigner -ArgumentList $cert
+$content=[System.Security.Cryptography.Pkcs.ContentInfo]::new([IO.File]::ReadAllBytes($paths[0]))
+$cms=[System.Security.Cryptography.Pkcs.SignedCms]::new($content,$true)
+$signer=[System.Security.Cryptography.Pkcs.CmsSigner]::new($cert)
 $signer.IncludeOption=[System.Security.Cryptography.X509Certificates.X509IncludeOption]::EndCertOnly
 $cms.ComputeSignature($signer)
 [IO.File]::WriteAllBytes($paths[1],$cms.Encode())
@@ -37,7 +37,8 @@ Write-Output $cert.Thumbprint
 }} finally {{ Remove-Item ('Cert:\\CurrentUser\\My\\'+$cert.Thumbprint) }}
 """
             encoded=base64.b64encode(command.encode('utf-16le')).decode()
-            result=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-EncodedCommand',encoded],capture_output=True,text=True,check=True)
+            result=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-EncodedCommand',encoded],capture_output=True,text=True)
+            self.assertEqual(result.returncode,0,result.stderr)
             with patch.object(agent_updates,'PUBLISHER_THUMBPRINT',result.stdout.strip()):
                 agent_updates._verify_bundle_signature(bundle,signature)
                 bundle.write_bytes(b'tampered runtime')

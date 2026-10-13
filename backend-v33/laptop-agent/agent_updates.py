@@ -79,8 +79,8 @@ def _verify_bundle_signature(bundle, signature):
     command = f"""$ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.Security
 $paths=ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{paths}')))
-$content=New-Object System.Security.Cryptography.Pkcs.ContentInfo -ArgumentList (,[IO.File]::ReadAllBytes($paths[0]))
-$cms=New-Object System.Security.Cryptography.Pkcs.SignedCms -ArgumentList $content,$true
+$content=[System.Security.Cryptography.Pkcs.ContentInfo]::new([IO.File]::ReadAllBytes($paths[0]))
+$cms=[System.Security.Cryptography.Pkcs.SignedCms]::new($content,$true)
 $cms.Decode([IO.File]::ReadAllBytes($paths[1]))
 $cms.CheckSignature($true)
 if ($cms.SignerInfos.Count -ne 1 -or $cms.SignerInfos[0].Certificate.Thumbprint -ne '{PUBLISHER_THUMBPRINT}') {{throw 'Unexpected update publisher'}}
