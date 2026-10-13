@@ -20,6 +20,7 @@ import sys
 import hashlib
 import platform
 import subprocess
+import shutil
 from account_auth import family_post
 from pathlib import Path
 
@@ -131,7 +132,7 @@ AGENT_EXE_NAME = "TracklineAgent.exe"
 # each has its own _internal subfolder, and two different apps' _internal
 # folders sharing one directory would collide.
 
-def build_scheduled_task_xml(agent_exe_path):
+def build_scheduled_task_xml(agent_exe_path, interval_minutes=30):
     """Builds a full Task Scheduler XML task definition, rather than
     schtasks' simple /create flags — because the simple flags have no way
     to set two settings that matter a lot for a LAPTOP specifically:
@@ -158,7 +159,7 @@ def build_scheduled_task_xml(agent_exe_path):
     <TimeTrigger>
       <StartBoundary>2020-01-01T00:00:00</StartBoundary>
       <Repetition>
-        <Interval>PT30M</Interval>
+        <Interval>PT{int(interval_minutes)}M</Interval>
         <StopAtDurationEnd>false</StopAtDurationEnd>
       </Repetition>
       <Enabled>true</Enabled>
@@ -210,7 +211,36 @@ def find_agent_exe():
 
     return None  # caller falls back to a file picker
 
-def install_scheduled_task(agent_exe_path=None):
+def install_user_runtime(agent_exe_path):
+    """Install the scheduled agent under this user's AppData for self-updates."""
+    source = Path(agent_exe_path).resolve().parent
+    root = Path(os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or Path.home()) / "TracklineAgent" / "runtime"
+    target = root / "TracklineAgent"
+    root.mkdir(parents=True, exist_ok=True)
+    if (target / AGENT_EXE_NAME).is_file():
+        return target / AGENT_EXE_NAME
+    staging = root / "TracklineAgent.new"
+    backup = root / "TracklineAgent.previous"
+    if staging.exists():
+        shutil.rmtree(staging)
+    shutil.copytree(source, staging)
+    if not (staging / AGENT_EXE_NAME).is_file():
+        shutil.rmtree(staging, ignore_errors=True)
+        raise RuntimeError("The agent files are incomplete; automatic updates were not enabled.")
+    if backup.exists():
+        shutil.rmtree(backup)
+    if target.exists():
+        target.rename(backup)
+    try:
+        staging.rename(target)
+    except Exception:
+        if backup.exists() and not target.exists():
+            backup.rename(target)
+        raise
+    shutil.rmtree(backup, ignore_errors=True)
+    return target / AGENT_EXE_NAME
+
+def install_scheduled_task(agent_exe_path=None, interval_minutes=30):
     """Actually creates the scheduled task, from the XML definition above.
     Windows-only — a no-op elsewhere, with a clear message rather than a
     confusing failure. agent_exe_path is optional — if not supplied,
@@ -225,14 +255,14 @@ def install_scheduled_task(agent_exe_path=None):
             f"wasn't set up. Pairing itself succeeded. Point the installer at "
             f"{AGENT_EXE_NAME} manually to finish setting up automatic syncing."
         )
-    xml_content = build_scheduled_task_xml(str(agent_exe_path))
+    xml_content = build_scheduled_task_xml(str(agent_exe_path), interval_minutes)
     tmp_xml_path = _app_dir() / "_scheduled_task.xml"
     try:
         with open(tmp_xml_path, "w", encoding="utf-16") as f:
             f.write(xml_content)
         cmd = ["schtasks", "/create", "/tn", TASK_NAME, "/xml", str(tmp_xml_path), "/f"]
         subprocess.run(cmd, check=True, capture_output=True, text=True)
-        return True, "Automatic syncing every 30 minutes is now set up (including while asleep or on battery)."
+        return True, f"Automatic syncing every {interval_minutes} minutes is now set up (including while asleep or on battery)."
     except subprocess.CalledProcessError as e:
         return False, f"Could not set up automatic syncing: {e.stderr}"
     finally:
@@ -337,6 +367,14 @@ def run_gui():
         write_status('ok')
 
         resolved_agent_path = find_agent_exe()
+        try:
+            resolved_agent_path = install_user_runtime(resolved_agent_path) if resolved_agent_path else None
+            if resolved_agent_path:
+                result['agent_exe_path'] = str(resolved_agent_path)
+                write_config(result)
+        except Exception as exc:
+            status_label.config(text=f"Paired successfully, but could not prepare the per-user agent runtime: {exc}", foreground="#a5323a")
+            return
         task_ok, task_msg = install_scheduled_task(resolved_agent_path)
         if not task_ok:
             # Auto-detect failed — ask directly rather than leave automatic
@@ -350,8 +388,10 @@ def run_gui():
                     filetypes=[("TracklineAgent", AGENT_EXE_NAME), ("All files", "*.*")],
                 )
                 if picked:
-                    resolved_agent_path = picked
-                    task_ok, task_msg = install_scheduled_task(picked)
+                    resolved_agent_path = install_user_runtime(picked)
+                    result['agent_exe_path'] = str(resolved_agent_path)
+                    write_config(result)
+                    task_ok, task_msg = install_scheduled_task(resolved_agent_path)
 
         messagebox.showinfo(
             "Paired successfully",

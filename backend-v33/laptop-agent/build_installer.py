@@ -5,6 +5,9 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import re
+import zipfile
+import json
 import sys
 
 ROOT = Path(__file__).resolve().parent
@@ -45,7 +48,7 @@ def main():
     if sys.version_info[:2] != (3, 12):
         raise RuntimeError('Use Python 3.12: py -3.12 build_installer.py')
     compiler = find_compiler(args.inno_compiler)
-    for name in ('trackline_agent.py', 'activitywatch_recovery.py', 'upload_schedule.py', 'account_auth.py',
+    for name in ('trackline_agent.py', 'activitywatch_recovery.py', 'upload_schedule.py', 'agent_updates.py', 'account_auth.py',
                  'trackline_setup_gui.py', 'trackline_config_manager.py',
                  'trackline_icon.ico', 'TracklineAgentSetup.iss'):
         if not (ROOT / name).is_file():
@@ -70,6 +73,16 @@ def main():
         run(python, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed',
             '--distpath', package, '--workpath', BUILD / 'pyinstaller', '--specpath', specs,
             '--icon', ROOT / 'trackline_icon.ico', '--name', name, ROOT / source)
+    version_match = re.search(r'^#define MyAppVersion \"([^\"]+)\"', (ROOT / 'TracklineAgentSetup.iss').read_text(encoding='utf-8'), re.M)
+    if not version_match:
+        raise RuntimeError('Could not read the installer version for the agent update bundle.')
+    agent_dir = package / 'TracklineAgent'
+    (agent_dir / 'agent-version.json').write_text(json.dumps({'version': version_match.group(1)}), encoding='utf-8')
+    module_zip = package / 'installer_output' / 'TracklineAgentModule.zip'
+    module_zip.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(module_zip, 'w', zipfile.ZIP_DEFLATED) as archive:
+        for path in agent_dir.rglob('*'):
+            if path.is_file(): archive.write(path, Path('TracklineAgent') / path.relative_to(agent_dir))
     for name in ('TracklineAgentSetup.iss', 'trackline_icon.ico'):
         shutil.copy2(ROOT / name, package / name)
     run(compiler, package / 'TracklineAgentSetup.iss')
@@ -78,7 +91,7 @@ def main():
         raise RuntimeError('Compiler completed without producing the expected installer.')
     digest = hashlib.sha256(installer.read_bytes()).hexdigest()
     (installer.parent / 'SHA256.txt').write_text(f'{digest}  {installer.name}\n', encoding='utf-8')
-    print(f'\nBUILD COMPLETE\nInstaller: {installer}\nSHA256: {digest}')
+    print(f'\nBUILD COMPLETE\nInstaller: {installer}\nModule update: {module_zip}\nSHA256: {digest}')
     print('The installer has not been installed or executed. It remains unsigned.')
 
 
