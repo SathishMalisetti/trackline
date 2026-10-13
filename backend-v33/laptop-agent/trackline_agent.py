@@ -42,6 +42,7 @@ import time
 import getpass
 import hashlib
 from upload_schedule import upload_allowed
+from agent_updates import check_for_update
 import argparse
 import platform
 import subprocess
@@ -883,7 +884,9 @@ if __name__ == "__main__":
         elif args.full_uninstall:
             full_uninstall()
         elif args.sync_once:
-            if sync_once(scheduled=True) == "failed":
+            result = sync_once(scheduled=True)
+            check_for_update()
+            if result == "failed":
                 sys.exit(1)
         elif args.manual_sync:
             if sync_once() == "failed":

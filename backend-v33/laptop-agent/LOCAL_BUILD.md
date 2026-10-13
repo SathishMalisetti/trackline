@@ -15,10 +15,11 @@ py -3.12 build_installer.py
 
 The build installs dependencies in its own virtual environment, runs mocked recovery checks, builds all three windowless executables, then compiles the installer. Internet access is needed for dependencies. It stops if any step fails.
 
-The resulting file is:
+The resulting installer and agent-only update package are:
 
 ```text
 backend-v33/laptop-agent/local-build/package/installer_output/TracklineAgentSetup.exe
+backend-v33/laptop-agent/local-build/package/installer_output/TracklineAgentModule.zip
 ```
 
 `SHA256.txt` is beside it. Build output is separate from the previously committed executables. The script does not install or run Trackline, change device pairing, query ActivityWatch, or upload data. Existing missing-day upload and family/device functionality are unchanged. ActivityWatch must still be installed separately on each target laptop.
@@ -28,6 +29,12 @@ If Inno Setup is installed in a custom location:
 ```cmd
 py -3.12 build_installer.py --inno-compiler "D:\Tools\Inno Setup 6\ISCC.exe"
 ```
+
+## Agent automatic updates
+
+After a laptop-agent change is merged to `main`, GitHub Actions builds the installer and uploads `TracklineAgentModule.zip` to the latest GitHub release. Paired agents check that release after a scheduled sync, verify the asset SHA-256 reported by GitHub, and apply a newer module after the current sync process exits.
+
+For each future agent release, increment `MyAppVersion` in `TracklineAgentSetup.iss`. The workflow reads that value for the build artifact name and module manifest. Existing paired laptops need this installer once to move the scheduled agent into the current user's AppData; the migration preserves pairing. Later agent-only updates run without an admin prompt.
 
 Building locally does not sign the installer or establish that it is safe. The earlier Chrome dangerous-download verdict is still unresolved; Windows or antivirus software may also flag the local build. Keep protections enabled and review any detection rather than automatically overriding it.
 

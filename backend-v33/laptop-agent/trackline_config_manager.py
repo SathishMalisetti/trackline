@@ -17,6 +17,7 @@ import os
 import sys
 import platform
 import subprocess
+import shutil
 import requests
 from account_auth import verify_family
 from pathlib import Path
@@ -113,6 +114,12 @@ def resolve_agent_exe_path(cfg):
     found, repairs config.json with the corrected path so this only ever
     needs to self-heal once, not on every single action. Returns the
     resolved path (str) or None if genuinely not found anywhere."""
+    app_data_agent = Path(os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or Path.home()) / "TracklineAgent" / "runtime" / "TracklineAgent" / AGENT_EXE_NAME
+    if app_data_agent.is_file():
+        if cfg.get("agent_exe_path") != str(app_data_agent):
+            cfg["agent_exe_path"] = str(app_data_agent)
+            write_config(cfg)
+        return str(app_data_agent)
     stored_path = cfg.get("agent_exe_path")
     if stored_path and Path(stored_path).exists():
         return stored_path
@@ -122,6 +129,61 @@ def resolve_agent_exe_path(cfg):
         write_config(cfg)
         return str(rediscovered)
     return None
+
+def _register_runtime_task(agent_exe_path, interval_minutes):
+    """Repoint the existing scheduled task while keeping its interval and wake settings."""
+    from xml.sax.saxutils import escape
+    interval_minutes = max(1, min(int(interval_minutes), 1440))
+    safe_path = escape(str(agent_exe_path))
+    xml_content = f'''<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <Triggers><TimeTrigger><StartBoundary>2020-01-01T00:00:00</StartBoundary><Repetition><Interval>PT{interval_minutes}M</Interval><StopAtDurationEnd>false</StopAtDurationEnd></Repetition><Enabled>true</Enabled></TimeTrigger></Triggers>
+  <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><AllowHardTerminate>true</AllowHardTerminate><StartWhenAvailable>true</StartWhenAvailable><WakeToRun>true</WakeToRun><Enabled>true</Enabled><Hidden>false</Hidden></Settings>
+  <Actions Context="Author"><Exec><Command>{safe_path}</Command><Arguments>--sync-once</Arguments></Exec></Actions>
+</Task>'''
+    task_file = _app_dir() / "_scheduled_task.xml"
+    try:
+        task_file.write_text(xml_content, encoding="utf-16")
+        subprocess.run(["schtasks", "/create", "/tn", TASK_NAME, "/xml", str(task_file), "/f"],
+                       check=True, capture_output=True, text=True, timeout=20)
+    finally:
+        task_file.unlink(missing_ok=True)
+
+def migrate_agent_to_user_runtime(cfg):
+    """Move an existing paired install to AppData once, without changing its pairing."""
+    if platform.system() != "Windows" or not getattr(sys, "frozen", False):
+        return None
+    runtime = Path(os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or Path.home()) / "TracklineAgent" / "runtime" / "TracklineAgent"
+    agent_exe = runtime / AGENT_EXE_NAME
+    if agent_exe.is_file() and cfg.get("agent_exe_path") == str(agent_exe):
+        return None
+    staging = runtime.with_name(runtime.name + ".new")
+    try:
+        if not agent_exe.is_file():
+            source_exe = find_agent_exe()
+            if not source_exe:
+                return "Could not find the bundled agent to enable automatic updates."
+            runtime.parent.mkdir(parents=True, exist_ok=True)
+            if staging.exists():
+                shutil.rmtree(staging)
+            shutil.copytree(Path(source_exe).resolve().parent, staging)
+            if not (staging / AGENT_EXE_NAME).is_file():
+                raise RuntimeError("The bundled agent files are incomplete.")
+            if runtime.exists():
+                shutil.rmtree(runtime)
+            staging.rename(runtime)
+        interval = cfg.get("sync_interval_minutes", 30)
+        try:
+            interval = int(interval)
+        except (TypeError, ValueError):
+            interval = 30
+        _register_runtime_task(agent_exe, interval)
+        cfg["agent_exe_path"] = str(agent_exe)
+        write_config(cfg)
+        return "Automatic agent updates are enabled for this device."
+    except Exception as exc:
+        shutil.rmtree(staging, ignore_errors=True)
+        return f"Could not prepare automatic agent updates: {exc}"
 
 def launch_setup(setup_exe_path):
     """Launches the setup wizard as a separate, non-blocking process —
@@ -382,6 +444,8 @@ def get_pairing_summary():
     if not cfg:
         return None
 
+    update_notice = migrate_agent_to_user_runtime(cfg)
+
     status = read_status()
     last_sent_file = find_most_recent_sent_file()
 
@@ -398,6 +462,7 @@ def get_pairing_summary():
         "status_detail": (status or {}).get("detail", ""),
         "status_checked_label": relative_time_label(status["checked_at"]) if status and status.get("checked_at") else "never",
         "last_successful_sync_label": relative_time_label(last_sent_file.stat().st_mtime) if last_sent_file else "never",
+        "update_notice": update_notice,
     }
 
 
@@ -505,6 +570,9 @@ def run_gui():
             row.pack(fill="x", pady=3)
             ttk.Label(row, text=label, width=18, foreground="#5c5847").pack(side="left")
             ttk.Label(row, text=str(value), font=("Segoe UI", 9, "bold")).pack(side="left")
+
+        if summary.get("update_notice"):
+            ttk.Label(status_tab, text=summary["update_notice"], foreground="#3d7a4f", wraplength=380).pack(anchor="w", pady=(4, 8))
 
         status_row = ttk.Frame(status_tab)
         status_row.pack(fill="x", pady=(10,10))
