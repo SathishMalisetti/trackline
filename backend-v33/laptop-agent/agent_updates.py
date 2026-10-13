@@ -86,8 +86,9 @@ $cms.CheckSignature($true)
 if ($cms.SignerInfos.Count -ne 1 -or $cms.SignerInfos[0].Certificate.Thumbprint -ne '{PUBLISHER_THUMBPRINT}') {{throw 'Unexpected update publisher'}}
 """
     encoded=base64.b64encode(command.encode('utf-16le')).decode()
+    shell_env=os.environ.copy();shell_env.pop('PSModulePath',None)
     result=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-EncodedCommand',encoded],
-                          capture_output=True, timeout=60, creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+                          capture_output=True, timeout=60, env=shell_env, creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
     if result.returncode != 0:
         raise ValueError('Update package publisher signature did not verify')
 

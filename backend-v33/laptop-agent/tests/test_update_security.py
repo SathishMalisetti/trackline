@@ -23,7 +23,7 @@ class UpdateSecurityTests(unittest.TestCase):
             bundle.write_bytes(b'whole bundle including runtime dependencies')
             paths=base64.b64encode(json.dumps([str(bundle),str(signature)]).encode()).decode()
             command=f"""$ErrorActionPreference='Stop'
-Import-Module Microsoft.PowerShell.Security
+Import-Module (Join-Path $PSHOME 'Modules/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.psd1')
 Add-Type -AssemblyName System.Security
 $paths=ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{paths}')))
 $cert=New-SelfSignedCertificate -Subject 'CN=Trackline Test Only' -CertStoreLocation 'Cert:\\CurrentUser\\My' -KeyUsage DigitalSignature
@@ -38,7 +38,8 @@ Write-Output $cert.Thumbprint
 }} finally {{ Remove-Item ('Cert:\\CurrentUser\\My\\'+$cert.Thumbprint) }}
 """
             encoded=base64.b64encode(command.encode('utf-16le')).decode()
-            result=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-EncodedCommand',encoded],capture_output=True,text=True)
+            shell_env=os.environ.copy();shell_env.pop('PSModulePath',None)
+            result=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-EncodedCommand',encoded],capture_output=True,text=True,env=shell_env)
             self.assertEqual(result.returncode,0,result.stderr)
             with patch.object(agent_updates,'PUBLISHER_THUMBPRINT',result.stdout.strip()):
                 agent_updates._verify_bundle_signature(bundle,signature)
