@@ -30,6 +30,7 @@ try {{
 $content=New-Object System.Security.Cryptography.Pkcs.ContentInfo -ArgumentList (,[IO.File]::ReadAllBytes($paths[0]))
 $cms=New-Object System.Security.Cryptography.Pkcs.SignedCms -ArgumentList $content,$true
 $signer=New-Object System.Security.Cryptography.Pkcs.CmsSigner -ArgumentList $cert
+$signer.IncludeOption=[System.Security.Cryptography.X509Certificates.X509IncludeOption]::EndCertOnly
 $cms.ComputeSignature($signer)
 [IO.File]::WriteAllBytes($paths[1],$cms.Encode())
 Write-Output $cert.Thumbprint

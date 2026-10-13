@@ -10,6 +10,7 @@ $content=New-Object System.Security.Cryptography.Pkcs.ContentInfo -ArgumentList 
 $cms=New-Object System.Security.Cryptography.Pkcs.SignedCms -ArgumentList $content,$true
 $signer=New-Object System.Security.Cryptography.Pkcs.CmsSigner -ArgumentList $cert
 $signer.DigestAlgorithm=New-Object System.Security.Cryptography.Oid -ArgumentList '2.16.840.1.101.3.4.2.1'
+$signer.IncludeOption=[System.Security.Cryptography.X509Certificates.X509IncludeOption]::EndCertOnly
 $cms.ComputeSignature($signer)
 [IO.File]::WriteAllBytes("$path.p7s",$cms.Encode())
 Write-Host "Upload both $path and $path.p7s to the same GitHub release."
