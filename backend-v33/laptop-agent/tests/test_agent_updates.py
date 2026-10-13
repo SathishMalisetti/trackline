@@ -8,6 +8,7 @@ from unittest.mock import patch
 import zipfile
 
 import agent_updates
+import trackline_config_manager as manager
 
 
 class Response:
@@ -89,6 +90,35 @@ class AgentUpdateTests(unittest.TestCase):
             with patch.dict(os.environ, env):
                 self.assertFalse(agent_updates.check_for_update(frozen=True, session=session, now=100))
             self.assertFalse((Path(temp) / "TracklineAgent" / "updates" / "last-check.json").exists())
+
+    def test_migration_preserves_pairing_and_interval_and_retries_task_failure(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / "installed"
+            source.mkdir()
+            (source / manager.AGENT_EXE_NAME).write_bytes(b"bundled executable")
+            cfg = {"family_id": "FAMILY1", "device_token": "existing-token",
+                   "member_id": "kid1", "sync_interval_minutes": 60,
+                   "agent_exe_path": str(source / manager.AGENT_EXE_NAME)}
+            old_path = cfg["agent_exe_path"]
+            with patch.dict(os.environ, {"LOCALAPPDATA": temp}), \
+                    patch.object(manager.platform, "system", return_value="Windows"), \
+                    patch.object(manager.sys, "frozen", True, create=True), \
+                    patch.object(manager, "find_agent_exe", return_value=source / manager.AGENT_EXE_NAME), \
+                    patch.object(manager, "write_config") as save, \
+                    patch.object(manager, "_register_runtime_task", side_effect=OSError("task unavailable")) as register:
+                message = manager.migrate_agent_to_user_runtime(cfg)
+                self.assertIn("Could not", message)
+                self.assertEqual(cfg["agent_exe_path"], old_path)
+                save.assert_not_called()
+                register.side_effect = None
+                self.assertIn("enabled", manager.migrate_agent_to_user_runtime(cfg))
+                expected = Path(temp) / "TracklineAgent/runtime/TracklineAgent" / manager.AGENT_EXE_NAME
+                register.assert_called_with(expected, 60)
+                self.assertTrue(expected.is_file())
+                self.assertEqual(cfg["agent_exe_path"], str(expected))
+                self.assertEqual(cfg["device_token"], "existing-token")
+                self.assertEqual(cfg["family_id"], "FAMILY1")
+                self.assertEqual(cfg["member_id"], "kid1")
 
 
 if __name__ == "__main__":
