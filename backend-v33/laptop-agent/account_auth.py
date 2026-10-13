@@ -1,32 +1,55 @@
-"""Interactive account sign-in only; never persist account passwords or tokens."""
+"""Short-lived family access for installer actions; never save credentials."""
+from contextlib import contextmanager
 from urllib.parse import urlparse
 import requests
 
 
-def sign_in(backend_url, email, password):
+@contextmanager
+def family_session(backend_url, family_id, password):
     backend_url = backend_url.strip().rstrip('/')
     parsed = urlparse(backend_url)
     if parsed.scheme != 'https' and not (parsed.scheme == 'http' and parsed.hostname in ('localhost', '127.0.0.1')):
         raise ValueError('Use the HTTPS address of your Trackline app.')
-    config_response = requests.get(f'{backend_url}/api/auth-config', timeout=15)
-    config_response.raise_for_status()
-    config = config_response.json()
-    auth_url = config['url'].rstrip('/')
-    if urlparse(auth_url).scheme != 'https':
-        raise ValueError('The authentication service must use HTTPS.')
-    response = requests.post(f'{auth_url}/auth/v1/token?grant_type=password',
-                             headers={'apikey': config['publishableKey']},
-                             json={'email': email.strip(), 'password': password}, timeout=15)
-    if response.status_code != 200:
-        raise ValueError('Account sign-in failed. Check your email/password and confirm your email.')
-    token = response.json()['access_token']
-    return {'X-Trackline-Authorization': f'Bearer {token}'}
+    family_id = family_id.strip().upper()
+    if not family_id or not password:
+        raise ValueError('Enter your Family ID and family password.')
+    session = requests.Session()
+    signed_in = False
+    try:
+        response = session.post(f'{backend_url}/api/family-session', json={
+            'action': 'login', 'identity': family_id, 'password': password,
+        }, timeout=15, allow_redirects=False)
+        result = response.json()
+        if response.status_code != 200:
+            raise ValueError(result.get('error', 'Incorrect Family ID or family password.'))
+        signed_in = True
+        if result.get('familyId') != family_id:
+            raise ValueError('Enter the Family ID, not a username.')
+        session.headers.update({'X-Trackline-Session': 'family'})
+        # The API cookie is Secure; permit explicit loopback development only.
+        if parsed.scheme == 'http':
+            token = session.cookies.get('__Host-trackline-family')
+            if token:
+                session.headers.update({'Cookie': f'__Host-trackline-family={token}'})
+        yield session
+    finally:
+        if signed_in:
+            try:
+                session.delete(f'{backend_url}/api/family-session', timeout=15, allow_redirects=False)
+            except requests.RequestException:
+                pass  # The server-side temporary session expires normally.
+        session.close()
 
 
-def verify_parent(backend_url, email, password, family_id):
-    headers = sign_in(backend_url, email, password)
-    response = requests.get(f'{backend_url.rstrip("/")}/api/auth-me', headers=headers, timeout=15)
-    response.raise_for_status()
-    if not any(m['family_id'] == family_id and m['role'] == 'parent' for m in response.json()['memberships']):
-        raise ValueError('This account does not have parent access to this family.')
-    return headers
+def family_post(backend_url, family_id, password, endpoint, payload):
+    if endpoint not in ('family-members', 'device-pair'):
+        raise ValueError('Unsupported installer action.')
+    backend_url = backend_url.strip().rstrip('/')
+    with family_session(backend_url, family_id, password) as session:
+        return session.post(f'{backend_url}/api/{endpoint}', json=payload,
+                            timeout=15, allow_redirects=False)
+
+
+def verify_family(backend_url, family_id, password):
+    with family_session(backend_url, family_id, password):
+        return True

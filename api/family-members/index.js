@@ -65,4 +65,4 @@ module.exports = async function (context, req) {
   }
 };
 
-module.exports = require('../shared/auth').protect(module.exports, {"parent": true});
+module.exports = require('../shared/auth').protect(module.exports, {"parent": true, "familyEntry": true});
