@@ -1,5 +1,6 @@
 param([Parameter(Mandatory=$true)][string]$Bundle)
 $ErrorActionPreference='Stop'
+Import-Module Microsoft.PowerShell.Security
 Add-Type -AssemblyName System.Security
 $thumbprint='297D507182D51329D8E40BEF20E709060D806D53'
 $cert=Get-Item "Cert:\CurrentUser\My\$thumbprint" -ErrorAction SilentlyContinue

@@ -23,6 +23,7 @@ class UpdateSecurityTests(unittest.TestCase):
             bundle.write_bytes(b'whole bundle including runtime dependencies')
             paths=base64.b64encode(json.dumps([str(bundle),str(signature)]).encode()).decode()
             command=f"""$ErrorActionPreference='Stop'
+Import-Module Microsoft.PowerShell.Security
 Add-Type -AssemblyName System.Security
 $paths=ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{paths}')))
 $cert=New-SelfSignedCertificate -Subject 'CN=Trackline Test Only' -CertStoreLocation 'Cert:\\CurrentUser\\My' -KeyUsage DigitalSignature
