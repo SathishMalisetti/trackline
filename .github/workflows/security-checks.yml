@@ -1,0 +1,22 @@
+name: Security regression checks
+on:
+  pull_request:
+    paths: ['api/**', 'app/**', 'security/**', 'tests/security*', '.github/workflows/security-checks.yml']
+  push:
+    branches: [main, security/family-isolation-and-credentials]
+    paths: ['api/**', 'app/**', 'security/**', 'tests/security*', '.github/workflows/security-checks.yml']
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix api
+      - run: npm test --prefix api
+      - run: node tests/security-isolation.cjs

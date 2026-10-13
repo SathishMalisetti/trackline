@@ -2985,7 +2985,7 @@ function renderStudyExamView(){
         <div>
           ${q.options.map(opt=>`
             <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;margin-bottom:6px;cursor:pointer;background:${attempt.answers[q.id]===opt?'var(--amber)':'transparent'};color:${attempt.answers[q.id]===opt?'var(--ink)':'var(--text-on-ink)'};">
-              <input type="radio" name="q_${q.id}" ${attempt.answers[q.id]===opt?'checked':''} onchange="setExamAnswer('${q.id}','${escapeHtml(opt).replace(/'/g,"\\'")}')" style="accent-color:var(--amber);">
+              <input type="radio" name="q_${q.id}" ${attempt.answers[q.id]===opt?'checked':''} onchange="setExamAnswer('${q.id}',${escapeHtml(JSON.stringify(opt))})" style="accent-color:var(--amber);">
               ${escapeHtml(opt)}
             </label>`).join('')}
         </div>
@@ -3179,7 +3179,7 @@ function renderSettings(){
         <option value="parent" ${m.role==='parent'?'selected':''}>Parent</option>
         <option value="kid" ${m.role==='kid'?'selected':''}>Kid</option>
       </select>
-      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:13px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text-dim);">${m.pinHash?'Reset PIN':'No PIN'}</button>
+      <button onclick="resetMemberPin('${m.id}')" title="Reset PIN" style="font-size:13px;background:none;border:1px solid var(--line);border-radius:6px;padding:6px 8px;cursor:pointer;color:var(--text-dim);">${(m.hasPin||m.pinHash)?'Reset PIN':'No PIN'}</button>
       ${m.role==='parent'?`<button class="btn ghost" onclick="openParentPassword('${m.id}')">Set parent password</button>`:''}
       <button onclick="removeMember('${m.id}')" title="Remove">✕</button>
     </div>
@@ -3226,8 +3226,8 @@ function renderSettings(){
       <div class="field">
         <label>Family password</label>
         <div style="display:flex;align-items:center;gap:10px;">
-          <input type="password" id="fam_newPassword" placeholder="${fam.passwordHash? 'Set a new family password':'No password set yet — set one'}" style="flex:1;">
-          <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="changeFamilyPassword()">${fam.passwordHash?'Change':'Set'}</button>
+          <input type="password" id="fam_newPassword" placeholder="${(fam.hasPassword||fam.passwordHash)? 'Set a new family password':'No password set yet — set one'}" style="flex:1;">
+          <button class="btn ghost" style="padding:9px 14px;font-size:12px;" onclick="changeFamilyPassword()">${(fam.hasPassword||fam.passwordHash)?'Change':'Set'}</button>
         </div>
         <p style="font-size:13px;color:var(--text-dim);margin:6px 0 0;">Family members use the Family ID above plus this password to join from their own device, then pick their own name and set their own PIN.</p>
       </div>
@@ -5941,18 +5941,17 @@ function updateFamily(field, value){
   render();
 }
 
-function changeFamilyPassword(){
-  if(!isParentLoggedIn()) return;
-  if(!state.family) return;
-  const input = document.getElementById('fam_newPassword');
-  const val = (input.value||'').trim();
-  if(!val || val.length < 4){
-    showAlert('Family password needs to be at least 4 characters.');
-    return;
-  }
-  state.family.passwordHash = simpleHash(val);
-  saveData();
-  render();
+async function changeFamilyPassword(){
+  if(!isParentLoggedIn() || !state.family) return;
+  const input=document.getElementById('fam_newPassword');
+  const password=(input.value||'').trim();
+  if(!password || password.length<4){showAlert('Family password needs to be at least 4 characters.');return;}
+  if(hasClaudeStorage || state.family.isExample){state.family.passwordHash=simpleHash(password);saveData();render();return;}
+  try{
+    const res=await tracklineAuth.fetch('/api/family-credentials',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'password',familyId:state.family.id,password})});
+    const result=await res.json();if(!res.ok)throw new Error(result.error||'Could not change the family password.');
+    await loadData();showAlert('Family password updated. Other devices need to sign in again.');
+  }catch(error){showAlert(error.message);}
 }
 
 function openTaskLibraryModal(){
@@ -6112,10 +6111,13 @@ function resetMemberPin(id){
   if(!isParentLoggedIn()) return;
   const m = memberById(id);
   if(!m) return;
-  showConfirm(`Reset ${m.name}'s PIN? They'll set a new one next time they log in.`, ()=>{
-    m.pinHash = null;
-    saveData();
-    render();
+  showConfirm(`Reset ${m.name}'s PIN? They'll set a new one next time they log in.`, async ()=>{
+    if(hasClaudeStorage || state.family.isExample){m.pinHash=null;m.hasPin=false;saveData();render();return;}
+    try{
+      const res=await tracklineAuth.fetch('/api/family-credentials',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reset-pin',familyId:state.family.id,memberId:id})});
+      const result=await res.json();if(!res.ok)throw new Error(result.error||'Could not reset the PIN.');
+      await loadData();render();
+    }catch(error){showAlert(error.message);}
   });
 }
 
@@ -6262,7 +6264,7 @@ async function submitExport(){
     const res = await tracklineAuth.fetch(`${API_BASE}/api/export-family`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ familyId: state.family.id, passwordHash: simpleHash(pwd) })
+      body: JSON.stringify({ familyId: state.family.id, password: pwd })
     });
     if(!res.ok){
       const err = await res.json().catch(()=>({}));

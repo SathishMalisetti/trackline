@@ -52,24 +52,19 @@ module.exports = async function (context, req) {
         context.res = jsonRes(400, { error: 'familyId and trip (with an id) are required' });
         return;
       }
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/shopping_lists?on_conflict=id`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/save_shopping_trip`, {
         method: 'POST',
         headers: supabaseHeaders({
           'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates,return=minimal',
+          'Prefer': 'return=minimal',
         }),
-        body: JSON.stringify({
-          id: trip.id,
-          family_id: familyId,
-          date: trip.date || null,
-          data: trip,
-          updated_at: new Date().toISOString(),
-        }),
+        body: JSON.stringify({ p_family_id: familyId, p_trip: trip }),
       });
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
         context.log.error('Supabase shopping_lists POST failed:', res.status, bodyText);
-        context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
+        let code; try { code = JSON.parse(bodyText).code; } catch {}
+        context.res = code === '42501' ? jsonRes(403, {error:'Record does not belong to this family.'}) : jsonRes(502, {error:'Upstream database error'});
         return;
       }
       context.res = jsonRes(200, { ok: true });
@@ -90,7 +85,8 @@ module.exports = async function (context, req) {
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
         context.log.error('Supabase shopping_lists DELETE failed:', res.status, bodyText);
-        context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
+        let code; try { code = JSON.parse(bodyText).code; } catch {}
+        context.res = code === '42501' ? jsonRes(403, {error:'Record does not belong to this family.'}) : jsonRes(502, {error:'Upstream database error'});
         return;
       }
       context.res = jsonRes(200, { ok: true });

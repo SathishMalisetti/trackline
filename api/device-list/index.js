@@ -32,23 +32,7 @@ module.exports = async function (context, req) {
 
   try {
     const body = req.body || {};
-    const { familyId, passwordHash } = body;
-    if (!familyId || !passwordHash) {
-      context.res = jsonRes(400, { error: 'familyId and passwordHash are required' });
-      return;
-    }
-
-    const famRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=password_hash`,
-      { headers: supabaseHeaders() }
-    );
-    if (!famRes.ok) { context.res = jsonRes(502, { error: 'Upstream database error' }); return; }
-    const famRows = await famRes.json();
-    if (!famRows || famRows.length === 0 || famRows[0].password_hash !== passwordHash) {
-      context.res = jsonRes(403, { error: 'Incorrect family password.' });
-      return;
-    }
-
+    const {familyId}=body;
     const devRes = await fetch(
       `${SUPABASE_URL}/rest/v1/devices?family_id=eq.${encodeURIComponent(familyId)}&select=id,member_id,hostname,label,paired_at,last_sync_at&order=paired_at.desc`,
       { headers: supabaseHeaders() }

@@ -16,6 +16,7 @@
 // for login), never the plaintext — consistent with how login already works.
 
 const fetch = require('node-fetch');
+const {matchesSecret} = require('../shared/credentials');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -75,15 +76,15 @@ module.exports = async function (context, req) {
   try {
     const body = req.body || {};
     const familyId = body.familyId;
-    const passwordHash = body.passwordHash;
-    if (!familyId || !passwordHash) {
-      context.res = jsonRes(400, { error: 'familyId and passwordHash are required' });
+    const password = body.password;
+    if (!familyId || typeof password !== 'string' || password.length > 128) {
+      context.res = jsonRes(400, { error: 'familyId and password are required' });
       return;
     }
 
     // Verify the password FIRST, before touching any of the family's real data.
     const famRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=password_hash`,
+      `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=password_hash,login_password_hash,login_password_version`,
       { headers: supabaseHeaders() }
     );
     if (!famRes.ok) {
@@ -96,7 +97,7 @@ module.exports = async function (context, req) {
       context.res = jsonRes(403, { error: 'Incorrect family ID or password.' });
       return;
     }
-    if (famRows[0].password_hash !== passwordHash) {
+    if (!await matchesSecret(password, famRows[0].login_password_version === famRows[0].password_hash ? famRows[0].login_password_hash || famRows[0].password_hash : famRows[0].password_hash)) {
       context.res = jsonRes(403, { error: 'Incorrect family ID or password.' });
       return;
     }

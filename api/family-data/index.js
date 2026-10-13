@@ -81,7 +81,8 @@ module.exports = async function (context, req) {
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
         context.log.error('get_family_data RPC failed:', res.status, bodyText);
-        context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
+        let code; try { code = JSON.parse(bodyText).code; } catch {}
+        context.res = code === '42501' ? jsonRes(403, {error:'Record does not belong to this family.'}) : jsonRes(502, {error:'Upstream database error'});
         return;
       }
 
@@ -110,6 +111,8 @@ module.exports = async function (context, req) {
         if(saved) Object.assign(chore,{pendingApproval:saved.pending_approval,icon:saved.icon});
       });
       data.topicProgress = (await progressRes.json()).map(p=>({id:p.id,kidId:p.member_id,topicId:p.topic_id,status:p.status,examScore:p.exam_score,attemptCount:p.attempt_count,studyCompletedAt:p.study_completed_at,examCompletedAt:p.exam_completed_at,updatedAt:p.updated_at}));
+      if(data.family){data.family.hasPassword=!!data.family.passwordHash; delete data.family.passwordHash;}
+      (data.members||[]).forEach(m=>{m.hasPin=!!m.pinHash;delete m.pinHash;});
       data.choreLogs = await fetchChoreLogsForFamily(familyId);
       data.shoppingTrips = await fetchTripsForFamily(familyId);
       context.res = jsonRes(200, data);
@@ -135,7 +138,8 @@ module.exports = async function (context, req) {
       if (!res.ok) {
         const bodyText = await res.text().catch(()=> '');
         context.log.error('save_family_data RPC failed:', res.status, bodyText);
-        context.res = jsonRes(502, { error: 'Upstream database error', status: res.status, detail: bodyText });
+        let code; try { code = JSON.parse(bodyText).code; } catch {}
+        context.res = code === '42501' ? jsonRes(403, {error:'Record does not belong to this family.'}) : jsonRes(502, {error:'Upstream database error'});
         return;
       }
       context.res = jsonRes(200, { ok: true });

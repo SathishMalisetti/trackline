@@ -28,7 +28,7 @@
 ; ============================================================================
 
 #define MyAppName "Trackline Agent"
-#define MyAppVersion "1.1.4"
+#define MyAppVersion "1.1.5"
 #define MyAppPublisher "Trackline"
 #define MyConfigManagerExe "TracklineConfigManager.exe"
 
@@ -100,3 +100,4 @@ Filename: "{app}\TracklineConfigManager\{#MyConfigManagerExe}"; Description: "Op
 ; an already-unpaired device won't block the rest of the uninstall either
 ; way — no extra flag needed for that.
 Filename: "{app}\TracklineAgent\TracklineAgent.exe"; Parameters: "--full-uninstall"; Flags: runhidden waituntilterminated skipifdoesntexist; RunOnceId: "TracklineFullUninstall"
+
