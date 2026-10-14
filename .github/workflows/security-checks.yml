@@ -21,5 +21,6 @@ jobs:
       - run: npm test --prefix api
       - run: node tests/security-isolation.cjs
       - run: node tests/admin-sql.cjs
+      - run: node tests/admin-import-sql.cjs
       - run: npx playwright install --with-deps chromium
       - run: node tests/admin-layout.cjs

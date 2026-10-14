@@ -1,4 +1,4 @@
-name: Curriculum generation worker
+name: Curriculum background worker
 on:
   schedule:
     - cron: '*/5 * * * *'
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Process queued curriculum jobs
+      - name: Process VCAA imports and lesson generation jobs
         env:
           ADMIN_API_ORIGIN: ${{ vars.ADMIN_API_ORIGIN }}
           ADMIN_WORKER_KEY: ${{ secrets.ADMIN_GENERATION_WORKER_KEY }}
