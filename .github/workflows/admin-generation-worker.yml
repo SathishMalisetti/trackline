@@ -1,0 +1,31 @@
+name: Curriculum generation worker
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: curriculum-generation-worker
+  cancel-in-progress: false
+jobs:
+  work:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Process queued curriculum jobs
+        env:
+          ADMIN_API_ORIGIN: ${{ vars.ADMIN_API_ORIGIN }}
+          ADMIN_WORKER_KEY: ${{ secrets.ADMIN_GENERATION_WORKER_KEY }}
+        shell: bash
+        run: |
+          if [ -z "$ADMIN_API_ORIGIN" ] || [ -z "$ADMIN_WORKER_KEY" ]; then
+            echo 'Worker is not configured. Set ADMIN_API_ORIGIN and ADMIN_GENERATION_WORKER_KEY.'
+            exit 0
+          fi
+          case "$ADMIN_API_ORIGIN" in https://*) ;; *) echo 'HTTPS origin required'; exit 1 ;; esac
+          for i in 1 2 3; do
+            curl --fail --silent --show-error --max-time 60 --request POST \
+              --header "X-Admin-Worker-Key: $ADMIN_WORKER_KEY" \
+              "$ADMIN_API_ORIGIN/api/admin-worker"
+          done
