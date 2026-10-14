@@ -61,13 +61,8 @@ module.exports = async function (context, req) {
     let authorized = false;
     if (deviceToken) {
       authorized = device.device_token_hash === hashToken(deviceToken);
-    } else if (familyId && passwordHash) {
-      const famRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/families?id=eq.${encodeURIComponent(familyId)}&select=password_hash`,
-        { headers: supabaseHeaders() }
-      );
-      const famRows = famRes.ok ? await famRes.json() : [];
-      authorized = famRows.length > 0 && famRows[0].password_hash === passwordHash && device.family_id === familyId;
+    } else if (familyId) {
+      authorized = req.membership && req.membership.role === 'parent' && req.membership.family_id === device.family_id;
     }
 
     if (!authorized) {

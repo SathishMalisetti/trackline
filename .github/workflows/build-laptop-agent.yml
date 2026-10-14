@@ -1,7 +1,7 @@
 name: Build Trackline Windows installer
 on:
   push:
-    branches: [main, fix/activitywatch-recovery, build/local-windows-installer, fix/agent-upload-timeouts, feat/upload-window, feat/agent-module-auto-updates]
+    branches: [main, fix/activitywatch-recovery, build/local-windows-installer, fix/agent-upload-timeouts, feat/upload-window, feat/agent-module-auto-updates, security/family-isolation-and-credentials]
     paths:
       - 'backend-v33/laptop-agent/**'
       - '.github/workflows/build-laptop-agent.yml'
@@ -40,3 +40,4 @@ jobs:
         run: |
           release_tag="$(gh release view --json tagName --jq .tagName)"
           gh release upload "$release_tag" local-build/package/installer_output/TracklineAgentModule.zip --clobber
+

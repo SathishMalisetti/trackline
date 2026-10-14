@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { validateRenderData } = require('./render-data');
 const { readSession, assertOrigin } = require('./family-session');
 
 function response(status, error) {
@@ -78,20 +79,23 @@ function protect(handler, options = {}) {
           if (!memberResponse.ok) throw Object.assign(new Error('Could not verify profile ownership.'), { status: 503 });
           if (!(await memberResponse.json()).length) throw Object.assign(new Error('Profile does not belong to this family.'), { status: 403 });
         }
-        if (options.chore && membership.role === 'kid') {
+        if (options.chore) {
           const choreId = body.choreId || query.choreId;
-          const chores = await fetch(`${process.env.SUPABASE_URL}/rest/v1/chores?id=eq.${encodeURIComponent(choreId || '')}&family_id=eq.${encodeURIComponent(familyId)}&member_id=eq.${encodeURIComponent(membership.member_id)}&select=id`, {
+          const chores = await fetch(`${process.env.SUPABASE_URL}/rest/v1/chores?id=eq.${encodeURIComponent(choreId || '')}&family_id=eq.${encodeURIComponent(familyId)}${membership.role === 'kid' ? `&member_id=eq.${encodeURIComponent(membership.member_id)}` : ''}&select=id`, {
             headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` }, timeout: 10000,
           });
           if (!chores.ok) throw Object.assign(new Error('Could not verify task ownership.'), { status: 503 });
           if (!(await chores.json()).length) throw Object.assign(new Error('You can only complete your own tasks.'), { status: 403 });
-          if (req.method === 'POST') req.body.loggedBy = membership.member_id;
+          if (req.method === 'POST' && membership.role === 'kid') req.body.loggedBy = membership.member_id;
         }
       }
       if (options.familyEntry && auth.familySession) {
         if (familyId && familyId !== auth.family.id) throw Object.assign(new Error('You do not have access to this family.'), { status: 403 });
       }
+      if (req.body && req.body.data) validateRenderData(req.body.data);
+      if (req.body && req.body.trip) validateRenderData(req.body.trip);
       await handler(context, req);
+      if (options.sanitize && context.res && context.res.status === 200) validateRenderData(JSON.parse(context.res.body));
       if (options.sanitize && req.membership.role === 'kid' && context.res && context.res.status === 200) {
         const data = JSON.parse(context.res.body);
         if (data) {

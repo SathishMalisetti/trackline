@@ -1,4 +1,5 @@
 """Download a GitHub-published agent bundle and replace the per-user runtime."""
+import base64
 import hashlib
 import json
 import os
@@ -68,6 +69,30 @@ def _safe_extract(bundle, staging):
     return candidate, str(manifest['version'])
 
 
+# Pin the existing Trackline Family Tools signing certificate. A GitHub
+# checksum alone cannot distinguish our release from a compromised release.
+PUBLISHER_THUMBPRINT = '297D507182D51329D8E40BEF20E709060D806D53'
+SIGNATURE_ASSET_NAME = ASSET_NAME + '.p7s'
+
+def _verify_bundle_signature(bundle, signature):
+    paths = base64.b64encode(json.dumps([str(bundle), str(signature)]).encode()).decode()
+    command = f"""$ErrorActionPreference='Stop'
+Add-Type -AssemblyName System.Security
+$paths=ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('{paths}')))
+$content=[System.Security.Cryptography.Pkcs.ContentInfo]::new([IO.File]::ReadAllBytes($paths[0]))
+$cms=[System.Security.Cryptography.Pkcs.SignedCms]::new($content,$true)
+$cms.Decode([IO.File]::ReadAllBytes($paths[1]))
+$cms.CheckSignature($true)
+if ($cms.SignerInfos.Count -ne 1 -or $cms.SignerInfos[0].Certificate.Thumbprint -ne '{PUBLISHER_THUMBPRINT}') {{throw 'Unexpected update publisher'}}
+"""
+    encoded=base64.b64encode(command.encode('utf-16le')).decode()
+    shell_env=os.environ.copy();shell_env.pop('PSModulePath',None)
+    result=subprocess.run(['powershell.exe','-NoProfile','-NonInteractive','-EncodedCommand',encoded],
+                          capture_output=True, timeout=60, env=shell_env, creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+    if result.returncode != 0:
+        raise ValueError('Update package publisher signature did not verify')
+
+
 def _schedule_swap(staging_agent, target, process_id):
     updates = _app_data() / 'updates'
     updates.mkdir(parents=True, exist_ok=True)
@@ -122,6 +147,10 @@ def check_for_update(logger=print, *, frozen=None, process_id=None, session=None
         asset = next((item for item in release.get('assets', []) if item.get('name') == ASSET_NAME), None)
         if not asset or not asset.get('browser_download_url'):
             return False
+        signature_asset = next((item for item in release.get('assets',[]) if item.get('name') == SIGNATURE_ASSET_NAME), None)
+        if not signature_asset or not signature_asset.get('browser_download_url'):
+            logger('Trackline update skipped: publisher signature is missing.')
+            return False
         expected = asset.get('digest') or ''
         if not re.fullmatch(r'sha256:[a-f0-9]{64}', expected):
             logger('Trackline update skipped: release asset has no SHA-256 digest.')
@@ -146,6 +175,15 @@ def check_for_update(logger=print, *, frozen=None, process_id=None, session=None
                     hasher.update(chunk); output.write(chunk)
             if f"sha256:{hasher.hexdigest()}" != expected:
                 raise ValueError('Update package SHA-256 did not match GitHub release metadata')
+            signature_response = _checked_response(http.get(signature_asset['browser_download_url'], timeout=30, stream=True))
+            signature_path = temp_dir / 'module.zip.p7s'
+            signature_bytes = bytearray()
+            for chunk in signature_response.iter_content(64 * 1024):
+                signature_bytes.extend(chunk)
+                if len(signature_bytes) > 1024 * 1024:
+                    raise ValueError('Update signature is too large')
+            signature_path.write_bytes(signature_bytes)
+            _verify_bundle_signature(archive_path, signature_path)
             stage_root = temp_dir / 'staged'
             stage_root.mkdir()
             staged_agent, package_version = _safe_extract(archive_path, stage_root)
@@ -159,3 +197,4 @@ def check_for_update(logger=print, *, frozen=None, process_id=None, session=None
     except Exception as error:
         logger(f'Trackline automatic update check failed: {type(error).__name__}. It will retry later.')
         return False
+

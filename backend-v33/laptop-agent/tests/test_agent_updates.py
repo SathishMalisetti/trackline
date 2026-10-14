@@ -69,14 +69,15 @@ class AgentUpdateTests(unittest.TestCase):
                     "name": agent_updates.ASSET_NAME,
                     "browser_download_url": "https://github.com/example/module.zip",
                     "digest": f"sha256:{digest}",
-                }],
+                }, {"name":agent_updates.SIGNATURE_ASSET_NAME,"browser_download_url":"https://github.com/example/module.zip.p7s"}],
             }
-            session = Session([Response(release), Response(chunks=[archive_bytes])])
+            session = Session([Response(release), Response(chunks=[archive_bytes]),Response(chunks=[b"signature"])])
 
-            with patch.dict(os.environ, env), patch.object(agent_updates, "_schedule_swap") as schedule:
+            with patch.dict(os.environ, env), patch.object(agent_updates, "_schedule_swap") as schedule, patch.object(agent_updates,"_verify_bundle_signature") as verify:
                 queued = agent_updates.check_for_update(frozen=True, process_id=123, session=session, now=12345)
 
             self.assertTrue(queued)
+            verify.assert_called_once()
             schedule.assert_called_once()
             self.assertEqual(schedule.call_args.args[1], runtime)
             state = json.loads((Path(temp) / "TracklineAgent" / "updates" / "last-check.json").read_text())
@@ -123,3 +124,4 @@ class AgentUpdateTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
