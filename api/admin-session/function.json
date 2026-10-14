@@ -1,1 +1,21 @@
-{"bindings":[{"authLevel":"anonymous","type":"httpTrigger","direction":"in","name":"req","methods":["get","post","delete"]},{"type":"http","direction":"out","name":"res"}]}
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "get",
+        "post",
+        "delete"
+      ],
+      "route": "platform-session"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    }
+  ]
+}

@@ -27,5 +27,5 @@ jobs:
           for i in 1 2 3; do
             curl --fail --silent --show-error --max-time 60 --request POST \
               --header "X-Admin-Worker-Key: $ADMIN_WORKER_KEY" \
-              "$ADMIN_API_ORIGIN/api/admin-worker"
+              "$ADMIN_API_ORIGIN/api/platform-worker"
           done

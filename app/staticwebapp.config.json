@@ -19,13 +19,13 @@
       "route": "/admin",
       "rewrite": "/admin/index.html",
       "headers": {
-        "Content-Security-Policy": "default-src 'self'; script-src 'sha256-8EJJaNwqMZQtyqgdqR+3KqKOQY1k2YL+SrAVe5O1rQ0='; style-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+        "Content-Security-Policy": "default-src 'self'; script-src 'sha256-MG8piGmUz6eIh5DRvS7waIS8lcWjmcg8ZUjAeQaG7Z0='; style-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
       }
     },
     {
       "route": "/admin/index.html",
       "headers": {
-        "Content-Security-Policy": "default-src 'self'; script-src 'sha256-8EJJaNwqMZQtyqgdqR+3KqKOQY1k2YL+SrAVe5O1rQ0='; style-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+        "Content-Security-Policy": "default-src 'self'; script-src 'sha256-MG8piGmUz6eIh5DRvS7waIS8lcWjmcg8ZUjAeQaG7Z0='; style-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
       }
     }
   ]

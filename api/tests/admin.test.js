@@ -10,6 +10,18 @@ function authRows(extra={}){return[{status:200,body:[{token_hash:A.digest(t),adm
 const request=(body={},method='POST')=>({method,headers:{cookie:'__Host-trackline-admin='+t},query:{},body});
 async function run(handler,req,rows=[]){replies=rows;calls=[];const c={};await handler(c,req);return c.res;}
 const skill={title:'Addition',prerequisites:['Place value'],lesson:'A sufficiently detailed lesson explaining addition with carrying.',worked_examples:['27 + 18 = 45'],writing_rubric:[],questions:Array.from({length:4},(_,i)=>({question:'Question '+i,type:'mcq',options:['45','35'],answer:'45',explanation:'Add the ones and carry into the tens.',purpose:'practice',difficulty:'introductory'}))};
+test('deployed HTTP routes avoid Azure Functions reserved admin/runtime prefixes',()=>{
+ const fs=require('node:fs'),path=require('node:path'),root=path.join(__dirname,'..');
+ for(const dir of fs.readdirSync(root)){
+  const config=path.join(root,dir,'function.json');if(!fs.existsSync(config))continue;
+  const trigger=JSON.parse(fs.readFileSync(config,'utf8')).bindings.find(b=>b.type==='httpTrigger');if(!trigger)continue;
+  const route=(trigger.route||dir).replace(/^\/+|\/+$/g,'');assert.ok(!/^(admin|runtime)/i.test(route),'Reserved route: '+dir+' → '+route);
+ }
+ for(const suffix of ['session','manage','worker']){
+  const trigger=JSON.parse(fs.readFileSync(path.join(root,'admin-'+suffix,'function.json'),'utf8')).bindings.find(b=>b.type==='httpTrigger');
+  assert.equal(trigger.route,'platform-'+suffix);
+ }
+});
 test('family cookies and claimed parent/admin roles cannot access platform administration',async()=>{
  const r=await run(manage,{method:'GET',headers:{cookie:'__Host-trackline-family='+t,authorization:'Bearer claimed-admin'},query:{kind:'admins'}});
  assert.equal(r.status,401);assert.equal(calls.length,0);
