@@ -2,6 +2,7 @@
 const {chromium}=require('playwright');const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
 (async()=>{const executable=process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;const browser=await chromium.launch({headless:true,executablePath:executable||undefined});try{
  const html=fs.readFileSync('app/admin/index.html','utf8'),config=JSON.parse(fs.readFileSync('app/staticwebapp.config.json','utf8')),headers=config.routes.find(r=>r.route==='/admin').headers;fs.mkdirSync('/tmp/trackline-admin-layout',{recursive:true});
+ const normalized=config.routes.map(r=>r.route.replace(/\/+$/,'')||'/');assert.equal(new Set(normalized).size,normalized.length,'Duplicate normalized Azure routes');
  for(const [label,width,scheme,signedIn] of [['desktop',1440,'light',true],['mobile',390,'light',true],['dark',1200,'dark',true],['login',390,'light',false]]){
   const context=await browser.newContext({viewport:{width,height:1000},colorScheme:scheme});const page=await context.newPage();let writes=0;const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*',async route=>{const r=route.request();if(r.method()!=='GET'){writes++;return route.abort();}
