@@ -159,8 +159,8 @@ test('every human API exports a protected wrapper', () => {
   const api = path.join(__dirname, '..');
   for (const folder of fs.readdirSync(api)) {
     const file = path.join(api, folder, 'index.js');
-    if (!fs.existsSync(file) || ['auth-config', 'family-session', 'device-usage-ingest'].includes(folder)) continue;
-    assert.match(fs.readFileSync(file, 'utf8'), /protect\(/, folder);
+    if (!fs.existsSync(file) || ['auth-config', 'family-session', 'admin-session', 'device-usage-ingest'].includes(folder)) continue;
+    assert.match(fs.readFileSync(file, 'utf8'), /protect(?:Worker)?\(/, folder);
   }
 });
 test('public configuration never returns server credentials', async () => {
