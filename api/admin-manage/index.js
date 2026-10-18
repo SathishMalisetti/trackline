@@ -1,5 +1,6 @@
 const A=require('../shared/admin');
 const G=require('../shared/admin-generation');
+const I=require('../shared/admin-import');
 const uuid=value=>{if(typeof value!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))throw A.fail('Invalid record ID.');return value;};
 function field(value,name,min=1,max=500){if(typeof value!=='string'||value.trim().length<min||value.length>max)throw A.fail(`Enter a valid ${name}.`);return value.trim();}
 function unitFields(b){
@@ -24,6 +25,12 @@ module.exports=A.protect(async(context,req)=>{
   }
   else if(kind==='versions')result=await A.db('curriculum_content_versions?unit_id=eq.'+uuid(req.query.unitId)+'&select=*&order=version.desc&limit=50');
   else if(kind==='jobs')result=await A.db('curriculum_generation_jobs?select=*,unit:curriculum_units(title)&order=created_at.desc&limit=50&offset='+offset);
+  else if(kind==='source-imports')result=await A.db('curriculum_source_imports?select=id,subject,year_levels,status,attempts,error,source_url,source_sha256,source_fetched_at,source_bytes,source_etag,source_last_modified,source_build_id,parser_version,attribution,licence_url,summary,created_at,finished_at,lease_until&order=created_at.desc&limit=50&offset='+offset+(req.query.id?'&id=eq.'+uuid(req.query.id):''));
+  else if(kind==='import-items')result=await A.db('curriculum_import_items?import_id=eq.'+uuid(req.query.id)+'&select=change_type,unit:curriculum_units(id,title,subject,year_level,descriptor_code,descriptor_text,source_url,source_details,supersedes_unit_id)&limit=500');
+  else if(kind==='import-source'){
+   const [source]=await A.db('curriculum_source_imports?id=eq.'+uuid(req.query.id)+'&status=eq.completed&select=source_archive_base64,source_sha256,source_url,source_fetched_at,subject,attribution,licence_url');
+   if(!source?.source_archive_base64)throw A.fail('Source snapshot is unavailable.',404);result=source;
+  }
   else if(kind==='families'){
    const search=req.query?.search||'';if(!/^[\p{L}\p{N} _-]{0,80}$/u.test(search))throw A.fail('Use letters and numbers for family search.');
    result=await A.db('families?select=id,name,updated_at&order=updated_at.desc&limit=25&offset='+offset+(search?'&name=ilike.*'+encodeURIComponent(search)+'*':''));
@@ -33,7 +40,7 @@ module.exports=A.protect(async(context,req)=>{
  }else if(req.method==='POST'){
   if(b.action==='unit-save'){
    const row={...unitFields(b),created_by:req.admin.id};
-   if(b.id){const id=uuid(b.id);const versions=await A.db('curriculum_content_versions?unit_id=eq.'+id+'&select=id&limit=1');if(versions.length)throw A.fail('Source references are immutable once content exists. Add a new unit for a changed source.',409);result=await A.patch('curriculum_units',id,row);}
+   if(b.id){const id=uuid(b.id);const [unit]=await A.db('curriculum_units?id=eq.'+id+'&select=source_import_id');if(unit?.source_import_id)throw A.fail('Imported official references cannot be edited. Re-import to check source changes.',409);const versions=await A.db('curriculum_content_versions?unit_id=eq.'+id+'&select=id&limit=1');if(versions.length)throw A.fail('Source references are immutable once content exists. Add a new unit for a changed source.',409);result=await A.patch('curriculum_units',id,row);}
    else result=await A.insert('curriculum_units',row);
    await A.audit(req.admin,'unit.save',(result[0]||{}).id);
   }else if(b.action==='units-import'){
@@ -43,7 +50,7 @@ module.exports=A.protect(async(context,req)=>{
   else if(b.action==='draft-create'){
    const id=uuid(b.unitId),[unit]=await A.db('curriculum_units?id=eq.'+id+'&select=*');if(!unit||unit.archived)throw A.fail('Select an active unit.');
    const issues=G.validate(b.content);if(issues.length)throw A.fail(issues.slice(0,5).join(' '));
-   result=await A.rpc('admin_create_draft',{p_unit:id,p_admin:req.admin.id,p_content:{...b.content,session:{learn_minutes:30,practice_minutes:15,checkpoint_minutes:5,pass_percent:80},reference:{source_url:unit.source_url,descriptor_code:unit.descriptor_code,descriptor_text:unit.descriptor_text,curriculum_version:unit.curriculum_version,year_level:unit.year_level,subject:unit.subject}}});
+   result=await A.rpc('admin_create_draft',{p_unit:id,p_admin:req.admin.id,p_content:{...b.content,session:{learn_minutes:30,practice_minutes:15,checkpoint_minutes:5,pass_percent:80},reference:I.reference(unit)}});
   }else if(b.action==='version-save'||b.action==='version-validate'){
    const id=uuid(b.id),[v]=await A.db('curriculum_content_versions?id=eq.'+id+'&select=*');if(!v||!['draft','validated'].includes(v.status))throw A.fail('Only unpublished drafts can be edited or validated.',409);
    const content=b.action==='version-save'?b.content:v.content,issues=G.validate(content);if(issues.length)throw A.fail(issues.slice(0,5).join(' '));
@@ -55,9 +62,17 @@ module.exports=A.protect(async(context,req)=>{
    A.recentPassword(req);if(b.reviewConfirmed!==true)throw A.fail('Confirm the lesson, answers and curriculum fit have been reviewed.');
    await A.rpc('admin_publish_content',{p_id:uuid(b.id),p_admin:req.admin.id});result={ok:true};
   }else if(b.action==='version-archive'){A.recentPassword(req);result=await A.patch('curriculum_content_versions',uuid(b.id),{status:'archived'});await A.audit(req.admin,'content.archive',b.id);}
-  else if(b.action==='generation-queue'){
+  else if(b.action==='source-import-queue'){
+   if(!Array.isArray(b.subjects)||!b.subjects.length||b.subjects.length>3||b.subjects.some(s=>!Object.hasOwn(I.sources,s))||!Array.isArray(b.years)||!b.years.length||b.years.length>2||b.years.some(y=>![4,7].includes(y)))throw A.fail('Select Mathematics, English or Science and Year 4 or 7.');
+   result=await A.rpc('admin_queue_curriculum_import',{p_admin:req.admin.id,p_subjects:b.subjects,p_years:b.years});
+  }else if(b.action==='source-import-run'){result=await I.processImport(uuid(b.id));}
+  else if(b.action==='source-import-retry'||b.action==='source-import-cancel'){
+   const id=uuid(b.id),retry=b.action==='source-import-retry';
+   result=await A.db('curriculum_source_imports?id=eq.'+id+'&status=in.('+(retry?'failed':'queued,running')+')',{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify(retry?{status:'queued',attempts:0,error:null,finished_at:null,lease_id:null,lease_until:null}:{status:'cancelled',finished_at:new Date().toISOString()})});
+   if(!result.length)throw A.fail('This import cannot be changed in its current state.',409);await A.audit(req.admin,b.action,id);
+  }else if(b.action==='generation-queue'){
    if(!process.env.OPENAI_API_KEY)throw A.fail('Configure the server OPENAI_API_KEY before queuing generation.',503);
-   const [unit]=await A.db('curriculum_units?id=eq.'+uuid(b.unitId)+'&select=id,archived');if(!unit||unit.archived)throw A.fail('Select an active unit.');
+   const [unit]=await A.db('curriculum_units?id=eq.'+uuid(b.unitId)+'&select=id,archived,source_current');if(!unit||unit.archived||unit.source_current===false)throw A.fail('Select an active reference present in the latest VCAA import.');
    result=await A.insert('curriculum_generation_jobs',{unit_id:unit.id,created_by:req.admin.id});await A.audit(req.admin,'generation.queue',result[0].id);
   }else if(b.action==='generation-run'){result=await G.processJob(b.id?uuid(b.id):null);}
   else if(b.action==='generation-retry'||b.action==='generation-cancel'){
