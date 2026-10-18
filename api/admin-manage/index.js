@@ -1,12 +1,13 @@
 const A=require('../shared/admin');
 const G=require('../shared/admin-generation');
 const I=require('../shared/admin-import');
+const L=require('../shared/curriculum-levels');
 const uuid=value=>{if(typeof value!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))throw A.fail('Invalid record ID.');return value;};
 function field(value,name,min=1,max=500){if(typeof value!=='string'||value.trim().length<min||value.length>max)throw A.fail(`Enter a valid ${name}.`);return value.trim();}
 function unitFields(b){
  let url;try{url=new URL(b.source_url);}catch{throw A.fail('Enter an official VCAA source URL.');}
  if(url.protocol!=='https:'||!(url.hostname==='vcaa.vic.edu.au'||url.hostname.endsWith('.vcaa.vic.edu.au')))throw A.fail('Use an HTTPS VCAA curriculum reference.');
- if(![4,7].includes(Number(b.year_level))||!['Mathematics','English','Science'].includes(b.subject))throw A.fail('Select Year 4 or Year 7 and a supported subject.');
+ if(!L.supports(b.subject,Number(b.year_level)))throw A.fail('Select an available curriculum level and subject.');
  return{title:field(b.title,'unit title',1,150),subject:b.subject,year_level:Number(b.year_level),curriculum_version:field(b.curriculum_version||'Victorian Curriculum F-10 Version 2.0','curriculum version',1,100),source_url:url.href,descriptor_code:field(b.descriptor_code,'descriptor code',1,80),descriptor_text:field(b.descriptor_text,'descriptor text',10,10000)};
 }
 function scrub(value){if(Array.isArray(value))return value.map(scrub);if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([k])=>!/password|pin.?hash|token|credential/i.test(k)).map(([k,v])=>[k,scrub(v)]));return value;}
@@ -19,14 +20,14 @@ module.exports=A.protect(async(context,req)=>{
    result={units,versions,jobs,generationConfigured:!!process.env.OPENAI_API_KEY,workerConfigured:!!process.env.ADMIN_GENERATION_WORKER_KEY&&process.env.ADMIN_GENERATION_WORKER_KEY.length>=32,model:process.env.ADMIN_GENERATION_MODEL||'gpt-4.1-mini'};
   }else if(kind==='units'){
    let filter='';if(req.query?.unitId)filter+='&id=eq.'+uuid(req.query.unitId);
-   if(req.query?.year){if(!['4','7'].includes(String(req.query.year)))throw A.fail('Select Year 4 or 7.');filter+='&year_level=eq.'+req.query.year;}
+   if(req.query?.year){if(!L.valid(Number(req.query.year)))throw A.fail('Select a supported curriculum level.');filter+='&year_level=eq.'+req.query.year;}
    if(req.query?.subject){if(!['Mathematics','English','Science'].includes(req.query.subject))throw A.fail('Select a supported subject.');filter+='&subject=eq.'+encodeURIComponent(req.query.subject);}
    result=await A.db('curriculum_units?select=*&order=created_at.desc&limit=50&offset='+offset+filter);
   }
   else if(kind==='versions')result=await A.db('curriculum_content_versions?unit_id=eq.'+uuid(req.query.unitId)+'&select=*&order=version.desc&limit=50');
   else if(kind==='jobs')result=await A.db('curriculum_generation_jobs?select=*,unit:curriculum_units(title)&order=created_at.desc&limit=50&offset='+offset);
   else if(kind==='source-imports')result=await A.db('curriculum_source_imports?select=id,subject,year_levels,status,attempts,error,source_url,source_sha256,source_fetched_at,source_bytes,source_etag,source_last_modified,source_build_id,parser_version,attribution,licence_url,summary,created_at,finished_at,lease_until&order=created_at.desc&limit=50&offset='+offset+(req.query.id?'&id=eq.'+uuid(req.query.id):''));
-  else if(kind==='import-items')result=await A.db('curriculum_import_items?import_id=eq.'+uuid(req.query.id)+'&select=change_type,unit:curriculum_units(id,title,subject,year_level,descriptor_code,descriptor_text,source_url,source_details,supersedes_unit_id)&limit=500');
+  else if(kind==='import-items')result=await A.db('curriculum_import_items?import_id=eq.'+uuid(req.query.id)+'&select=change_type,unit:curriculum_units(id,title,subject,year_level,descriptor_code,descriptor_text,source_url,source_details,supersedes_unit_id)&order=unit_id&limit=50&offset='+offset);
   else if(kind==='import-source'){
    const [source]=await A.db('curriculum_source_imports?id=eq.'+uuid(req.query.id)+'&status=eq.completed&select=source_archive_base64,source_sha256,source_url,source_fetched_at,subject,attribution,licence_url');
    if(!source?.source_archive_base64)throw A.fail('Source snapshot is unavailable.',404);result=source;
@@ -63,7 +64,7 @@ module.exports=A.protect(async(context,req)=>{
    await A.rpc('admin_publish_content',{p_id:uuid(b.id),p_admin:req.admin.id});result={ok:true};
   }else if(b.action==='version-archive'){A.recentPassword(req);result=await A.patch('curriculum_content_versions',uuid(b.id),{status:'archived'});await A.audit(req.admin,'content.archive',b.id);}
   else if(b.action==='source-import-queue'){
-   if(!Array.isArray(b.subjects)||!b.subjects.length||b.subjects.length>3||b.subjects.some(s=>!Object.hasOwn(I.sources,s))||!Array.isArray(b.years)||!b.years.length||b.years.length>2||b.years.some(y=>![4,7].includes(y)))throw A.fail('Select Mathematics, English or Science and Year 4 or 7.');
+   if(!Array.isArray(b.subjects)||!b.subjects.length||b.subjects.length>3||b.subjects.some(s=>!Object.hasOwn(I.sources,s))||!Array.isArray(b.years)||!b.years.length||b.years.length>L.levels.length||b.years.some(y=>!L.valid(y)))throw A.fail('Select supported subjects and curriculum levels.');
    result=await A.rpc('admin_queue_curriculum_import',{p_admin:req.admin.id,p_subjects:b.subjects,p_years:b.years});
   }else if(b.action==='source-import-run'){result=await I.processImport(uuid(b.id));}
   else if(b.action==='source-import-retry'||b.action==='source-import-cancel'){

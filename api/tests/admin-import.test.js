@@ -21,7 +21,7 @@ test('extracts explicit years and science bands, preserving official source guid
 });
 test('source changes fail closed rather than guessing missing subjects, levels or codes',()=>{
  const f=fixture();assert.throws(()=>I.extract(f.html(),'English',[4]),/subject/);
- assert.throws(()=>I.extract(f.html(),'Mathematics',[6]),/supported/);
+ assert.throws(()=>I.extract(f.html(),'Mathematics',[6]),/missing/);
  const level=f.data.props.pageProps.additionalContent.curriculum.pathways[0].curriculum[0];level.contentDescriptionsContent[0].contentDescriptions[0].code='made-up';assert.throws(()=>I.extract(f.html(),'Mathematics',[4]),/descriptor structure/);
  assert.throws(()=>I.extract('<html>changed page</html>','Mathematics',[4]),/unrecognised/);
 });

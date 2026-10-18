@@ -113,3 +113,10 @@ node tests/admin-layout.cjs
 ```
 
 The SQL test uses isolated PGlite accounts and records. The layout check mocks GET responses and blocks writes; it does not submit login forms or call the production database. Live functionality QA remains paused.
+
+## All curriculum levels
+Apply `admin/all-curriculum-levels.sql` after `admin/schema.sql` and `admin/curriculum-import.sql`. This additive extension preserves references and lesson history; do not rerun earlier schema files on an existing database.
+
+Admin imports, manual references, filters, coverage and generation support Foundation A–D, Foundation and Years 1–10. Maths also supports Level 10A. Science retains VCAA bands F–2, 3–4, 5–6, 7–8 and 9–10, mapped to each selected school year. Unsupported subject/level pairs are skipped and reported. All-level imports queue one job per subject; source snapshots and attribution are retained as before. Reference browsing is paginated; JSON export collects all pages.
+
+Existing numeric Year 4/7 contracts remain unchanged. Developmental Foundation A/B/C/D use storage IDs -4/-3/-2/-1; Foundation uses 0; Maths Level 10A uses 101 (not Year 11). UI and AI prompts use readable labels. This change is limited to the independent admin curriculum tools; family study enrolment is unchanged.
