@@ -22,6 +22,14 @@ const {chromium}=require('playwright');const fs=require('fs'),path=require('path
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,label+'/'+key+' overflow');
    assert.equal(writes,0);assert.deepEqual(errors,[]);await page.screenshot({path:'/tmp/trackline-admin-layout/'+label+'-'+key+'.png',fullPage:true});
    if(key==='sources'){
+    assert.equal(await page.locator('#source-years option').count(),18);
+    await page.locator('#source-subject').selectOption('Science');
+    assert.equal(await page.locator('#source-years option').count(),13);
+    assert.equal(await page.locator('#source-years option[value="101"]').count(),0);
+    await page.locator('#source-subject').selectOption('Mathematics');
+    await page.locator('#source-years').selectOption('101');
+    assert.equal(await page.locator('#source-years option:checked').innerText(),'Level 10A');
+
     await page.getByRole('button',{name:'View references',exact:true}).click();await page.getByRole('heading',{name:'Imported references',exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,label+'/import-items overflow');
     await page.getByRole('button',{name:'Open reference',exact:true}).click();await page.getByRole('heading',{name:'VC2M4N99 · Curriculum reference',exact:true}).waitFor();

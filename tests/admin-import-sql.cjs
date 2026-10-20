@@ -1,6 +1,6 @@
 const {PGlite}=require('@electric-sql/pglite'),fs=require('fs'),assert=require('node:assert/strict');
 (async()=>{const db=new PGlite();try{
- await db.exec('create role anon;create role authenticated;create role service_role bypassrls;');await db.exec(fs.readFileSync('admin/schema.sql','utf8'));await db.exec(fs.readFileSync('admin/curriculum-import.sql','utf8'));
+ await db.exec('create role anon;create role authenticated;create role service_role bypassrls;');await db.exec(fs.readFileSync('admin/schema.sql','utf8'));await db.exec(fs.readFileSync('admin/curriculum-import.sql','utf8'));await db.exec(fs.readFileSync('admin/all-curriculum-levels.sql','utf8'));
  const actor='11111111-1111-4111-8111-111111111111';await db.query("insert into platform_admins(id,username,password_hash,pin_hash) values($1,'owner','scrypt:fake','scrypt:fake')",[actor]);
  await db.exec('set role service_role');
  const queue=()=>db.query('select admin_queue_curriculum_import($1,$2,$3) r',[actor,['Mathematics'],[4,7]]);
@@ -20,6 +20,14 @@ const {PGlite}=require('@electric-sql/pglite'),fs=require('fs'),assert=require('
  await db.query("update curriculum_source_imports set status='cancelled' where id=$1",[fourth.id]);assert.equal((await finish(fourth,[unit('c'.repeat(64))])).rows[0].r.status,'cancelled');
  await queue();const fifth=await claim();await db.query("update curriculum_source_imports set lease_until=now()-interval '1 minute' where id=$1",[fifth.id]);const reclaimed=await claim();assert.notEqual(reclaimed.lease_id,fifth.lease_id);await finish(fifth,[unit('c'.repeat(64))]);assert.equal((await db.query('select count(*)::int n from curriculum_units')).rows[0].n,2);await finish(reclaimed,null,'Fixture failure');
  assert.equal((await db.query('select count(*)::int n from curriculum_import_items')).rows[0].n,3);
+ await db.query("update curriculum_source_imports set status='cancelled' where status in ('queued','running')");
+ const all=[-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,101];
+ const expanded=(await db.query('select admin_queue_curriculum_import($1,$2,$3) r',[actor,['Mathematics','English','Science'],all])).rows[0].r;
+ assert.equal(expanded.queued,3);assert.equal(expanded.unavailable_combinations,6);
+ const jobs=(await db.query("select subject,year_levels from curriculum_source_imports where status='queued'")).rows;
+ for(const j of jobs)assert.equal(j.year_levels.length,j.subject==='Mathematics'?16:j.subject==='English'?15:11);
+ for(const bad of [[11],[null],[],[102]])await assert.rejects(db.query('select admin_queue_curriculum_import($1,$2,$3)',[actor,['Mathematics'],bad]),/supported/);
+ for(const y of all)await db.query("insert into curriculum_units(title,subject,year_level,source_url,descriptor_code,descriptor_text,created_by) values('All level fixture','Mathematics',$1,'https://f10.vcaa.vic.edu.au/','fixture','Fictional descriptor',$2)",[y,actor]);
  await db.exec('reset role');
  for(const role of ['anon','authenticated']){await db.exec('set role '+role);for(const table of ['curriculum_source_imports','curriculum_import_items'])await assert.rejects(db.query('select * from '+table),/permission denied/);await assert.rejects(queue(),/permission denied/);await db.exec('reset role');}
  console.log('PASS: import queue isolation, leases, idempotent references, source revisions, existing lesson preservation, rollback, cancellation and public denial.');
