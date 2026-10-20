@@ -23,9 +23,10 @@ async function config(initialise=false){
 function protectWorker(handler){return async(context,req)=>{
  try{
   if(req.method!=='POST')throw fail('Method not allowed.',405);
-  const secret=req.headers?.['x-trackline-push-worker'];if(typeof secret!=='string'||!/^[a-f0-9]{64}$/.test(secret))throw fail('Worker authorization required.',401);
-  const c=await config();
-  if(c.worker_secret.length!==64||!crypto.timingSafeEqual(Buffer.from(secret),Buffer.from(c.worker_secret)))throw fail('Worker authorization required.',401);
+  const headers=req.headers||{},minute=headers['x-trackline-push-minute'],nonce=headers['x-trackline-push-nonce'],proof=headers['x-trackline-push-proof'];
+  if(!/^\d{7,12}$/.test(minute||'')||!/^[a-f0-9-]{36}$/.test(nonce||'')||!/^[a-f0-9]{64}$/.test(proof||'')||Math.abs(Math.floor(Date.now()/60000)-Number(minute))>1)throw fail('Worker authorization required.',401);
+  const c=await config(),expected=crypto.createHmac('sha256',c.worker_secret).update(minute+':'+nonce).digest('hex');
+  if(!crypto.timingSafeEqual(Buffer.from(proof),Buffer.from(expected)))throw fail('Worker authorization required.',401);
   req.pushConfig=c;await handler(context,req);
  }catch(e){context.res=response(e.status||503,{error:e.status?e.message:'Reminder worker could not complete this cycle.'});}
 };}
