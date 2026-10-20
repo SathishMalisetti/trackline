@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/push-icon.svg">
+<link rel="apple-touch-icon" href="/push-icon-192.png">
+<meta name="theme-color" content="#243b32">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trackline — Family Schedule</title>
@@ -758,6 +762,7 @@
 <script src="/auth-client.js"></script>
 <script src="/auth.js"></script>
 <script src="/family-auth.js"></script>
+<script src="/push-notifications.js" defer></script>
 <script>
 // ==============================================================================
 // No database URLs or keys live here anymore — on purpose. The browser only
@@ -908,6 +913,7 @@ function upcomingReminderItems(){
 }
 
 function checkAndFireNotificationReminders(){
+  if(window.tracklinePush) return;
   const prefs = getNotifyPrefs();
   if(!prefs.enabled) return;
   if(typeof Notification==='undefined' || Notification.permission!=='granted') return;
@@ -3162,7 +3168,7 @@ function renderPendingApprovals(){
 
 function renderSettings(){
   if(!isParentLoggedIn()){
-    return `
+    return `${window.tracklinePush ? tracklinePush.panel() : '<section class="settings-card" id="push-panel"><h3>Notifications</h3><p>Loading notification controls…</p></section>'}
       <div class="settings-card" style="text-align:center;max-width:560px;">
         <h3>Parent access required</h3>
         <p style="font-size:13.5px;color:var(--text-dim);">Log in as a parent (top right) to manage family members, colors, and data.</p>
@@ -3283,20 +3289,7 @@ function renderSettings(){
         <button class="btn ghost" onclick="enableKioskMode()">Make this device a display</button>
       `}
     </div>
-    <div class="settings-card">
-      <h3>Notifications</h3>
-      <p style="font-size:13px;color:var(--text-dim);margin-top:0;">A browser notification before upcoming tasks and activities. Only fires while this tab is open (even in the background) — not if the browser itself is fully closed. Applies to this device, not synced with the family.</p>
-      ${(() => { const np = getNotifyPrefs(); return np.enabled ? `
-        <p style="font-size:12.5px;color:var(--success);font-weight:600;margin-bottom:10px;">✓ Enabled on this device</p>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">First reminder <input type="number" min="0" value="${np.firstReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid var(--line);" onchange="setNotifyReminderMinutes('firstReminder', this.value)"> min before</label>
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;">Second reminder <input type="number" min="0" value="${np.secondReminder}" style="width:56px;padding:5px;border-radius:6px;border:1px solid var(--line);" onchange="setNotifyReminderMinutes('secondReminder', this.value)"> min before</label>
-        </div>
-        <button class="btn ghost" onclick="disableNotifications()">Turn off notifications</button>
-      ` : `
-        <button class="btn ghost" onclick="enableNotifications()">Enable notifications</button>
-      `; })()}
-    </div>
+    ${window.tracklinePush ? tracklinePush.panel() : '<section class="settings-card" id="push-panel"><h3>Notifications</h3><p>Loading notification controls…</p></section>'}
     <div class="settings-card">
       <h3>Screen time devices</h3>
       <p style="font-size:13px;color:var(--text-dim);margin-top:0;">Laptops paired for automatic screen-time reporting. Removing one deletes its usage history permanently.</p>
@@ -3434,6 +3427,7 @@ function renderModal(){
         <label>Notes (optional)</label>
         <textarea id="f_notes" placeholder="e.g. Bring $10 for excursion, coach's number: ..." rows="2" style="width:100%;padding:10px 11px;border-radius:7px;border:1px solid var(--line);background:#fff;font-family:'Inter',sans-serif;font-size:14px;color:var(--ink);resize:vertical;" ${dis}>${escapeHtml(notes)}</textarea>
       </div>
+      ${window.tracklinePush && ui.editingId ? tracklinePush.itemControl('event',ui.editingId) : ''}
       <div class="checkline">
         <input type="checkbox" id="f_needsDrive" ${needsDrive?'checked':''} onchange="toggleDriveFields(this.checked)" ${dis}>
         <label for="f_needsDrive">Someone needs to drive / drop off &amp; pick up</label>
@@ -3511,6 +3505,7 @@ function renderChoreModal(){
   <div class="overlay" onclick="if(event.target===this) closeChoreModal()">
     <div class="modal">
       <h2>${editing? (readOnly?'Task details':'Edit task') : 'Add task'}</h2>
+      ${window.tracklinePush && editing ? tracklinePush.itemControl('task',editing.id) : ''}
       ${readOnly? `<div class="skip-note">View only. ${isLoggedIn()? 'A parent needs to log in to change or delete this.' : 'Log in to make changes.'}</div>`:''}
       <div class="field">
         <label>What needs doing</label>
@@ -4886,6 +4881,7 @@ function renderDashboard(){
 }
 
 function enhancePresentation(root){
+  window.tracklinePush?.syncProfile();
   // Presentation-only semantics; existing click handlers and form IDs survive.
   root.querySelectorAll('.field').forEach(field=>{
     const label=field.querySelector('label'),control=field.querySelector('input,select,textarea');

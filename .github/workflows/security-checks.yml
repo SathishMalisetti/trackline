@@ -1,10 +1,10 @@
 name: Security regression checks
 on:
   pull_request:
-    paths: ['api/**', 'app/**', 'admin/**', 'security/**', 'tests/security*', 'tests/admin*', '.github/workflows/security-checks.yml']
+    paths: ['api/**', 'app/**', 'admin/**', 'notifications/**', 'security/**', 'tests/security*', 'tests/admin*', '.github/workflows/security-checks.yml']
   push:
     branches: [main, security/family-isolation-and-credentials, feat/platform-admin]
-    paths: ['api/**', 'app/**', 'admin/**', 'security/**', 'tests/security*', 'tests/admin*', '.github/workflows/security-checks.yml']
+    paths: ['api/**', 'app/**', 'admin/**', 'notifications/**', 'security/**', 'tests/security*', 'tests/admin*', '.github/workflows/security-checks.yml']
 permissions:
   contents: read
 jobs:
@@ -22,6 +22,8 @@ jobs:
       - run: node tests/security-isolation.cjs
       - run: node tests/admin-sql.cjs
       - run: node tests/admin-import-sql.cjs
+      - run: node tests/security-push-sql.cjs
       - run: npx playwright install --with-deps chromium
       - run: node tests/admin-layout.cjs
       - run: node tests/security-keyboard.cjs
+      - run: node tests/security-push-layout.cjs

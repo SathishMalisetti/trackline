@@ -1,0 +1,32 @@
+const {PGlite}=require('@electric-sql/pglite'),fs=require('node:fs'),assert=require('node:assert/strict');
+(async()=>{const db=new PGlite();try{
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;
+ create table families(id text primary key,password_hash text);create table members(id text primary key,family_id text,role text,pin_hash text);
+ create table family_device_sessions(token_hash text primary key,family_id text,member_id text,password_version text,pin_version text,expires_at timestamptz);
+ create table family_auth_memberships(user_id uuid,family_id text,member_id text,role text);create table chore_logs(family_id text,chore_id text,date date);
+ grant select on families,members,family_device_sessions,family_auth_memberships,chore_logs to service_role;
+ insert into families values('F1','family-v1');insert into members values('parent','F1','parent','pin-v1'),('kid','F1','kid','kid-pin');
+ insert into family_device_sessions values('session','F1','parent','family-v1','pin-v1',now()+interval '1 day');`);
+ await db.exec(fs.readFileSync('notifications/schema.sql','utf8'));
+ await db.exec('set role service_role');
+ const data={endpoint:'https://fcm.googleapis.com/test',keys:{auth:'fixture',p256dh:'fixture'},device_key_hash:'a'.repeat(64),family_id:'F1',member_id:'parent',session_hash:'session',auth_user_id:null,minutes_before:15,child_ids:['kid'],timezone:'Australia/Melbourne',expires_at:new Date(Date.now()+86400000).toISOString()};
+ const save=async value=>(await db.query('select push_save_subscription($1) id',[value])).rows[0].id;
+ const id=await save(data);assert.equal(await save(data),id);await assert.rejects(save({...data,device_key_hash:'b'.repeat(64)}),/another device/);
+ const live=async()=>(await db.query('select id from push_live_subscriptions(null,100)')).rows;
+ assert.equal((await live()).length,1);
+ const claim=async(key='key')=>(await db.query("select push_claim_delivery($1,$2,'task','task1','2026-10-20',15) lease",[id,key])).rows[0].lease;
+ const lease=await claim();assert.ok(lease);assert.equal(await claim(),null);
+ await db.query('select push_finish_delivery($1,$2,$3,false,$4)',[id,'key',lease,'503']);const retry=await claim();assert.ok(retry);assert.notEqual(lease,retry);
+ await db.query('select push_finish_delivery($1,$2,$3,true,null)',[id,'key',lease]);assert.equal((await db.query('select status from push_deliveries')).rows[0].status,'sending');
+ await db.query('select push_finish_delivery($1,$2,$3,true,null)',[id,'key',retry]);assert.equal(await claim(),null);
+ await db.query("insert into push_item_mutes values($1,'task','task1')",[id]);assert.equal(await claim('muted'),null);await db.query('delete from push_item_mutes');
+ await db.exec('reset role');await db.exec("insert into chore_logs values('F1','task1','2026-10-20')");await db.exec('set role service_role');assert.equal(await claim('completed'),null);
+ await db.exec('reset role');await db.exec("delete from chore_logs;update family_device_sessions set member_id=null where token_hash='session'");await db.exec('set role service_role');assert.equal((await live()).length,0);assert.equal(await claim('locked'),null);
+ await db.exec('reset role');await db.exec("update family_device_sessions set member_id='parent';update members set pin_hash='changed' where id='parent'");await db.exec('set role service_role');assert.equal((await live()).length,0);
+ await db.exec('reset role');await db.exec("update members set pin_hash='pin-v1' where id='parent';update families set password_hash='changed'");await db.exec('set role service_role');assert.equal((await live()).length,0);
+ await db.exec('reset role');await db.exec("update families set password_hash='family-v1'");await db.exec('set role service_role');assert.equal((await live()).length,1);
+ await db.query("select push_initialise_keys('first-public','first-private')");await db.query("select push_initialise_keys('wrong-public','wrong-private')");assert.equal((await db.query('select public_key from push_config')).rows[0].public_key,'first-public');
+ await db.exec('reset role');for(const role of ['anon','authenticated']){await db.exec('set role '+role);for(const table of ['push_config','push_subscriptions','push_item_mutes','push_deliveries'])await assert.rejects(db.query('select * from '+table),/permission denied/);await assert.rejects(live(),/permission denied/);await db.exec('reset role');}
+ await db.exec("delete from family_device_sessions where token_hash='session'");assert.equal((await db.query('select count(*)::int n from push_subscriptions')).rows[0].n,0);
+ console.log('PASS: subscription ownership, atomic claims/retries, duplicate suppression, completion/mute checks, session/PIN/family revocation, key stability and public access denial.');
+ }finally{await db.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

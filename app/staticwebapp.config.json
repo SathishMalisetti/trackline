@@ -3,11 +3,13 @@
     "rewrite": "/index.html",
     "exclude": [
       "/api/*",
-      "/*.{png,jpg,jpeg,svg,ico,css,js}"
+      "/*.{png,jpg,jpeg,svg,ico,css,js}",
+      "/manifest.webmanifest"
     ]
   },
   "mimeTypes": {
-    ".json": "application/json"
+    ".json": "application/json",
+    ".webmanifest": "application/manifest+json"
   },
   "globalHeaders": {
     "X-Frame-Options": "DENY",
@@ -26,6 +28,13 @@
       "route": "/admin/index.html",
       "headers": {
         "Content-Security-Policy": "default-src 'self'; script-src 'sha256-D5lUIHC9rgLrNVlbZsT2ty6poqSzUlQTBeBGHoePHAw='; style-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+      }
+    },
+    {
+      "route": "/push-sw.js",
+      "headers": {
+        "Cache-Control": "no-cache",
+        "Service-Worker-Allowed": "/"
       }
     }
   ]
