@@ -4237,14 +4237,14 @@ function renderDayDrillModal(){
     const apps = ui.dayDrillData.apps || [];
     const showCount = ui.dayDrillShowAll ? apps.length : 5;
     const shown = apps.slice(0, showCount);
-    const totalMinutes = apps.reduce((sum,a)=>sum+a.minutesUsed, 0);
+    const totalMinutes = ui.dayDrillData.totalMinutes ?? apps.reduce((sum,a)=>sum+a.minutesUsed, 0);
     const maxMinutes = Math.max(1, ...apps.map(a=>a.minutesUsed));
 
     // Category summary for THIS specific day — computed client-side from
     // the same apps array already fetched, no extra request needed. Gives
     // quick context before the app-by-app list below.
-    const catTotals = {};
-    apps.forEach(a=>{ catTotals[a.category] = (catTotals[a.category]||0) + a.minutesUsed; });
+    const catTotals = ui.dayDrillData.categoryTotals || {};
+    if(!ui.dayDrillData.categoryTotals) apps.forEach(a=>{ catTotals[a.category] = (catTotals[a.category]||0) + a.minutesUsed; });
     const catSummary = Object.keys(catTotals).sort((a,b)=>catTotals[b]-catTotals[a]).map(cat=>{
       const color = categoryColors[cat] || '#8a8468';
       return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;">
@@ -4265,7 +4265,7 @@ function renderDayDrillModal(){
                 <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-dim);width:14px;flex:none;">${i+1}</span>
                 <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${color};flex:none;"></span>
                 <div style="min-width:0;">
-                  <div class="trip-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(a.name)}</div>
+                  <div class="trip-title" style="white-space:normal;overflow-wrap:anywhere;">${escapeHtml(a.name)}${a.title ? ` <span style="font-weight:400;">(${escapeHtml(a.title)})</span>` : ''}</div>
                   <div class="trip-meta">${escapeHtml(a.category)} · ${pct}%</div>
                 </div>
               </div>
@@ -4278,7 +4278,7 @@ function renderDayDrillModal(){
         }).join('');
 
     const moreLink = (!ui.dayDrillShowAll && apps.length>5)
-      ? `<button class="btn ghost" style="width:100%;margin-top:10px;padding:9px;font-size:12.5px;" onclick="ui.dayDrillShowAll=true;render();">Show all ${apps.length} programs</button>`
+      ? `<button class="btn ghost" style="width:100%;margin-top:10px;padding:9px;font-size:12.5px;" onclick="ui.dayDrillShowAll=true;render();">Show all ${apps.length} activities</button>`
       : '';
 
     body = `

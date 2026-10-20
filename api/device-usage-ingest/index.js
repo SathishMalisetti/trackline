@@ -13,6 +13,7 @@
 
 const fetch = require('node-fetch');
 const crypto = require('crypto');
+const {usageCategory} = require('../shared/usage-category');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -85,7 +86,7 @@ module.exports = async function (context, req) {
           // constraint, so multiple NULL-title rows would never conflict
           // and upserting would silently break, inserting duplicates
           // instead of updating. '' behaves correctly.
-          source: 'app', name: a.app, title: a.title || '', category: a.category || null, active_seconds: a.active_seconds,
+          source: 'app', name: a.app, title: a.title || '', category: usageCategory(a.app, a.title, a.category), active_seconds: a.active_seconds,
           updated_at: new Date().toISOString(),
         });
       });
