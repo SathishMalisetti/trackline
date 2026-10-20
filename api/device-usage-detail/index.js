@@ -3,11 +3,11 @@
 // GET /api/device-usage-detail?familyId=X&memberId=Y&date=2026-08-16
 //
 // Returns the top apps (and sites, separately) for one family member on
-// one specific day — aggregated across every hour and every distinct
-// title, since a "top programs" view cares about total time per app, not
-// fragmenting chrome.exe into one row per browser tab title.
+// one specific day — aggregated across hours, preserving each distinct
+// title. Titles remain separate so parents can identify the game or activity.
 
 const fetch = require('node-fetch');
+const {usageCategory} = require('../shared/usage-category');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -45,7 +45,7 @@ module.exports = async function (context, req) {
     }
 
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/usage?family_id=eq.${encodeURIComponent(familyId)}&member_id=eq.${encodeURIComponent(memberId)}&date=eq.${date}&select=source,name,category,active_seconds`,
+      `${SUPABASE_URL}/rest/v1/usage?family_id=eq.${encodeURIComponent(familyId)}&member_id=eq.${encodeURIComponent(memberId)}&date=eq.${date}&select=source,name,title,category,active_seconds`,
       { headers: supabaseHeaders() }
     );
     if (!res.ok) {
@@ -56,28 +56,30 @@ module.exports = async function (context, req) {
     }
     const rows = await res.json();
 
-    // Group by (source, name) — collapses every hour and every distinct
-    // title into one total-time figure per app/site, which is what a
-    // "top programs" view actually wants.
-    const appTotals = {}, siteTotals = {};
-    const appCategory = {}, siteCategory = {};
+    // Retain title/category distinctions instead of hiding Minecraft behind javaw.exe.
+    const apps = new Map(), sites = new Map();
     rows.forEach(r => {
-      const bucket = r.source === 'site' ? siteTotals : appTotals;
-      const catBucket = r.source === 'site' ? siteCategory : appCategory;
-      bucket[r.name] = (bucket[r.name] || 0) + Number(r.active_seconds || 0);
-      catBucket[r.name] = r.category || 'Uncategorized'; // same app should always carry the same category; last-write is fine
+      const bucket = r.source === 'site' ? sites : apps;
+      const title = r.source === 'site' ? '' : (r.title || '');
+      const category = r.source === 'site' ? (r.category || 'Uncategorized')
+        : (usageCategory(r.name, title, r.category) || 'Uncategorized');
+      const key = JSON.stringify([r.name, title, category]);
+      if (!bucket.has(key)) bucket.set(key, {name:r.name, title, category, seconds:0});
+      bucket.get(key).seconds += Number(r.active_seconds || 0);
     });
+    const toSortedList = bucket => [...bucket.values()]
+      .map(({seconds,...item}) => ({...item, minutesUsed:Math.round(seconds/60)}))
+      .filter(item => item.minutesUsed > 0)
+      .sort((a,b) => b.minutesUsed-a.minutesUsed || a.name.localeCompare(b.name) || a.title.localeCompare(b.title));
 
-    const toSortedList = (totals, categories) =>
-      Object.keys(totals)
-        .map(name => ({ name, category: categories[name], minutesUsed: Math.round(totals[name] / 60) }))
-        .filter(item => item.minutesUsed > 0)
-        .sort((a, b) => b.minutesUsed - a.minutesUsed);
-
+    const categorySeconds = new Map();
+    for(const app of apps.values()) categorySeconds.set(app.category,(categorySeconds.get(app.category)||0)+app.seconds);
     context.res = jsonRes(200, {
       date,
-      apps: toSortedList(appTotals, appCategory),
-      sites: toSortedList(siteTotals, siteCategory),
+      totalMinutes: Math.round([...apps.values()].reduce((sum,a)=>sum+a.seconds,0)/60),
+      categoryTotals: Object.fromEntries([...categorySeconds].map(([category,seconds])=>[category,Math.round(seconds/60)])),
+      apps: toSortedList(apps),
+      sites: toSortedList(sites),
     });
   } catch (err) {
     context.log.error('device-usage-detail function threw:', err && err.stack ? err.stack : err);
