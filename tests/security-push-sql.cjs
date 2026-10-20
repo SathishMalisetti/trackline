@@ -28,5 +28,10 @@ const {PGlite}=require('@electric-sql/pglite'),fs=require('node:fs'),assert=requ
  await db.query("select push_initialise_keys('first-public','first-private')");await db.query("select push_initialise_keys('wrong-public','wrong-private')");assert.equal((await db.query('select public_key from push_config')).rows[0].public_key,'first-public');
  await db.exec('reset role');for(const role of ['anon','authenticated']){await db.exec('set role '+role);for(const table of ['push_config','push_subscriptions','push_item_mutes','push_deliveries'])await assert.rejects(db.query('select * from '+table),/permission denied/);await assert.rejects(live(),/permission denied/);await db.exec('reset role');}
  await db.exec("delete from family_device_sessions where token_hash='session'");assert.equal((await db.query('select count(*)::int n from push_subscriptions')).rows[0].n,0);
+ await db.exec(`create schema net;create schema extensions;
+ create function extensions.hmac(text,text,text) returns bytea language sql as $$select decode('aabb','hex')$$;
+ create function net.http_post(url text,body jsonb default '{}'::jsonb,params jsonb default '{}'::jsonb,headers jsonb default '{}'::jsonb,timeout_milliseconds integer default 2000) returns bigint language sql as $$select 1::bigint$$;`);
+ const scheduled=fs.readFileSync('notifications/scheduler.sql','utf8').match(/\$job\$([\s\S]*?)\$job\$/)[1];
+ await db.query('EXPLAIN '+scheduled);
  console.log('PASS: subscription ownership, atomic claims/retries, duplicate suppression, completion/mute checks, session/PIN/family revocation, key stability and public access denial.');
  }finally{await db.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

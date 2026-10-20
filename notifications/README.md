@@ -34,7 +34,7 @@ Web Push for calendar events and timed tasks, using the existing Azure Static We
 
 ## Operations
 
-Inspect `cron.job` / `cron.job_run_details` for `trackline-push-every-minute`. Worker responses contain counts, never endpoint/key/payload secrets. `push_deliveries` records success/failure and bounded error codes. 404/410 push endpoints are disabled. Notification history and expired subscription records are retained; no automatic deletion policy is installed. To pause the complete service, set `push_config.enabled=false` through an administrator SQL session; per-device controls remain the normal user option.
+Inspect `cron.job` / `cron.job_run_details` for `trackline-push-every-minute`. Worker responses contain counts, never endpoint/key/payload secrets. `push_deliveries` records success/failure and bounded error codes. 404/410 push endpoints are disabled. Notification history and expired subscription records are retained; no automatic deletion policy is installed. To pause new scheduled sends, set `push_config.enabled=false` through an administrator SQL session; per-device controls remain the normal user option.
 
 ## Verification
 
