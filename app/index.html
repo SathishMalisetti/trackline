@@ -4893,9 +4893,13 @@ function enhancePresentation(root){
   });
   root.querySelectorAll('button[title]').forEach(button=>{if(!button.hasAttribute('aria-label')) button.setAttribute('aria-label',button.title);});
   root.querySelectorAll('[onclick]').forEach(element=>{
-    if(element.matches('button,a,input,select,textarea,summary,.col-body')) return;
+    if(element.matches('button,a,input,select,textarea,summary,.col-body,.overlay')) return;
     element.setAttribute('role','button');element.tabIndex=0;
-    element.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();element.click();}});
+    element.addEventListener('keydown',event=>{
+      // Keys typed in nested inputs must not activate their clickable ancestors.
+      if(event.target!==element||event.defaultPrevented||event.isComposing) return;
+      if(event.key==='Enter'||event.key===' '){event.preventDefault();element.click();}
+    });
   });
   root.querySelectorAll('.modal').forEach((modal,index)=>{
     modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');

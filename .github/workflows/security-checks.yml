@@ -24,3 +24,4 @@ jobs:
       - run: node tests/admin-import-sql.cjs
       - run: npx playwright install --with-deps chromium
       - run: node tests/admin-layout.cjs
+      - run: node tests/security-keyboard.cjs
